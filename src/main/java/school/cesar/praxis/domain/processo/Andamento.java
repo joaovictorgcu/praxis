@@ -1,36 +1,38 @@
 package school.cesar.praxis.domain.processo;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 
-/** Entidade do agregado Processo: um evento na linha do tempo processual. */
-@Entity
-@Table(name = "andamento")
+/**
+ * Entidade do agregado Processo: um evento na linha do tempo processual.
+ * Dominio puro - o mapeamento objeto-relacional vive na camada de infraestrutura.
+ */
 public class Andamento {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private final Long id;
+    private final LocalDate data;
+    private final String descricao;
+    private final TipoAndamento tipo;
 
-    @Column(nullable = false)
-    private LocalDate data;
-
-    @Column(nullable = false, length = 500)
-    private String descricao;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TipoAndamento tipo;
-
-    protected Andamento() {
-    }
-
-    public Andamento(LocalDate data, String descricao, TipoAndamento tipo) {
-        if (data == null) throw new IllegalArgumentException("data obrigatoria");
-        if (descricao == null || descricao.isBlank()) throw new IllegalArgumentException("descricao obrigatoria");
+    public Andamento(Long id, LocalDate data, String descricao, TipoAndamento tipo) {
+        if (data == null) {
+            throw new IllegalArgumentException("data do andamento e obrigatoria");
+        }
+        if (descricao == null || descricao.isBlank()) {
+            throw new IllegalArgumentException("descricao do andamento e obrigatoria");
+        }
+        this.id = id;
         this.data = data;
         this.descricao = descricao;
         this.tipo = tipo == null ? TipoAndamento.OUTRO : tipo;
+    }
+
+    public Andamento(LocalDate data, String descricao, TipoAndamento tipo) {
+        this(null, data, descricao, tipo);
+    }
+
+    /** Intimacao e citacao sao os andamentos que disparam contagem de prazo. */
+    public boolean iniciaContagemDePrazo() {
+        return tipo == TipoAndamento.INTIMACAO || tipo == TipoAndamento.CITACAO;
     }
 
     public Long getId() {
@@ -47,10 +49,5 @@ public class Andamento {
 
     public TipoAndamento getTipo() {
         return tipo;
-    }
-
-    /** Intimacao e citacao disparam contagem de prazo na linguagem do dominio. */
-    public boolean iniciaContagemDePrazo() {
-        return tipo == TipoAndamento.INTIMACAO || tipo == TipoAndamento.CITACAO;
     }
 }

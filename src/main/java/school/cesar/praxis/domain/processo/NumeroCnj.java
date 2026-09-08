@@ -1,25 +1,28 @@
 package school.cesar.praxis.domain.processo;
 
-import jakarta.persistence.Embeddable;
 import java.util.regex.Pattern;
 
-/** Value Object: numero unico de processo no padrao CNJ (NNNNNNN-DD.AAAA.J.TR.OOOO). */
-@Embeddable
-public class NumeroCnj {
+/**
+ * Value Object: numero unico do processo no padrao CNJ
+ * (NNNNNNN-DD.AAAA.J.TR.OOOO). Imutavel e autovalidado: nao existe processo
+ * com numero mal formado no dominio.
+ */
+public final class NumeroCnj {
 
     private static final Pattern FORMATO =
             Pattern.compile("\\d{7}-\\d{2}\\.\\d{4}\\.\\d\\.\\d{2}\\.\\d{4}");
 
-    private String valor;
-
-    protected NumeroCnj() {
-    }
+    private final String valor;
 
     public NumeroCnj(String valor) {
         if (valor == null || !FORMATO.matcher(valor).matches()) {
             throw new IllegalArgumentException("Numero CNJ invalido: " + valor);
         }
         this.valor = valor;
+    }
+
+    public static NumeroCnj de(String valor) {
+        return new NumeroCnj(valor);
     }
 
     public String valor() {

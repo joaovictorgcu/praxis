@@ -1,87 +1,66 @@
 package school.cesar.praxis.domain.processo;
 
-import jakarta.persistence.*;
 import school.cesar.praxis.domain.notificacao.EventoProcesso;
 import school.cesar.praxis.domain.notificacao.ObservadorProcesso;
-import school.cesar.praxis.domain.prazo.ContagemPrazoStrategy;
-import school.cesar.praxis.domain.prazo.Prazo;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * Raiz do agregado do contexto Gestao de Processos.
+ * Raiz de agregado do subdominio nuclear <b>Gestao de Processos</b>.
  *
- * <p>Padroes: Observer (advogados responsaveis assinam eventos) e Iterator
- * (linha do tempo de andamentos em ordem cronologica, sem expor a colecao).
+ * <p>Padroes aplicados aqui:
+ * <ul>
+ *   <li><b>Observer</b> - observadores assinam o agregado e recebem eventos de dominio;</li>
+ *   <li><b>Iterator</b> - a linha do tempo de andamentos e percorrida em ordem
+ *       cronologica sem expor a colecao interna.</li>
+ * </ul>
  */
-@Entity
-@Table(name = "processo")
 public class Processo implements Iterable<Andamento> {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Embedded
-    @AttributeOverride(name = "valor", column = @Column(name = "numero_cnj", nullable = false, unique = true))
-    private NumeroCnj numero;
-
-    @Column(nullable = false, length = 200)
-    private String cliente;
-
-    @Column(nullable = false)
-    private boolean segredoJustica;
-
-    @Column(length = 120)
-    private String responsavelNome;
-
-    @Column(length = 160)
-    private String responsavelEmail;
-
-    @Column(length = 20)
-    private String responsavelOab;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "processo_id")
+    private final Long id;
+    private final NumeroCnj numero;
+    private final String cliente;
+    private final String comarca;
+    private final boolean segredoJustica;
+    private final Advogado responsavel;
     private final List<Andamento> andamentos = new ArrayList<>();
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "processo_id")
-    private final List<Prazo> prazos = new ArrayList<>();
-
-    @Transient
     private final List<ObservadorProcesso> observadores = new ArrayList<>();
 
-    protected Processo() {
-    }
-
-    public Processo(NumeroCnj numero, String cliente, boolean segredoJustica) {
+    public Processo(Long id,
+                    NumeroCnj numero,
+                    String cliente,
+                    String comarca,
+                    boolean segredoJustica,
+                    Advogado responsavel) {
+        if (numero == null) {
+            throw new IllegalArgumentException("numero CNJ e obrigatorio");
+        }
+        if (cliente == null || cliente.isBlank()) {
+            throw new IllegalArgumentException("cliente e obrigatorio");
+        }
+        if (comarca == null || comarca.isBlank()) {
+            throw new IllegalArgumentException("comarca e obrigatoria");
+        }
+        if (responsavel == null) {
+            throw new IllegalArgumentException("advogado responsavel e obrigatorio");
+        }
+        this.id = id;
         this.numero = numero;
         this.cliente = cliente;
+        this.comarca = comarca;
         this.segredoJustica = segredoJustica;
+        this.responsavel = responsavel;
     }
 
-    /** Define o advogado responsavel pelos autos (destinatario das notificacoes). */
-    public void definirResponsavel(String nome, String email, String oab) {
-        this.responsavelNome = nome;
-        this.responsavelEmail = email;
-        this.responsavelOab = oab;
-    }
-
-    public String getResponsavelNome() {
-        return responsavelNome;
-    }
-
-    public String getResponsavelEmail() {
-        return responsavelEmail;
-    }
-
-    public String getResponsavelOab() {
-        return responsavelOab;
+    public Processo(NumeroCnj numero,
+                    String cliente,
+                    String comarca,
+                    boolean segredoJustica,
+                    Advogado responsavel) {
+        this(null, numero, cliente, comarca, segredoJustica, responsavel);
     }
 
     // --- Observer ---
@@ -96,34 +75,31 @@ public class Processo implements Iterable<Andamento> {
         }
     }
 
-    // --- Regras de negocio ---
+    // --- Comportamento de dominio ---
 
+    /** Registra andamento e avisa os observadores (Observer). */
     public void registrarAndamento(Andamento andamento) {
+        if (andamento == null) {
+            throw new IllegalArgumentException("andamento e obrigatorio");
+        }
         andamentos.add(andamento);
-        publicar(new EventoProcesso.AndamentoRegistrado(numero.valor(), andamento.getDescricao()));
+        publicar(new EventoProcesso.AndamentoRegistrado(
+                numero.valor(), responsavel, andamento.getDescricao(), andamento.getData()));
     }
 
-    public void adicionarPrazo(Prazo prazo) {
-        prazos.add(prazo);
+    public void restaurarAndamento(Andamento andamento) {
+        andamentos.add(andamento);
     }
 
-    /**
-     * Varre os prazos e publica evento para cada prazo fatal em risco.
-     *
-     * @return quantidade de prazos que dispararam alerta
-     */
-    public int verificarPrazos(LocalDate hoje, ContagemPrazoStrategy contagem) {
-        int alertados = 0;
-        for (Prazo prazo : prazos) {
-            if (prazo.emRisco(hoje, contagem)) {
-                publicar(new EventoProcesso.PrazoEmRisco(
-                        numero.valor(),
-                        prazo.getDescricao(),
-                        prazo.diasRestantes(hoje, contagem)));
-                alertados++;
+    /** Ultimo andamento que inicia contagem de prazo, se houver. */
+    public Andamento ultimaIntimacao() {
+        Andamento encontrado = null;
+        for (Andamento andamento : this) {
+            if (andamento.iniciaContagemDePrazo()) {
+                encontrado = andamento;
             }
         }
-        return alertados;
+        return encontrado;
     }
 
     // --- Iterator: linha do tempo cronologica ---
@@ -147,12 +123,16 @@ public class Processo implements Iterable<Andamento> {
         return cliente;
     }
 
+    public String getComarca() {
+        return comarca;
+    }
+
     public boolean isSegredoJustica() {
         return segredoJustica;
     }
 
-    public List<Prazo> getPrazos() {
-        return List.copyOf(prazos);
+    public Advogado getResponsavel() {
+        return responsavel;
     }
 
     public int quantidadeAndamentos() {
