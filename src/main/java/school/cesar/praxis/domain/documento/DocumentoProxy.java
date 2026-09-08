@@ -1,38 +1,36 @@
 package school.cesar.praxis.domain.documento;
 
-import java.util.Set;
-
 /**
- * Proxy de protecao: documento em segredo de justica so e carregado se o
- * solicitante estiver habilitado nos autos (art. 189 CPC). A validacao ocorre
- * antes de qualquer leitura do objeto real.
+ * <b>Proxy</b> de protecao: intercepta o acesso ao documento e verifica o
+ * segredo de justica (art. 189 do CPC) antes de devolver o conteudo. O objeto
+ * real (o adaptador de persistencia) so e consultado quando ha um solicitante,
+ * e o conteudo so sai daqui se a OAB estiver habilitada nos autos.
  */
 public class DocumentoProxy implements AcessoDocumento {
 
     private final AcessoDocumento real;
-    private final boolean segredoJustica;
-    private final Set<String> oabsHabilitadas;
     private final String oabSolicitante;
 
-    public DocumentoProxy(AcessoDocumento real,
-                          boolean segredoJustica,
-                          Set<String> oabsHabilitadas,
-                          String oabSolicitante) {
+    public DocumentoProxy(AcessoDocumento real, String oabSolicitante) {
         this.real = real;
-        this.segredoJustica = segredoJustica;
-        this.oabsHabilitadas = Set.copyOf(oabsHabilitadas);
         this.oabSolicitante = oabSolicitante;
     }
 
     @Override
-    public String carregar(String documentoId) {
-        if (segredoJustica && !oabsHabilitadas.contains(oabSolicitante)) {
-            throw new AcessoNegadoException(
-                    "documento em segredo de justica: OAB " + oabSolicitante + " nao habilitada nos autos");
+    public DocumentoGerado carregar(Long documentoId) {
+        if (oabSolicitante == null || oabSolicitante.isBlank()) {
+            throw new AcessoNegadoException("solicitante nao identificado por OAB");
         }
-        return real.carregar(documentoId);
+        DocumentoGerado documento = real.carregar(documentoId);
+        if (!documento.podeSerLidoPor(oabSolicitante)) {
+            throw new AcessoNegadoException(
+                    "documento " + documentoId + " esta em segredo de justica e a OAB "
+                            + oabSolicitante + " nao esta habilitada nos autos");
+        }
+        return documento;
     }
 
+    /** Falha de dominio: acesso barrado pelo segredo de justica. */
     public static class AcessoNegadoException extends RuntimeException {
         public AcessoNegadoException(String mensagem) {
             super(mensagem);
