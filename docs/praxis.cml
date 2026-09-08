@@ -1,0 +1,262 @@
+/*
+ * Modelo dos subdominios do praxis em CML (Context Mapper).
+ * Abrir com a extensao Context Mapper no VS Code / Eclipse para gerar os
+ * diagramas de mapa de contextos e o PlantUML dos agregados.
+ */
+
+ContextMap PraxisContextMap {
+	type = SYSTEM_LANDSCAPE
+	state = TO_BE
+
+	contains GestaoDeProcessos
+	contains PrazosEAgenda
+	contains Documentos
+	contains Honorarios
+
+	/* Prazos consome a identidade e o responsavel do processo. */
+	GestaoDeProcessos [U,S] -> [D,C] PrazosEAgenda {
+		implementationTechnology = "chamada em processo (porta de saida ProcessoRepositorio)"
+		exposedAggregates = Processo
+	}
+
+	/* Documentos consome cliente, comarca, subscritor e segredo de justica. */
+	GestaoDeProcessos [U,S] -> [D,C] Documentos {
+		implementationTechnology = "chamada em processo (porta de saida ProcessoRepositorio)"
+		exposedAggregates = Processo
+	}
+
+	/* Honorarios compartilha apenas o identificador do processo. */
+	GestaoDeProcessos [SK] <-> [SK] Honorarios {
+		implementationTechnology = "Value Object NumeroCnj"
+	}
+}
+
+Domain Advocacia {
+	domainVisionStatement = "Reduzir perda de prazo e retrabalho de redacao em escritorio de advocacia."
+
+	Subdomain GestaoDeProcessosSubdomain {
+		type = CORE_DOMAIN
+		domainVisionStatement = "Manter o cadastro dos autos e a linha do tempo processual como fonte da verdade."
+	}
+
+	Subdomain PrazosSubdomain {
+		type = CORE_DOMAIN
+		domainVisionStatement = "Contar prazo conforme a lei e avisar o responsavel antes da preclusao."
+	}
+
+	Subdomain DocumentosSubdomain {
+		type = SUPPORTING_DOMAIN
+		domainVisionStatement = "Produzir peca processual a partir de template, respeitando segredo de justica."
+	}
+
+	Subdomain HonorariosSubdomain {
+		type = SUPPORTING_DOMAIN
+		domainVisionStatement = "Calcular remuneracao contratada dentro dos limites eticos da OAB."
+	}
+}
+
+BoundedContext GestaoDeProcessos implements GestaoDeProcessosSubdomain {
+	type = FEATURE
+	domainVisionStatement = "Cadastro dos autos, partes, responsavel e andamentos."
+	implementationTechnology = "Java 17, Spring Boot, JPA"
+
+	Aggregate ProcessoAggregate {
+		Entity Processo {
+			aggregateRoot
+
+			- NumeroCnj numero
+			String cliente
+			String comarca
+			boolean segredoJustica
+			- Advogado responsavel
+			- List<Andamento> andamentos
+
+			def void registrarAndamento(Andamento andamento);
+			def Andamento ultimaIntimacao();
+		}
+
+		Entity Andamento {
+			long andamentoId
+			Date data
+			String descricao
+			TipoAndamento tipo
+
+			def boolean iniciaContagemDePrazo();
+		}
+
+		ValueObject NumeroCnj {
+			String valor
+		}
+
+		ValueObject Advogado {
+			String nome
+			String email
+			String oab
+		}
+
+		enum TipoAndamento {
+			INTIMACAO, CITACAO, AUDIENCIA, DESPACHO, SENTENCA, JUNTADA, OUTRO
+		}
+
+		DomainEvent AndamentoRegistrado {
+			String numeroProcesso
+			- Advogado destinatario
+			String descricao
+			Date data
+		}
+	}
+}
+
+BoundedContext PrazosEAgenda implements PrazosSubdomain {
+	type = FEATURE
+	domainVisionStatement = "Motor de prazos: contagem legal, escalonamento de alerta e agenda."
+	implementationTechnology = "Java 17, Spring Boot, JPA, agendamento cron"
+
+	Aggregate PrazoAggregate {
+		Entity Prazo {
+			aggregateRoot
+
+			long prazoId
+			- NumeroCnj numeroProcesso
+			String descricao
+			Date intimacao
+			int quantidadeDias
+			RegimeContagem regime
+			Date vencimento
+			boolean fatal
+			- Advogado responsavel
+			- Set<NivelAlerta> alertasEmitidos
+			boolean cumprido
+			Date cumpridoEm
+
+			def int diasRestantes(Date hoje);
+			def boolean registrarAlerta(NivelAlerta nivel);
+			def void cumprir(Date quando);
+		}
+
+		enum RegimeContagem {
+			DIAS_UTEIS, DIAS_CORRIDOS
+		}
+
+		enum NivelAlerta {
+			ATENCAO, URGENTE, CRITICO, VENCE_HOJE
+		}
+
+		ValueObject AlertaPrazo {
+			long prazoId
+			String numeroProcesso
+			String descricaoPrazo
+			Date vencimento
+			int diasRestantes
+			NivelAlerta nivel
+			boolean vencido
+			- Advogado destinatario
+		}
+
+		DomainEvent PrazoEmRisco {
+			String numeroProcesso
+			- Advogado destinatario
+			String descricaoPrazo
+			Date vencimento
+			int diasRestantes
+			NivelAlerta nivel
+		}
+
+		DomainEvent PrazoVencido {
+			String numeroProcesso
+			- Advogado destinatario
+			String descricaoPrazo
+			Date vencimento
+		}
+
+		Service MotorDePrazos {
+			@AlertaPrazo avaliar(@Prazo prazo, Date hoje);
+			List<@AlertaPrazo> avaliarTodos(List<@Prazo> prazos, Date hoje);
+		}
+
+		Service CalendarioForense {
+			boolean isDiaUtil(Date data);
+			Date proximoDiaUtil(Date data);
+		}
+	}
+}
+
+BoundedContext Documentos implements DocumentosSubdomain {
+	type = FEATURE
+	domainVisionStatement = "Geracao de peca por template e controle de acesso em segredo de justica."
+	implementationTechnology = "Java 17, Spring Boot, JPA"
+
+	Aggregate DocumentoAggregate {
+		Entity DocumentoGerado {
+			aggregateRoot
+
+			long documentoId
+			- NumeroCnj numeroProcesso
+			TipoDocumento tipo
+			String conteudo
+			Date geradoEm
+			String geradoPorOab
+			boolean segredoJustica
+			Set<String> oabsHabilitadas
+
+			def boolean podeSerLidoPor(String oabSolicitante);
+			def String nomeArquivo();
+		}
+
+		enum TipoDocumento {
+			PETICAO_INICIAL, CONTESTACAO, PROCURACAO
+		}
+
+		ValueObject DadosDocumento {
+			String numeroProcesso
+			String cliente
+			String comarca
+			- Advogado advogado
+			Map<String, String> campos
+		}
+
+		DomainEvent DocumentoEmitido {
+			String numeroProcesso
+			- Advogado destinatario
+			String tipoDocumento
+		}
+
+		Service GeradorDocumento {
+			String gerar(@DadosDocumento dados);
+		}
+	}
+}
+
+BoundedContext Honorarios implements HonorariosSubdomain {
+	type = FEATURE
+	domainVisionStatement = "Calculo de honorario fixo, por hora e quota litis."
+	implementationTechnology = "Java 17, Spring Boot"
+
+	Aggregate HonorarioAggregate {
+		ValueObject BaseCalculo {
+			aggregateRoot
+
+			BigDecimal valorFixo
+			BigDecimal valorHora
+			int horasTrabalhadas
+			BigDecimal valorCausa
+			BigDecimal percentualExito
+		}
+
+		Service CalculoHonorario {
+			BigDecimal calcular(@BaseCalculo base);
+		}
+	}
+}
+
+UserStory MotorDePrazosStory {
+	As an "advogado responsavel"
+	I want to update a "Prazo"
+	so that "eu seja avisado antes da preclusao e nao perca prazo fatal"
+}
+
+UserStory GeracaoDeDocumentosStory {
+	As an "advogado responsavel"
+	I want to create a "DocumentoGerado"
+	so that "eu produza peticao, contestacao e procuracao sem redigir a estrutura na mao"
+}
