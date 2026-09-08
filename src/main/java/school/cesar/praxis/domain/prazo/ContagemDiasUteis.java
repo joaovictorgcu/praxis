@@ -2,7 +2,10 @@ package school.cesar.praxis.domain.prazo;
 
 import java.time.LocalDate;
 
-/** Strategy concreta: CPC art. 219 - prazos processuais em dias uteis. */
+/**
+ * Strategy concreta: prazos processuais em dias uteis (CPC art. 219), com termo
+ * inicial no primeiro dia util seguinte a intimacao (CPC art. 224).
+ */
 public class ContagemDiasUteis implements ContagemPrazoStrategy {
 
     private final CalendarioForense calendario;
@@ -13,7 +16,6 @@ public class ContagemDiasUteis implements ContagemPrazoStrategy {
 
     @Override
     public LocalDate calcularVencimento(LocalDate intimacao, int quantidadeDias) {
-        // Termo inicial: primeiro dia util seguinte a intimacao (art. 224 CPC).
         LocalDate cursor = calendario.proximoDiaUtil(intimacao.plusDays(1));
         int contados = 1;
         while (contados < quantidadeDias) {
@@ -40,7 +42,7 @@ public class ContagemDiasUteis implements ContagemPrazoStrategy {
     }
 
     @Override
-    public String nome() {
-        return "DIAS_UTEIS";
+    public RegimeContagem regime() {
+        return RegimeContagem.DIAS_UTEIS;
     }
 }

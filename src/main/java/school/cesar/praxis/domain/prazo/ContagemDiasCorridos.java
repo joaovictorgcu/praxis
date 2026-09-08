@@ -3,7 +3,10 @@ package school.cesar.praxis.domain.prazo;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
-/** Strategy concreta: prazos materiais e de leis especiais, em dias corridos. */
+/**
+ * Strategy concreta: prazos materiais e de leis especiais, em dias corridos.
+ * Vencimento em dia sem expediente forense prorroga para o proximo dia util.
+ */
 public class ContagemDiasCorridos implements ContagemPrazoStrategy {
 
     private final CalendarioForense calendario;
@@ -14,9 +17,7 @@ public class ContagemDiasCorridos implements ContagemPrazoStrategy {
 
     @Override
     public LocalDate calcularVencimento(LocalDate intimacao, int quantidadeDias) {
-        LocalDate vencimento = intimacao.plusDays(quantidadeDias);
-        // Vencimento em dia sem expediente prorroga para o proximo dia util.
-        return calendario.proximoDiaUtil(vencimento);
+        return calendario.proximoDiaUtil(intimacao.plusDays(quantidadeDias));
     }
 
     @Override
@@ -28,7 +29,7 @@ public class ContagemDiasCorridos implements ContagemPrazoStrategy {
     }
 
     @Override
-    public String nome() {
-        return "DIAS_CORRIDOS";
+    public RegimeContagem regime() {
+        return RegimeContagem.DIAS_CORRIDOS;
     }
 }
