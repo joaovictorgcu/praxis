@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>praxis - agenda de prazos</title>
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+</head>
+<body>
+<header>
+  <h1>praxis</h1>
+  <nav>
+    <a th:href="@{/painel}" class="ativo">Agenda de prazos</a>
+    <a th:href="@{/painel/documentos}">Documentos</a>
+  </nav>
+</header>
+
+<main>
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>Agenda de prazos</h2>
+      <form th:action="@{/painel/varredura}" method="post" class="linha">
+        <label for="hoje">Simular data</label>
+        <input type="date" id="hoje" name="hoje">
+        <button type="submit">Rodar varredura</button>
+      </form>
+    </div>
+    <p class="apoio">
+      Hoje: <strong th:text="${hoje}">2026-09-08</strong> &middot;
+      exibindo prazos em aberto com vencimento ate <strong th:text="${limite}">2026-10-08</strong>.
+    </p>
+
+    <table>
+      <thead>
+      <tr>
+        <th>Processo</th>
+        <th>Prazo</th>
+        <th>Vencimento</th>
+        <th>Dias restantes</th>
+        <th>Fatal</th>
+        <th>Responsavel</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="item : ${itens}"
+          th:classappend="${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : '')">
+        <td th:text="${item.numeroProcesso()}">-</td>
+        <td th:text="${item.descricao()}">-</td>
+        <td th:text="${item.vencimento()}">-</td>
+        <td>
+          <span th:if="${item.vencido()}" class="etiqueta vermelha">vencido</span>
+          <span th:unless="${item.vencido()}" th:text="${item.diasRestantes()}">0</span>
+        </td>
+        <td>
+          <span th:if="${item.fatal()}" class="etiqueta vermelha">fatal</span>
+          <span th:unless="${item.fatal()}" class="etiqueta cinza">comum</span>
+        </td>
+        <td th:text="${item.responsavel()}">-</td>
+        <td>
+          <form th:action="@{'/painel/prazos/' + ${item.prazoId()} + '/cumprir'}" method="post">
+            <button type="submit" class="secundario">Cumprir</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(itens)}">
+        <td colspan="7" class="vazio">Nenhum prazo em aberto no periodo.</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="cartao">
+    <h2>Avisos emitidos pelo motor de prazos</h2>
+    <ul class="avisos">
+      <li th:each="aviso : ${avisos}">
+        <strong th:text="${aviso.assunto()}">assunto</strong>
+        <span th:text="${aviso.destinatario()}">destinatario</span>
+        <p th:text="${aviso.corpo()}">corpo</p>
+      </li>
+      <li th:if="${#lists.isEmpty(avisos)}" class="vazio">
+        Nenhum alerta nesta sessao. Rode a varredura para avaliar a agenda.
+      </li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

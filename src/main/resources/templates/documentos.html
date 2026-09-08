@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>praxis - documentos</title>
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+</head>
+<body>
+<header>
+  <h1>praxis</h1>
+  <nav>
+    <a th:href="@{/painel}">Agenda de prazos</a>
+    <a th:href="@{/painel/documentos}" class="ativo">Documentos</a>
+  </nav>
+</header>
+
+<main>
+  <section class="cartao">
+    <h2>Gerar peca por template</h2>
+    <p class="apoio">
+      O esqueleto da peca e fixo (cabecalho, enderecamento, qualificacao, corpo,
+      pedidos, assinatura); cada tipo preenche o que lhe e proprio.
+    </p>
+
+    <form th:action="@{/painel/documentos}" method="post" class="formulario">
+      <label>Processo (CNJ)
+        <input type="text" name="numeroProcesso" th:value="${processoFiltro}"
+               placeholder="0001234-56.2026.8.17.0001" required>
+      </label>
+      <label>Tipo de peca
+        <select name="tipo">
+          <option th:each="tipo : ${tipos}" th:value="${tipo}" th:text="${tipo.rotulo()}">peca</option>
+        </select>
+      </label>
+      <label>OAB do solicitante
+        <input type="text" name="oab" placeholder="PE12345">
+      </label>
+      <label class="largo">Dos fatos
+        <textarea name="fatos" rows="3" placeholder="Narrativa dos fatos"></textarea>
+      </label>
+      <label class="largo">Do direito
+        <textarea name="fundamentos" rows="3" placeholder="Fundamentos juridicos"></textarea>
+      </label>
+      <label class="largo">Poderes especiais (procuracao)
+        <input type="text" name="poderesEspeciais" placeholder="receber citacao, dar quitacao">
+      </label>
+      <button type="submit">Gerar peca</button>
+    </form>
+  </section>
+
+  <section class="cartao" th:if="${erro}">
+    <h2>Acesso negado</h2>
+    <p class="erro" th:text="${erro}">motivo</p>
+  </section>
+
+  <section class="cartao" th:if="${previa}">
+    <h2>Previa da peca <span th:if="${documentoGerado}" th:text="'#' + ${documentoGerado}"></span></h2>
+    <pre th:text="${previa}">conteudo</pre>
+  </section>
+
+  <section class="cartao">
+    <h2>Pecas geradas</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>Processo</th>
+        <th>Tipo</th>
+        <th>Gerado em</th>
+        <th>Segredo de justica</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="documento : ${documentos}">
+        <td th:text="${documento.id()}">1</td>
+        <td th:text="${documento.numeroProcesso()}">-</td>
+        <td th:text="${documento.tipo().rotulo()}">-</td>
+        <td th:text="${documento.geradoEm()}">-</td>
+        <td>
+          <span th:if="${documento.segredoJustica()}" class="etiqueta vermelha">sim</span>
+          <span th:unless="${documento.segredoJustica()}" class="etiqueta cinza">nao</span>
+        </td>
+        <td>
+          <form th:action="@{'/painel/documentos/' + ${documento.id()}}" method="get" class="linha">
+            <input type="text" name="oab" placeholder="OAB" required>
+            <button type="submit" class="secundario">Abrir</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(documentos)}">
+        <td colspan="6" class="vazio">Nenhuma peca gerada ainda.</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>
