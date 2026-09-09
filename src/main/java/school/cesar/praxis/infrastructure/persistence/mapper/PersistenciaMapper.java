@@ -1,6 +1,8 @@
 package school.cesar.praxis.infrastructure.persistence.mapper;
 
 import school.cesar.praxis.domain.documento.DocumentoGerado;
+import school.cesar.praxis.domain.documento.RegistroAprovacao;
+import school.cesar.praxis.domain.documento.StatusDocumento;
 import school.cesar.praxis.domain.prazo.NivelAlerta;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
@@ -9,6 +11,7 @@ import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.PrazoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ProcessoEntity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -133,6 +136,8 @@ public final class PersistenciaMapper {
         entidade.setGeradoPorOab(documento.getGeradoPorOab());
         entidade.setSegredoJustica(documento.isSegredoJustica());
         entidade.setOabsHabilitadas(String.join(",", documento.getOabsHabilitadas()));
+        entidade.setStatus(documento.getStatus().nome());
+        entidade.setHistorico(serializarHistorico(documento.getHistorico()));
         return entidade;
     }
 
@@ -145,7 +150,7 @@ public final class PersistenciaMapper {
                     .forEach(oabs::add);
         }
 
-        return new DocumentoGerado(
+        DocumentoGerado documento = new DocumentoGerado(
                 entidade.getId(),
                 NumeroCnj.de(entidade.getNumeroProcesso()),
                 entidade.getTipo(),
@@ -154,5 +159,36 @@ public final class PersistenciaMapper {
                 entidade.getGeradoPorOab(),
                 entidade.isSegredoJustica(),
                 oabs);
+        documento.restaurarStatusPersistido(StatusDocumento.porNome(entidade.getStatus()));
+        documento.restaurarHistoricoPersistido(desserializarHistorico(entidade.getHistorico()));
+        return documento;
+    }
+
+    private static String serializarHistorico(List<RegistroAprovacao> historico) {
+        return historico.stream()
+                .map(r -> String.join("|",
+                        r.getDeEstado(),
+                        r.getParaEstado(),
+                        r.getResponsavelOab() == null ? "" : r.getResponsavelOab(),
+                        r.getComentario() == null ? "" : r.getComentario(),
+                        r.getQuando().toString()))
+                .collect(Collectors.joining(";"));
+    }
+
+    private static List<RegistroAprovacao> desserializarHistorico(String valor) {
+        List<RegistroAprovacao> historico = new ArrayList<>();
+        if (valor == null || valor.isBlank()) {
+            return historico;
+        }
+        for (String entrada : valor.split(";")) {
+            String[] partes = entrada.split("\\|", -1);
+            historico.add(new RegistroAprovacao(
+                    partes[0],
+                    partes[1],
+                    partes[2].isEmpty() ? null : partes[2],
+                    partes[3].isEmpty() ? null : partes[3],
+                    LocalDateTime.parse(partes[4])));
+        }
+        return historico;
     }
 }

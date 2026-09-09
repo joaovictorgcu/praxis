@@ -3,17 +3,12 @@ package school.cesar.praxis.domain.documento;
 import school.cesar.praxis.domain.processo.NumeroCnj;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
-/**
- * Raiz de agregado do subdominio de apoio <b>Documentos</b>: a peca ja
- * materializada e anexada aos autos.
- *
- * <p>Carrega consigo a restricao de acesso (segredo de justica e OABs habilitadas)
- * porque quem decide se um documento pode ser lido e o proprio documento - o
- * {@link DocumentoProxy} apenas faz cumprir.
- */
 public class DocumentoGerado {
 
     private final Long id;
@@ -24,6 +19,9 @@ public class DocumentoGerado {
     private final String geradoPorOab;
     private final boolean segredoJustica;
     private final Set<String> oabsHabilitadas;
+
+    private StatusDocumento status;
+    private final List<RegistroAprovacao> historico = new ArrayList<>();
 
     public DocumentoGerado(Long id,
                            NumeroCnj numeroProcesso,
@@ -49,9 +47,9 @@ public class DocumentoGerado {
         this.oabsHabilitadas = oabsHabilitadas == null
                 ? Set.of()
                 : Set.copyOf(new LinkedHashSet<>(oabsHabilitadas));
+        this.status = new Rascunho();
     }
 
-    /** Art. 189 do CPC: em segredo de justica, so quem esta habilitado nos autos le. */
     public boolean podeSerLidoPor(String oabSolicitante) {
         if (!segredoJustica) {
             return true;
@@ -63,35 +61,55 @@ public class DocumentoGerado {
         return tipo.name().toLowerCase() + "-" + numeroProcesso.valor().replace('.', '-') + ".txt";
     }
 
-    public Long getId() {
-        return id;
+    public void enviarParaRevisao() {
+        transicionar(status.enviarParaRevisao(this), null, null);
     }
 
-    public NumeroCnj getNumeroProcesso() {
-        return numeroProcesso;
+    public void aprovar(String oabAprovador, String comentario) {
+        transicionar(status.aprovar(this, oabAprovador, comentario), oabAprovador, comentario);
     }
 
-    public TipoDocumento getTipo() {
-        return tipo;
+    public void rejeitar(String oabAprovador, String motivo) {
+        transicionar(status.rejeitar(this, oabAprovador, motivo), oabAprovador, motivo);
     }
 
-    public String getConteudo() {
-        return conteudo;
+    public void protocolar() {
+        transicionar(status.protocolar(this), null, null);
     }
 
-    public LocalDate getGeradoEm() {
-        return geradoEm;
+    private void transicionar(StatusDocumento novoStatus, String responsavelOab, String comentario) {
+        String deEstado = status.nome();
+        this.status = novoStatus;
+        historico.add(new RegistroAprovacao(deEstado, status.nome(), responsavelOab, comentario, LocalDateTime.now()));
     }
 
-    public String getGeradoPorOab() {
-        return geradoPorOab;
+    public void restaurarStatus(StatusDocumento statusAnterior, String responsavelOab, String comentario) {
+        transicionar(statusAnterior, responsavelOab, comentario);
     }
 
-    public boolean isSegredoJustica() {
-        return segredoJustica;
+    public void restaurarStatusPersistido(StatusDocumento status) {
+        this.status = status;
     }
 
-    public Set<String> getOabsHabilitadas() {
-        return oabsHabilitadas;
+    public void restaurarHistoricoPersistido(List<RegistroAprovacao> historicoPersistido) {
+        this.historico.clear();
+        this.historico.addAll(historicoPersistido);
     }
+
+    public StatusDocumento getStatus() {
+        return status;
+    }
+
+    public List<RegistroAprovacao> getHistorico() {
+        return List.copyOf(historico);
+    }
+
+    public Long getId() { return id; }
+    public NumeroCnj getNumeroProcesso() { return numeroProcesso; }
+    public TipoDocumento getTipo() { return tipo; }
+    public String getConteudo() { return conteudo; }
+    public LocalDate getGeradoEm() { return geradoEm; }
+    public String getGeradoPorOab() { return geradoPorOab; }
+    public boolean isSegredoJustica() { return segredoJustica; }
+    public Set<String> getOabsHabilitadas() { return oabsHabilitadas; }
 }

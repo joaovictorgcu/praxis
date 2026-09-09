@@ -40,6 +40,13 @@ public class DocumentoEntity {
     @Column(name = "oabs_habilitadas", length = 500)
     private String oabsHabilitadas;
 
+    @Column(nullable = false, length = 20)
+    private String status = "RASCUNHO";
+
+    @Lob
+    @Column(name = "historico")
+    private String historico;
+
     public Long getId() {
         return id;
     }
@@ -102,5 +109,21 @@ public class DocumentoEntity {
 
     public void setOabsHabilitadas(String oabsHabilitadas) {
         this.oabsHabilitadas = oabsHabilitadas;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getHistorico() {
+        return historico;
+    }
+
+    public void setHistorico(String historico) {
+        this.historico = historico;
     }
 }

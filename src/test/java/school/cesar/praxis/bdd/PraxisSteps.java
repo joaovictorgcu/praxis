@@ -58,6 +58,16 @@ public class PraxisSteps {
     private DocumentoJpaRepository documentosJpa;
     @Autowired
     private NotificacaoJpaRepository notificacoesJpa;
+    @Autowired
+    private DocumentosUseCases.EnviarDocumentoParaRevisao enviarParaRevisao;
+    @Autowired
+    private DocumentosUseCases.AprovarDocumento aprovarDocumento;
+    @Autowired
+    private DocumentosUseCases.RejeitarDocumento rejeitarDocumento;
+    @Autowired
+    private DocumentosUseCases.DesfazerDecisaoDocumento desfazerDecisao;
+    @Autowired
+    private DocumentosUseCases.ProtocolarDocumento protocolarDocumento;
 
     // Estado do cenario
     private String numeroProcesso;
@@ -233,5 +243,56 @@ public class PraxisSteps {
     public void leituraNegada(String oab) {
         assertThrows(DocumentoProxy.AcessoNegadoException.class,
                 () -> baixarDocumento.executar(documento.getId(), oab));
+    }
+
+        // --- Fluxo de aprovacao de documentos ---
+
+    @Quando("eu envio o documento para revisao")
+    public void euEnvioODocumentoParaRevisao() {
+        documento = enviarParaRevisao.executar(
+                new DocumentosUseCases.EnviarDocumentoParaRevisao.Comando(documento.getId()));
+    }
+
+    @E("eu aprovo o documento com OAB {string} e comentario {string}")
+    public void euAprovoODocumento(String oab, String comentario) {
+        documento = aprovarDocumento.executar(
+                new DocumentosUseCases.AprovarDocumento.Comando(documento.getId(), oab, comentario));
+    }
+
+    @E("eu rejeito o documento com OAB {string} e motivo {string}")
+    public void euRejeitoODocumento(String oab, String motivo) {
+        documento = rejeitarDocumento.executar(
+                new DocumentosUseCases.RejeitarDocumento.Comando(documento.getId(), oab, motivo));
+    }
+
+    @E("eu protocolo o documento")
+    public void euProtocoloODocumento() {
+        documento = protocolarDocumento.executar(
+                new DocumentosUseCases.ProtocolarDocumento.Comando(documento.getId()));
+    }
+
+    @E("eu desfaco a ultima decisao do documento")
+    public void euDesfacoAUltimaDecisao() {
+        documento = desfazerDecisao.executar(
+                new DocumentosUseCases.DesfazerDecisaoDocumento.Comando(documento.getId()));
+    }
+
+    @Entao("o status do documento deve ser {string}")
+    public void oStatusDoDocumentoDeveSer(String statusEsperado) {
+        assertEquals(statusEsperado, documento.getStatus().nome());
+    }
+
+    @E("o historico do documento deve conter uma transicao de {string} para {string}")
+    public void oHistoricoDeveConterTransicao(String de, String para) {
+        assertTrue(documento.getHistorico().stream()
+                        .anyMatch(registro -> registro.getDeEstado().equals(de)
+                                && registro.getParaEstado().equals(para)),
+                "historico nao contem transicao de " + de + " para " + para);
+    }
+
+    @Entao("tentar aprovar o documento deve falhar")
+    public void tentarAprovarDeveFalhar() {
+        assertThrows(IllegalStateException.class, () -> aprovarDocumento.executar(
+                new DocumentosUseCases.AprovarDocumento.Comando(documento.getId(), "PE12345", "x")));
     }
 }
