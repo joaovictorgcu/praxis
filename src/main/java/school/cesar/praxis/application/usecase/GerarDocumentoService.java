@@ -4,12 +4,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.application.port.out.DocumentoRepositorio;
+import school.cesar.praxis.application.port.out.ModeloRepositorio;
 import school.cesar.praxis.application.port.out.ProcessoRepositorio;
 import school.cesar.praxis.domain.compartilhado.Relogio;
 import school.cesar.praxis.domain.documento.DadosDocumento;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.documento.GeradorDocumento;
 import school.cesar.praxis.domain.documento.TipoDocumento;
+import school.cesar.praxis.domain.modelo.CodigoModelo;
+import school.cesar.praxis.domain.modelo.GeradorPorModelo;
 import school.cesar.praxis.domain.notificacao.EventoProcesso;
 import school.cesar.praxis.domain.notificacao.ObservadorProcesso;
 import school.cesar.praxis.domain.processo.NumeroCnj;
@@ -34,6 +37,7 @@ public class GerarDocumentoService implements DocumentosUseCases.GerarDocumento 
 
     private final ProcessoRepositorio processos;
     private final DocumentoRepositorio documentos;
+    private final ModeloRepositorio modelos;
     private final Map<TipoDocumento, GeradorDocumento> geradores =
             new EnumMap<>(TipoDocumento.class);
     private final ObservadorProcesso observador;
@@ -41,11 +45,13 @@ public class GerarDocumentoService implements DocumentosUseCases.GerarDocumento 
 
     public GerarDocumentoService(ProcessoRepositorio processos,
                                  DocumentoRepositorio documentos,
+                                 ModeloRepositorio modelos,
                                  List<GeradorDocumento> geradoresDisponiveis,
                                  ObservadorProcesso observador,
                                  Relogio relogio) {
         this.processos = processos;
         this.documentos = documentos;
+        this.modelos = modelos;
         for (GeradorDocumento gerador : geradoresDisponiveis) {
             this.geradores.put(gerador.tipo(), gerador);
         }
@@ -61,10 +67,7 @@ public class GerarDocumentoService implements DocumentosUseCases.GerarDocumento 
                 .orElseThrow(() -> new NoSuchElementException(
                         "processo nao encontrado: " + comando.numeroProcesso()));
 
-        GeradorDocumento gerador = geradores.get(comando.tipo());
-        if (gerador == null) {
-            throw new IllegalArgumentException("sem template para a peca " + comando.tipo());
-        }
+        GeradorDocumento gerador = escolherGerador(comando);
 
         DadosDocumento dados = new DadosDocumento(
                 numero.valor(),
@@ -81,10 +84,14 @@ public class GerarDocumentoService implements DocumentosUseCases.GerarDocumento 
             habilitadas.add(comando.oabSolicitante());
         }
 
+        // O tipo vem do gerador, e nao do comando: quem usa modelo cadastrado
+        // produz a peca que o modelo declara.
+        TipoDocumento tipo = gerador.tipo();
+
         DocumentoGerado documento = documentos.salvar(new DocumentoGerado(
                 null,
                 numero,
-                comando.tipo(),
+                tipo,
                 conteudo,
                 relogio.hoje(),
                 comando.oabSolicitante() == null
@@ -94,8 +101,30 @@ public class GerarDocumentoService implements DocumentosUseCases.GerarDocumento 
                 habilitadas));
 
         observador.notificar(new EventoProcesso.DocumentoGerado(
-                numero.valor(), processo.getResponsavel(), comando.tipo().rotulo()));
+                numero.valor(), processo.getResponsavel(), tipo.rotulo()));
 
         return documento;
+    }
+
+    /**
+     * Modelo cadastrado tem precedencia; sem modelo, vale a peca compilada.
+     * Os dois caminhos devolvem um {@code GeradorDocumento}, entao o resto do
+     * caso de uso nao sabe qual foi escolhido.
+     */
+    private GeradorDocumento escolherGerador(Comando comando) {
+        if (comando.codigoModelo() != null && !comando.codigoModelo().isBlank()) {
+            CodigoModelo codigo = CodigoModelo.de(comando.codigoModelo());
+            return new GeradorPorModelo(modelos.porCodigo(codigo)
+                    .orElseThrow(() -> new NoSuchElementException(
+                            "modelo nao encontrado: " + codigo)));
+        }
+
+        GeradorDocumento compilado = geradores.get(comando.tipo());
+        if (compilado == null) {
+            throw new IllegalArgumentException(
+                    "a peca " + comando.tipo() + " nao tem gerador compilado;"
+                            + " informe o codigo de um modelo cadastrado");
+        }
+        return compilado;
     }
 }

@@ -1,7 +1,7 @@
 package school.cesar.praxis.domain.documento;
 
-/** Contrato de leitura de documento - implementado pelo real e pelo Proxy. */
-public interface AcessoDocumento {
+import school.cesar.praxis.domain.compartilhado.AcessoRestrito;
 
-    DocumentoGerado carregar(Long documentoId);
+/** Contrato de leitura de documento - implementado pelo real e pelo Proxy. */
+public interface AcessoDocumento extends AcessoRestrito<DocumentoGerado> {
 }

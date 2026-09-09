@@ -12,6 +12,9 @@
   <nav>
     <a th:href="@{/painel}">Agenda de prazos</a>
     <a th:href="@{/painel/documentos}" class="ativo">Documentos</a>
+    <a th:href="@{/painel/anexos}">Anexos</a>
+    <a th:href="@{/painel/modelos}">Modelos</a>
+    <a th:href="@{/painel/feriados}">Feriados</a>
   </nav>
 </header>
 
@@ -22,6 +25,10 @@
       O esqueleto da peca e fixo (cabecalho, enderecamento, qualificacao, corpo,
       pedidos, assinatura); cada tipo preenche o que lhe e proprio.
     </p>
+    <p class="apoio">
+      Escolher um <a th:href="@{/painel/modelos}">modelo cadastrado</a> troca apenas o corpo e os
+      pedidos: o esqueleto e o mesmo. Sem modelo, vale a peca compilada do tipo selecionado.
+    </p>
 
     <form th:action="@{/painel/documentos}" method="post" class="formulario">
       <label>Processo (CNJ)
@@ -31,6 +38,13 @@
       <label>Tipo de peca
         <select name="tipo">
           <option th:each="tipo : ${tipos}" th:value="${tipo}" th:text="${tipo.rotulo()}">peca</option>
+        </select>
+      </label>
+      <label>Modelo cadastrado
+        <select name="codigoModelo">
+          <option value="">-- sem modelo (peca compilada) --</option>
+          <option th:each="modelo : ${modelos}" th:value="${modelo.codigo()}"
+                  th:text="${modelo.nome()} + ' (' + ${modelo.codigo()} + ')'">modelo</option>
         </select>
       </label>
       <label>OAB do solicitante
@@ -44,6 +58,10 @@
       </label>
       <label class="largo">Poderes especiais (procuracao)
         <input type="text" name="poderesEspeciais" placeholder="receber citacao, dar quitacao">
+      </label>
+      <label class="largo">Campos do modelo (um <code>campo=valor</code> por linha)
+        <textarea name="camposLivres" rows="3"
+                  placeholder="valorDivida=R$ 12.500,00&#10;prazoAcordo=30 dias"></textarea>
       </label>
       <button type="submit">Gerar peca</button>
     </form>

@@ -1,30 +1,63 @@
 package school.cesar.praxis.domain.prazo;
 
-import java.time.DayOfWeek;
+import school.cesar.praxis.domain.feriado.FonteDeFeriados;
+import school.cesar.praxis.domain.feriado.Jurisdicao;
+
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
-/** Servico de dominio: sabe quais dias nao contam para prazo processual. */
+/**
+ * Servico de dominio: sabe quais dias nao contam para prazo processual.
+ *
+ * <p>Nao guarda mais a lista de feriados. Ele combina um conjunto de
+ * {@link RegraDiaNaoUtil} (Composite), o que permite trocar a origem dos
+ * feriados sem alterar esta classe nem as estrategias de contagem.
+ */
 public class CalendarioForense {
 
-    private final Set<LocalDate> feriados;
+    private final List<RegraDiaNaoUtil> regras;
 
+    public CalendarioForense(List<RegraDiaNaoUtil> regras) {
+        if (regras == null || regras.isEmpty()) {
+            throw new IllegalArgumentException("calendario exige ao menos uma regra");
+        }
+        this.regras = List.copyOf(regras);
+    }
+
+    /**
+     * Calendario de datas fixas: fim de semana, recesso forense e o conjunto
+     * informado. Usado no teste de unidade, que precisa ser previsivel.
+     */
     public CalendarioForense(Set<LocalDate> feriados) {
-        this.feriados = Set.copyOf(feriados);
+        this(regrasPadrao(new FeriadosFixos(feriados)));
+    }
+
+    /**
+     * Calendario do foro: os feriados vem do cadastro, ja filtrados pela
+     * abrangencia (nacional, estadual ou da comarca).
+     */
+    public static CalendarioForense doForo(FonteDeFeriados fonte, Jurisdicao foro) {
+        return new CalendarioForense(regrasPadrao(new FeriadosDoForo(fonte, foro)));
+    }
+
+    /** Fim de semana e recesso valem sempre; a origem dos feriados e que varia. */
+    private static List<RegraDiaNaoUtil> regrasPadrao(RegraDiaNaoUtil feriados) {
+        List<RegraDiaNaoUtil> padrao = new ArrayList<>();
+        padrao.add(new FimDeSemana());
+        padrao.add(new RecessoForense());
+        padrao.add(feriados);
+        return padrao;
     }
 
     public boolean isDiaUtil(LocalDate data) {
-        if (data.getDayOfWeek() == DayOfWeek.SATURDAY || data.getDayOfWeek() == DayOfWeek.SUNDAY) {
-            return false;
+        for (RegraDiaNaoUtil regra : regras) {
+            if (regra.suspende(data)) {
+                return false;
+            }
         }
-        if (feriados.contains(data)) {
-            return false;
-        }
-        // Art. 220 CPC: suspensao de prazos entre 20/12 e 20/01.
-        int mes = data.getMonthValue();
-        int dia = data.getDayOfMonth();
-        boolean recesso = (mes == 12 && dia >= 20) || (mes == 1 && dia <= 20);
-        return !recesso;
+        return true;
     }
 
     public LocalDate proximoDiaUtil(LocalDate data) {

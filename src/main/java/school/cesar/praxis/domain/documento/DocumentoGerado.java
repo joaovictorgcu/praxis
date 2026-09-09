@@ -1,5 +1,6 @@
 package school.cesar.praxis.domain.documento;
 
+import school.cesar.praxis.domain.compartilhado.ConteudoRestrito;
 import school.cesar.praxis.domain.processo.NumeroCnj;
 
 import java.time.LocalDate;
@@ -9,7 +10,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class DocumentoGerado {
+/**
+ * Raiz de agregado do subdominio de apoio <b>Documentos</b>: a peca ja
+ * materializada e anexada aos autos.
+ *
+ * <p>Carrega consigo a restricao de acesso (segredo de justica e OABs habilitadas)
+ * porque quem decide se um documento pode ser lido e o proprio documento - o
+ * {@link DocumentoProxy} apenas faz cumprir.
+ */
+public class DocumentoGerado implements ConteudoRestrito {
 
     private final Long id;
     private final NumeroCnj numeroProcesso;
@@ -50,6 +59,8 @@ public class DocumentoGerado {
         this.status = new Rascunho();
     }
 
+    /** Art. 189 do CPC: em segredo de justica, so quem esta habilitado nos autos le. */
+    @Override
     public boolean podeSerLidoPor(String oabSolicitante) {
         if (!segredoJustica) {
             return true;

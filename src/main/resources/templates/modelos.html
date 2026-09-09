@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>praxis - modelos de peca</title>
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+</head>
+<body>
+<header>
+  <h1>praxis</h1>
+  <nav>
+    <a th:href="@{/painel}">Agenda de prazos</a>
+    <a th:href="@{/painel/documentos}">Documentos</a>
+    <a th:href="@{/painel/anexos}">Anexos</a>
+    <a th:href="@{/painel/modelos}" class="ativo">Modelos</a>
+    <a th:href="@{/painel/feriados}">Feriados</a>
+  </nav>
+</header>
+
+<main>
+  <section class="cartao">
+    <h2>Cadastrar modelo de peca</h2>
+    <p class="apoio">
+      O modelo define apenas <strong>corpo</strong> e <strong>pedidos</strong>. A ordem das secoes
+      (cabecalho, enderecamento, qualificacao, corpo, pedidos, assinatura) continua sendo regra do
+      dominio, a mesma das pecas compiladas.
+    </p>
+    <p class="apoio">
+      Use marcadores <code>{{campo}}</code> no texto. Estes vem dos autos automaticamente:
+      <strong th:text="${#strings.setJoin(reservados, ', ')}">cliente, comarca</strong>.
+      Qualquer outro nome sera pedido na hora de gerar a peca.
+    </p>
+
+    <p th:if="${erro}" class="etiqueta vermelha" th:text="${erro}">erro</p>
+
+    <form th:action="@{/painel/modelos}" method="post">
+      <div class="linha">
+        <label for="codigo">Codigo</label>
+        <input type="text" id="codigo" name="codigo" required placeholder="COBRANCA_ALUGUEL">
+
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" name="nome" required placeholder="Cobranca de aluguel">
+
+        <label for="tipo">Peca produzida</label>
+        <select id="tipo" name="tipo">
+          <option th:each="item : ${tipos}" th:value="${item}" th:text="${item.rotulo()}">Peca</option>
+        </select>
+      </div>
+
+      <div class="linha">
+        <label for="titulo">Titulo proprio (opcional)</label>
+        <input type="text" id="titulo" name="titulo" placeholder="Acordo extrajudicial">
+
+        <label for="enderecaAoJuizo">
+          <input type="checkbox" id="enderecaAoJuizo" name="enderecaAoJuizo" value="true" checked>
+          Enderaca ao juizo
+        </label>
+      </div>
+
+      <label for="corpo">Corpo</label>
+      <textarea id="corpo" name="corpo" rows="6" required
+                placeholder="DOS FATOS&#10;O locatario {{cliente}} deixou de pagar {{valorDivida}}."></textarea>
+
+      <label for="pedidos">Pedidos</label>
+      <textarea id="pedidos" name="pedidos" rows="4" required
+                placeholder="DOS PEDIDOS&#10;a) a condenacao ao pagamento de {{valorDivida}}."></textarea>
+
+      <button type="submit">Cadastrar modelo</button>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <h2>Modelos cadastrados</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Codigo</th>
+        <th>Nome</th>
+        <th>Peca produzida</th>
+        <th>Campos a informar</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="modelo : ${modelos}">
+        <td><code th:text="${modelo.codigo()}">-</code></td>
+        <td th:text="${modelo.nome()}">-</td>
+        <td>
+          <span th:text="${modelo.rotuloTipo()}">-</span>
+          <span th:unless="${modelo.enderecaAoJuizo()}" class="etiqueta cinza">sem enderecamento</span>
+        </td>
+        <td>
+          <span th:if="${#sets.isEmpty(modelo.camposEsperados())}" class="apoio">nenhum</span>
+          <span th:text="${#strings.setJoin(modelo.camposEsperados(), ', ')}">campos</span>
+        </td>
+        <td>
+          <form th:action="@{'/painel/modelos/' + ${modelo.id()} + '/remover'}" method="post">
+            <button type="submit" class="secundario">Remover</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(modelos)}">
+        <td colspan="5" class="vazio">Nenhum modelo cadastrado.</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>

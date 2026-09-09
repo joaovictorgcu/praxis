@@ -1,18 +1,25 @@
 package school.cesar.praxis.bdd;
 
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.pt.Dado;
 import io.cucumber.java.pt.E;
 import io.cucumber.java.pt.Entao;
+import io.cucumber.java.pt.Mas;
 import io.cucumber.java.pt.Quando;
 import org.springframework.beans.factory.annotation.Autowired;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
+import school.cesar.praxis.application.port.in.AnexosUseCases;
+import school.cesar.praxis.application.port.in.FeriadosUseCases;
+import school.cesar.praxis.application.port.in.ModelosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
-import school.cesar.praxis.domain.documento.DocumentoProxy;
+import school.cesar.praxis.domain.anexo.ArquivoAnexo;
+import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.TipoDocumento;
+import school.cesar.praxis.domain.feriado.Abrangencia;
 import school.cesar.praxis.domain.notificacao.Notificacao;
 import school.cesar.praxis.domain.prazo.AlertaPrazo;
 import school.cesar.praxis.domain.prazo.Prazo;
@@ -24,6 +31,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,6 +55,22 @@ public class PraxisSteps {
     private DocumentosUseCases.BaixarDocumento baixarDocumento;
     @Autowired
     private DocumentosUseCases.ListarDocumentos listarDocumentos;
+    @Autowired
+    private AnexosUseCases.AnexarArquivo anexarArquivo;
+    @Autowired
+    private AnexosUseCases.ListarAnexos listarAnexos;
+    @Autowired
+    private AnexosUseCases.BaixarAnexo baixarAnexo;
+    @Autowired
+    private ModelosUseCases.CadastrarModelo cadastrarModelo;
+    @Autowired
+    private ModelosUseCases.RemoverModelo removerModelo;
+    @Autowired
+    private FeriadosUseCases.CadastrarFeriado cadastrarFeriado;
+    @Autowired
+    private FeriadosUseCases.RemoverFeriado removerFeriado;
+    @Autowired
+    private FeriadosUseCases.ConsultarDiaUtil consultarDiaUtil;
     @Autowired
     private NotificadorPainel painel;
 
@@ -78,6 +102,11 @@ public class PraxisSteps {
     private Prazo prazo;
     private DocumentoGerado documento;
     private final List<AlertaPrazo> alertas = new ArrayList<>();
+    private final List<Long> feriadosDoCenario = new ArrayList<>();
+    private final List<Long> modelosDoCenario = new ArrayList<>();
+    private ModelosUseCases.ItemModelo modelo;
+    private AnexosUseCases.ItemAnexo anexo;
+    private RuntimeException falhaEsperada;
 
     @Before
     public void limparEstado() {
@@ -89,7 +118,29 @@ public class PraxisSteps {
         alertas.clear();
         prazo = null;
         documento = null;
+        modelo = null;
+        anexo = null;
+        falhaEsperada = null;
         segredoJustica = false;
+    }
+
+    /**
+     * Remove apenas os feriados criados pelo cenario - a carga de referencia
+     * (feriados nacionais) tem de sobreviver, porque os cenarios de prazo
+     * dependem dela. A remocao passa pelo caso de uso, e nao pelo repositorio
+     * JPA, para que o cache do adaptador seja invalidado.
+     */
+    @After
+    public void removerFeriadosDoCenario() {
+        feriadosDoCenario.forEach(removerFeriado::executar);
+        feriadosDoCenario.clear();
+    }
+
+    /** Mesma regra dos feriados: os modelos de exemplo tem de sobreviver. */
+    @After
+    public void removerModelosDoCenario() {
+        modelosDoCenario.forEach(removerModelo::executar);
+        modelosDoCenario.clear();
     }
 
     // --- Contexto ---
@@ -196,6 +247,160 @@ public class PraxisSteps {
                         && notificacao.assunto().contains("VENCIDO")));
     }
 
+    // --- Cadastro de modelos de documento ---
+
+    @Dado("o modelo cadastrado:")
+    public void oModeloCadastrado(DataTable tabela) {
+        Map<String, String> dados = tabela.asMap(String.class, String.class);
+        modelo = cadastrarModelo.executar(new ModelosUseCases.CadastrarModelo.Comando(
+                dados.get("codigo"),
+                dados.get("nome"),
+                TipoDocumento.valueOf(dados.get("tipo")),
+                dados.get("titulo"),
+                dados.get("corpo"),
+                dados.get("pedidos"),
+                "sim".equals(dados.get("juizo"))));
+        modelosDoCenario.add(modelo.id());
+    }
+
+    @Quando("eu gero a peca pelo modelo {string} com os campos:")
+    public void euGeroPeloModelo(String codigo, DataTable tabela) {
+        gerarPeloModelo(codigo, tabela.asMap(String.class, String.class));
+    }
+
+    @Quando("eu gero a peca pelo modelo {string} sem informar campos")
+    public void euGeroPeloModeloSemCampos(String codigo) {
+        gerarPeloModelo(codigo, Map.of());
+    }
+
+    @Quando("eu removo o modelo cadastrado")
+    public void euRemovoOModelo() {
+        removerModelo.executar(modelosDoCenario.remove(modelosDoCenario.size() - 1));
+    }
+
+    @Quando("eu tento cadastrar outro modelo com o codigo {string}")
+    public void euTentoCadastrarComCodigoRepetido(String codigo) {
+        falhaEsperada = assertThrows(IllegalArgumentException.class,
+                () -> cadastrarModelo.executar(new ModelosUseCases.CadastrarModelo.Comando(
+                        codigo, "Segundo modelo", TipoDocumento.PETICAO_INICIAL, null,
+                        "Outro corpo.", "Outros pedidos.", true)));
+    }
+
+    @Quando("eu tento gerar a peca {string} sem modelo")
+    public void euTentoGerarSemModelo(String tipo) {
+        falhaEsperada = assertThrows(IllegalArgumentException.class,
+                () -> gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
+                        numeroProcesso, TipoDocumento.valueOf(tipo), Map.of(), oabResponsavel)));
+    }
+
+    @E("eu tento gerar a peca pelo modelo {string}")
+    public void euTentoGerarPeloModelo(String codigo) {
+        falhaEsperada = assertThrows(NoSuchElementException.class,
+                () -> gerarPeloModelo(codigo, Map.of()));
+    }
+
+    @Entao("o tipo da peca gerada deve ser {string}")
+    public void oTipoDaPecaDeveSer(String tipo) {
+        assertEquals(TipoDocumento.valueOf(tipo), documento.getTipo());
+    }
+
+    @Entao("o cadastro do modelo deve ser recusado")
+    public void oCadastroDoModeloDeveSerRecusado() {
+        assertNotNull(falhaEsperada, "o cadastro duplicado foi aceito");
+        assertTrue(falhaEsperada.getMessage().contains("ja existe modelo"),
+                "motivo inesperado: " + falhaEsperada.getMessage());
+    }
+
+    @Entao("a geracao deve ser recusada por falta de gerador")
+    public void recusadaPorFaltaDeGerador() {
+        assertNotNull(falhaEsperada, "a geracao foi aceita");
+        assertTrue(falhaEsperada.getMessage().contains("nao tem gerador compilado"),
+                "motivo inesperado: " + falhaEsperada.getMessage());
+    }
+
+    @Entao("a geracao deve ser recusada por modelo inexistente")
+    public void recusadaPorModeloInexistente() {
+        assertNotNull(falhaEsperada, "a geracao foi aceita");
+        assertTrue(falhaEsperada.getMessage().contains("modelo nao encontrado"),
+                "motivo inesperado: " + falhaEsperada.getMessage());
+    }
+
+    private void gerarPeloModelo(String codigo, Map<String, String> campos) {
+        documento = gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
+                numeroProcesso, TipoDocumento.PECA_AVULSA, campos, oabResponsavel, codigo));
+    }
+
+    // --- Cadastro de feriados ---
+
+    @Dado("o feriado {string} cadastrado em {string} valido em todo o pais")
+    public void oFeriadoNacional(String descricao, String data) {
+        cadastrar(descricao, data, false, Abrangencia.Nivel.NACIONAL, null);
+    }
+
+    @Quando("o feriado {string} e cadastrado em {string} valido em todo o pais")
+    public void oFeriadoNacionalECadastrado(String descricao, String data) {
+        cadastrar(descricao, data, false, Abrangencia.Nivel.NACIONAL, null);
+    }
+
+    @Dado("o feriado {string} cadastrado em {string} repetindo todo ano")
+    public void oFeriadoAnual(String descricao, String data) {
+        cadastrar(descricao, data, true, Abrangencia.Nivel.NACIONAL, null);
+    }
+
+    @Dado("o feriado {string} cadastrado em {string} so na comarca de {string}")
+    public void oFeriadoDaComarca(String descricao, String data, String comarcaDoFeriado) {
+        cadastrar(descricao, data, false, Abrangencia.Nivel.COMARCAL, comarcaDoFeriado);
+    }
+
+    @Quando("eu removo o feriado cadastrado")
+    public void euRemovoOFeriado() {
+        removerFeriado.executar(feriadosDoCenario.remove(feriadosDoCenario.size() - 1));
+    }
+
+    @Entao("o dia {string} nao deve correr prazo")
+    public void oDiaNaoDeveCorrerPrazo(String data) {
+        assertFalse(consultarDiaUtil.executar(LocalDate.parse(data)).diaUtil(),
+                data + " deveria estar sem expediente forense");
+    }
+
+    @Entao("o dia {string} deve correr prazo")
+    public void oDiaDeveCorrerPrazo(String data) {
+        assertTrue(consultarDiaUtil.executar(LocalDate.parse(data)).diaUtil(),
+                data + " deveria ser dia util");
+    }
+
+    @E("o proximo dia util depois de {string} deve ser {string}")
+    public void oProximoDiaUtilDeveSer(String data, String esperado) {
+        assertEquals(LocalDate.parse(esperado),
+                consultarDiaUtil.executar(LocalDate.parse(data)).proximoDiaUtil());
+    }
+
+    @Entao("o vencimento do prazo ja lancado deve continuar {string}")
+    public void oVencimentoJaLancadoDeveContinuar(String vencimento) {
+        LocalDate persistido = prazosJpa.findById(prazo.getId()).orElseThrow().getVencimento();
+        assertEquals(LocalDate.parse(vencimento), persistido);
+    }
+
+    @E("um novo prazo fatal de {int} dias uteis intimado em {string} deve vencer em {string}")
+    public void umNovoPrazoDeveVencerEm(int dias, String intimacao, String vencimento) {
+        Prazo novo = abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
+                numeroProcesso, "Prazo aberto depois do feriado", LocalDate.parse(intimacao),
+                dias, true, RegimeContagem.DIAS_UTEIS));
+
+        assertEquals(LocalDate.parse(vencimento), novo.getVencimento());
+    }
+
+    private void cadastrar(String descricao,
+                           String data,
+                           boolean repeteTodoAno,
+                           Abrangencia.Nivel nivel,
+                           String abrangencia) {
+        FeriadosUseCases.ItemFeriado item = cadastrarFeriado.executar(
+                new FeriadosUseCases.CadastrarFeriado.Comando(
+                        descricao, LocalDate.parse(data), repeteTodoAno, nivel, abrangencia));
+        feriadosDoCenario.add(item.id());
+    }
+
     // --- Geracao de documentos ---
 
     @Quando("eu gero a peca {string} com os campos:")
@@ -241,11 +446,11 @@ public class PraxisSteps {
 
     @E("a leitura da peca pela OAB {string} deve ser negada")
     public void leituraNegada(String oab) {
-        assertThrows(DocumentoProxy.AcessoNegadoException.class,
+        assertThrows(ProxyDeAcesso.AcessoNegadoException.class,
                 () -> baixarDocumento.executar(documento.getId(), oab));
     }
 
-        // --- Fluxo de aprovacao de documentos ---
+    // --- Fluxo de aprovacao de documentos ---
 
     @Quando("eu envio o documento para revisao")
     public void euEnvioODocumentoParaRevisao() {
@@ -294,5 +499,95 @@ public class PraxisSteps {
     public void tentarAprovarDeveFalhar() {
         assertThrows(IllegalStateException.class, () -> aprovarDocumento.executar(
                 new DocumentosUseCases.AprovarDocumento.Comando(documento.getId(), "PE12345", "x")));
+    }
+
+    // --- Anexacao de arquivos ao processo ---
+
+    @Quando("eu junto aos autos o arquivo {string} do tipo {string}")
+    public void euJuntoOArquivo(String nome, String mime) {
+        anexo = juntar(numeroProcesso, nome, mime, "conteudo de teste".getBytes());
+    }
+
+    @Quando("eu tento juntar aos autos o arquivo {string} do tipo {string}")
+    public void euTentoJuntarTipoInvalido(String nome, String mime) {
+        falhaEsperada = assertThrows(IllegalArgumentException.class,
+                () -> juntar(numeroProcesso, nome, mime, "conteudo de teste".getBytes()));
+    }
+
+    @Quando("eu tento juntar aos autos um arquivo vazio")
+    public void euTentoJuntarArquivoVazio() {
+        falhaEsperada = assertThrows(IllegalArgumentException.class,
+                () -> juntar(numeroProcesso, "vazio.pdf", "application/pdf", new byte[0]));
+    }
+
+    @Quando("eu tento juntar o arquivo {string} ao processo {string}")
+    public void euTentoJuntarEmProcessoInexistente(String nome, String numero) {
+        falhaEsperada = assertThrows(NoSuchElementException.class,
+                () -> juntar(numero, nome, "application/pdf", "conteudo".getBytes()));
+    }
+
+    @Entao("o anexo deve constar na lista de arquivos do processo")
+    public void oAnexoDeveConstarNaLista() {
+        assertTrue(listarAnexos.executar(numeroProcesso).stream()
+                        .anyMatch(item -> item.id().equals(anexo.id())),
+                "anexo nao aparece na lista do processo");
+    }
+
+    @Entao("o nome do anexo deve ser {string}")
+    public void oNomeDoAnexoDeveSer(String nome) {
+        assertEquals(nome, anexo.nome());
+    }
+
+    @Entao("o anexo deve poder ser lido pela OAB {string}")
+    public void anexoLidoPor(String oab) {
+        ArquivoAnexo lido = baixarAnexo.executar(anexo.id(), oab);
+        assertEquals(anexo.id(), lido.getId());
+        assertTrue(lido.tamanhoBytes() > 0);
+    }
+
+    @Mas("a leitura do anexo pela OAB {string} deve ser negada")
+    public void leituraDoAnexoNegada(String oab) {
+        assertThrows(ProxyDeAcesso.AcessoNegadoException.class,
+                () -> baixarAnexo.executar(anexo.id(), oab));
+    }
+
+    @E("a leitura do anexo sem OAB deve ser negada")
+    public void leituraDoAnexoSemOab() {
+        assertThrows(ProxyDeAcesso.AcessoNegadoException.class,
+                () -> baixarAnexo.executar(anexo.id(), "  "));
+    }
+
+    @E("o advogado responsavel deve ser notificado sobre o arquivo juntado")
+    public void notificadoSobreAnexo() {
+        List<Notificacao> entregues = painel.getEntregues();
+        assertTrue(entregues.stream()
+                        .anyMatch(notificacao -> notificacao.assunto().startsWith("Arquivo juntado")),
+                "painel nao recebeu aviso de arquivo juntado: " + entregues);
+    }
+
+    @Entao("a juntada deve ser recusada por tipo nao aceito")
+    public void recusadaPorTipo() {
+        assertRecusa("tipo de arquivo nao aceito");
+    }
+
+    @Entao("a juntada deve ser recusada por falta de conteudo")
+    public void recusadaPorConteudo() {
+        assertRecusa("anexo sem conteudo");
+    }
+
+    @Entao("a juntada deve ser recusada por processo inexistente")
+    public void recusadaPorProcesso() {
+        assertRecusa("processo nao encontrado");
+    }
+
+    private AnexosUseCases.ItemAnexo juntar(String numero, String nome, String mime, byte[] bytes) {
+        return anexarArquivo.executar(new AnexosUseCases.AnexarArquivo.Comando(
+                numero, nome, mime, bytes, "arquivo de teste", oabResponsavel));
+    }
+
+    private void assertRecusa(String motivoEsperado) {
+        assertNotNull(falhaEsperada, "a operacao foi aceita");
+        assertTrue(falhaEsperada.getMessage().contains(motivoEsperado),
+                "motivo inesperado: " + falhaEsperada.getMessage());
     }
 }

@@ -36,4 +36,9 @@ public sealed interface EventoProcesso {
                            Advogado destinatario,
                            String tipoDocumento) implements EventoProcesso {
     }
+
+    record ArquivoAnexado(String numeroProcesso,
+                          Advogado destinatario,
+                          String nomeArquivo) implements EventoProcesso {
+    }
 }
