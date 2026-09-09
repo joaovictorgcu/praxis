@@ -14,10 +14,23 @@ public interface DocumentosUseCases {
 
     interface GerarDocumento {
 
+        /**
+         * @param codigoModelo modelo cadastrado a usar; nulo cai no gerador
+         *                     compilado do {@code tipo}.
+         */
         record Comando(String numeroProcesso,
                        TipoDocumento tipo,
                        Map<String, String> campos,
-                       String oabSolicitante) {
+                       String oabSolicitante,
+                       String codigoModelo) {
+
+            /** Geracao sem modelo: usa a peca compilada. */
+            public Comando(String numeroProcesso,
+                           TipoDocumento tipo,
+                           Map<String, String> campos,
+                           String oabSolicitante) {
+                this(numeroProcesso, tipo, campos, oabSolicitante, null);
+            }
         }
 
         DocumentoGerado executar(Comando comando);

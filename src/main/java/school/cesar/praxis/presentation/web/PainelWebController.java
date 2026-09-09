@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
+import school.cesar.praxis.application.port.in.ModelosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.documento.DocumentoProxy;
@@ -13,6 +14,7 @@ import school.cesar.praxis.infrastructure.notificacao.NotificadorPainel;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * Camada de apresentacao web (Thymeleaf): agenda de prazos, avisos do dia e
@@ -28,6 +30,7 @@ public class PainelWebController {
     private final DocumentosUseCases.GerarDocumento gerar;
     private final DocumentosUseCases.ListarDocumentos listar;
     private final DocumentosUseCases.BaixarDocumento baixar;
+    private final ModelosUseCases.ListarModelos listarModelos;
     private final NotificadorPainel painel;
 
     public PainelWebController(PrazosUseCases.ConsultarAgenda agenda,
@@ -36,6 +39,7 @@ public class PainelWebController {
                                DocumentosUseCases.GerarDocumento gerar,
                                DocumentosUseCases.ListarDocumentos listar,
                                DocumentosUseCases.BaixarDocumento baixar,
+                               ModelosUseCases.ListarModelos listarModelos,
                                NotificadorPainel painel) {
         this.agenda = agenda;
         this.varredura = varredura;
@@ -43,6 +47,7 @@ public class PainelWebController {
         this.gerar = gerar;
         this.listar = listar;
         this.baixar = baixar;
+        this.listarModelos = listarModelos;
         this.painel = painel;
     }
 
@@ -74,47 +79,45 @@ public class PainelWebController {
 
     @GetMapping("/documentos")
     public String documentos(@RequestParam(required = false) String processo, Model model) {
-        model.addAttribute("tipos", TipoDocumento.values());
         model.addAttribute("processoFiltro", processo);
         model.addAttribute("documentos", listar.executar(processo));
-        return "documentos";
+        return comOpcoesDoFormulario(model);
     }
 
     @PostMapping("/documentos")
     public String gerarDocumento(@RequestParam String numeroProcesso,
                                  @RequestParam TipoDocumento tipo,
+                                 @RequestParam(required = false) String codigoModelo,
                                  @RequestParam(required = false) String fatos,
                                  @RequestParam(required = false) String fundamentos,
                                  @RequestParam(required = false) String poderesEspeciais,
+                                 @RequestParam(required = false) String camposLivres,
                                  @RequestParam(required = false) String oab,
                                  Model model) {
         Map<String, String> campos = new LinkedHashMap<>();
-        if (fatos != null && !fatos.isBlank()) {
-            campos.put("fatos", fatos);
-        }
-        if (fundamentos != null && !fundamentos.isBlank()) {
-            campos.put("fundamentos", fundamentos);
-        }
-        if (poderesEspeciais != null && !poderesEspeciais.isBlank()) {
-            campos.put("poderesEspeciais", poderesEspeciais);
-        }
+        adicionar(campos, "fatos", fatos);
+        adicionar(campos, "fundamentos", fundamentos);
+        adicionar(campos, "poderesEspeciais", poderesEspeciais);
+        campos.putAll(lerCamposLivres(camposLivres));
 
-        DocumentoGerado documento = gerar.executar(new DocumentosUseCases.GerarDocumento.Comando(
-                numeroProcesso, tipo, campos, oab));
-
-        model.addAttribute("tipos", TipoDocumento.values());
-        model.addAttribute("documentos", listar.executar(numeroProcesso));
         model.addAttribute("processoFiltro", numeroProcesso);
-        model.addAttribute("previa", documento.getConteudo());
-        model.addAttribute("documentoGerado", documento.getId());
-        return "documentos";
+        try {
+            DocumentoGerado documento = gerar.executar(new DocumentosUseCases.GerarDocumento.Comando(
+                    numeroProcesso, tipo, campos, oab, codigoModelo));
+            model.addAttribute("previa", documento.getConteudo());
+            model.addAttribute("documentoGerado", documento.getId());
+        } catch (IllegalArgumentException | NoSuchElementException falha) {
+            model.addAttribute("erro", falha.getMessage());
+        }
+
+        model.addAttribute("documentos", listar.executar(numeroProcesso));
+        return comOpcoesDoFormulario(model);
     }
 
     @GetMapping("/documentos/{id}")
     public String verDocumento(@PathVariable Long id,
                                @RequestParam String oab,
                                Model model) {
-        model.addAttribute("tipos", TipoDocumento.values());
         try {
             DocumentoGerado documento = baixar.executar(id, oab);
             model.addAttribute("previa", documento.getConteudo());
@@ -124,6 +127,34 @@ public class PainelWebController {
             model.addAttribute("erro", negado.getMessage());
             model.addAttribute("documentos", listar.executar(null));
         }
+        return comOpcoesDoFormulario(model);
+    }
+
+    private String comOpcoesDoFormulario(Model model) {
+        model.addAttribute("tipos", TipoDocumento.values());
+        model.addAttribute("modelos", listarModelos.executar());
         return "documentos";
+    }
+
+    private static void adicionar(Map<String, String> campos, String chave, String valor) {
+        if (valor != null && !valor.isBlank()) {
+            campos.put(chave, valor);
+        }
+    }
+
+    /** Campos do modelo vem do formulario como "campo=valor", um por linha. */
+    private static Map<String, String> lerCamposLivres(String texto) {
+        Map<String, String> campos = new LinkedHashMap<>();
+        if (texto == null || texto.isBlank()) {
+            return campos;
+        }
+        for (String linha : texto.split("\\R")) {
+            int separador = linha.indexOf('=');
+            if (separador > 0) {
+                adicionar(campos, linha.substring(0, separador).trim(),
+                        linha.substring(separador + 1).trim());
+            }
+        }
+        return campos;
     }
 }

@@ -29,16 +29,19 @@ public class DocumentoRestController {
         this.listarDocumentos = listarDocumentos;
     }
 
+    /** {@code codigoModelo} e opcional: sem ele, vale a peca compilada do tipo. */
     public record NovoDocumento(String numeroProcesso,
                                 TipoDocumento tipo,
                                 Map<String, String> campos,
-                                String oabSolicitante) {
+                                String oabSolicitante,
+                                String codigoModelo) {
     }
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> gerar(@RequestBody NovoDocumento corpo) {
         DocumentoGerado documento = gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
-                corpo.numeroProcesso(), corpo.tipo(), corpo.campos(), corpo.oabSolicitante()));
+                corpo.numeroProcesso(), corpo.tipo(), corpo.campos(),
+                corpo.oabSolicitante(), corpo.codigoModelo()));
 
         return ResponseEntity.ok(Map.of(
                 "id", documento.getId(),

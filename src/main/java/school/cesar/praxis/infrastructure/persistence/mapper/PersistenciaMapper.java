@@ -6,12 +6,16 @@ import school.cesar.praxis.domain.feriado.DataUnica;
 import school.cesar.praxis.domain.feriado.Feriado;
 import school.cesar.praxis.domain.feriado.RecorrenciaAnualFixa;
 import school.cesar.praxis.domain.feriado.RegraRecorrencia;
+import school.cesar.praxis.domain.modelo.CodigoModelo;
+import school.cesar.praxis.domain.modelo.ModeloDocumento;
+import school.cesar.praxis.domain.modelo.TextoModelo;
 import school.cesar.praxis.domain.prazo.NivelAlerta;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.PrazoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ProcessoEntity;
 
@@ -186,5 +190,33 @@ public final class PersistenciaMapper {
                 entidade.getDescricao(),
                 recorrencia,
                 new Abrangencia(entidade.getAbrangenciaNivel(), entidade.getAbrangenciaValor()));
+    }
+
+    // --- Modelo de documento ---
+
+    public static ModeloEntity paraEntidade(ModeloDocumento modelo) {
+        ModeloEntity entidade = new ModeloEntity();
+        entidade.setId(modelo.getId());
+        entidade.setCodigo(modelo.getCodigo().valor());
+        entidade.setNome(modelo.getNome());
+        entidade.setTipo(modelo.getTipo());
+        entidade.setTitulo(modelo.getTitulo());
+        // Persiste o texto cru; a analise dos marcadores refaz-se na leitura.
+        entidade.setCorpo(modelo.getCorpo().texto());
+        entidade.setPedidos(modelo.getPedidos().texto());
+        entidade.setEnderecaAoJuizo(modelo.isEnderecaAoJuizo());
+        return entidade;
+    }
+
+    public static ModeloDocumento paraDominio(ModeloEntity entidade) {
+        return new ModeloDocumento(
+                entidade.getId(),
+                CodigoModelo.de(entidade.getCodigo()),
+                entidade.getNome(),
+                entidade.getTipo(),
+                entidade.getTitulo(),
+                new TextoModelo(entidade.getCorpo()),
+                new TextoModelo(entidade.getPedidos()),
+                entidade.isEnderecaAoJuizo());
     }
 }

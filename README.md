@@ -8,7 +8,7 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 ## Como rodar
 
 ```bash
-./mvnw test            # 29 testes: unidade + 12 cenários BDD (80 steps)
+./mvnw test            # 67 testes: unidade + contrato HTTP + 26 cenários BDD (227 steps)
 ./mvnw spring-boot:run # sobe em http://localhost:8080
 ```
 
@@ -46,6 +46,17 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 - Fim de semana e recesso forense (art. 220) continuam no código, como regras de lei que o usuário não pode apagar por engano.
 - Carga de referência com os feriados nacionais na subida, mais um exemplo estadual (PE) e um comarcal (Recife).
 
+### 4. Cadastro de modelos de documento
+
+- O escritório cadastra **corpo** e **pedidos** com marcadores `{{campo}}`, e passa a gerar peça nova **sem alterar código**.
+- Modelo cadastrado **coexiste** com as peças compiladas: `GeradorPorModelo` é mais uma subclasse do Template Method, então `gerar()` segue `final` e a ordem das seções continua sendo regra do domínio, não escolha do usuário.
+- Marcadores resolvidos por **Interpreter**: `cliente`, `comarca`, `processo`, `advogado` e `oab` vêm dos autos automaticamente; os demais são cobrados na geração e o cadastro informa **quais campos cada modelo espera**.
+- Campo não informado vira marcador visível na peça (`(valorDivida a preencher)`) em vez de lacuna silenciosa.
+- Modelo que **não se endereça ao juízo** abandona as três seções do juízo de uma vez (endereçamento, qualificação e fecho), como a `Procuracao` faz — só que decidido pelo cadastro.
+- O `TipoDocumento` da peça registrada nos autos vem do **modelo**, não do pedido. `PECA_AVULSA` existe para o que não é petição, contestação nem procuração.
+- Editar modelo não altera peça já gerada, porque o documento persiste o próprio conteúdo.
+- Sobe com dois modelos de exemplo (`COBRANCA_ALUGUEL` e `ACORDO_EXTRAJUDICIAL`). Desligue com `praxis.modelos-iniciais=false`.
+
 Funcionalidades de apoio já no repositório: cadastro de processo, registro de andamento com linha do tempo cronológica, e cálculo de honorários (fixo, por hora, quota litis com limite ético de 30%).
 
 ## Arquitetura limpa
@@ -53,7 +64,7 @@ Funcionalidades de apoio já no repositório: cadastro de processo, registro de 
 ```
 presentation/   REST (/api/**) e web Thymeleaf (/painel/**) — só traduz HTTP em caso de uso
 application/    port/in (casos de uso), port/out (repositórios), usecase (orquestração)
-domain/         processo, prazo, documento, notificacao, honorario, compartilhado — Java puro
+domain/         processo, prazo, documento, modelo, feriado, notificacao, honorario, compartilhado — Java puro
 infrastructure/ persistence (JPA + mappers + adapters), notificacao, scheduler, config
 ```
 
@@ -65,18 +76,19 @@ Regra de dependência: **nada no `domain` importa Spring ou JPA**. As entidades 
 |---|---|
 | Preliminar | [`docs/dominio.md`](docs/dominio.md) — problema, e por que estas duas funcionalidades primeiro |
 | Estratégico | 4 subdomínios / bounded contexts e suas relações — [`docs/praxis.cml`](docs/praxis.cml) (Context Mapper) |
-| Tático | Agregados `Processo`, `Prazo`, `DocumentoGerado`, `Feriado`; VOs `NumeroCnj`, `Advogado`, `AlertaPrazo`, `BaseCalculo`, `Abrangencia`, `Jurisdicao`; serviços `MotorDePrazos`, `CalendarioForense`; eventos em `EventoProcesso` |
+| Tático | Agregados `Processo`, `Prazo`, `DocumentoGerado`, `Feriado`, `ModeloDocumento`; VOs `NumeroCnj`, `Advogado`, `AlertaPrazo`, `BaseCalculo`, `Abrangencia`, `Jurisdicao`, `CodigoModelo`, `TextoModelo`; serviços `MotorDePrazos`, `CalendarioForense`; eventos em `EventoProcesso` |
 | Operacional | Casos de uso em `application.usecase`, job de varredura, endpoints REST e telas |
 
 Linguagem onipresente preservada no código: processo, andamento, intimação, citação, prazo fatal, termo inicial, dias úteis, recesso forense, cumprir, peça, endereçamento, qualificação, procuração ad judicia, segredo de justiça, OAB habilitada, quota litis, feriado, abrangência, comarca, foro.
 
-## Padrões de projeto (os 6 da lista do enunciado, mais Composite)
+## Padrões de projeto (os 6 da lista do enunciado, mais Composite e Interpreter)
 
 | Padrão | Onde | Problema real que resolve |
 |---|---|---|
 | **Strategy** | `ContagemPrazoStrategy` → `ContagemDiasUteis` / `ContagemDiasCorridos`; `CalculoHonorarioStrategy` → fixo / hora / quota litis; `RegraRecorrencia` → `DataUnica` / `RecorrenciaAnualFixa` | A lei define regimes distintos de contagem e de cobrança; o agregado não deve saber qual está em vigor. No feriado, separa *quando incide* de *onde vale* |
 | **Composite** | `RegraDiaNaoUtil` → `FimDeSemana`, `RecessoForense`, `FeriadosFixos`, `FeriadosDoForo`, combinadas por `CalendarioForense` | Cada motivo de suspensão do expediente é independente; o calendário combina todos sem saber quantos são, e a origem dos feriados (constante em teste, cadastro em banco em produção) troca sem tocar no calendário |
-| **Template Method** | `GeradorDocumento` → `PeticaoInicial`, `Contestacao`, `Procuracao` | A ordem das seções da peça é regra do domínio (`gerar()` é `final`); só corpo e pedidos mudam. `Procuracao` sobrescreve os hooks porque não se endereça ao juízo |
+| **Template Method** | `GeradorDocumento` → `PeticaoInicial`, `Contestacao`, `Procuracao`, `GeradorPorModelo` | A ordem das seções da peça é regra do domínio (`gerar()` é `final`); só corpo e pedidos mudam. `Procuracao` sobrescreve os hooks porque não se endereça ao juízo, e `GeradorPorModelo` lê os mesmos dois passos de um modelo cadastrado — é o que deixa a peça ser cadastrável sem abrir mão do padrão |
+| **Interpreter** | `ExpressaoTexto` → `Literal` / `ReferenciaCampo`, montadas por `TextoModelo` e avaliadas contra `ContextoTexto` | O texto do modelo é uma linguagem mínima (trecho fixo + referência a campo); cada termo sabe se interpretar, então o modelo não faz varredura de string a cada geração nem precisa saber quais campos existem |
 | **Observer** | `Processo` e `MotorDePrazos` publicam `EventoProcesso`; `AdvogadoResponsavel` observa | Novo andamento e prazo em risco precisam avisar o responsável sem o agregado conhecer e-mail nem banco |
 | **Decorator** | `NotificadorPainel` decorado por `NotificadorEmail` e `NotificadorAuditoria` | Canais e trilha de auditoria empilháveis sobre a notificação base, sem `if` de canal |
 | **Proxy** | `DocumentoProxy` | Segredo de justiça conferido antes de o conteúdo sair da persistência; impossível esquecer a checagem, porque o caso de uso só tem acesso ao Proxy |
@@ -89,10 +101,12 @@ Cenários em português em [`src/test/resources/features`](src/test/resources/fe
 > **Dado** um processo com prazo fatal em 5 dias úteis, **quando** faltarem 3 dias, **então** o advogado responsável deve ser notificado.
 
 ```
-18 scenarios (18 passed)
-135 steps (135 passed)
-Tests run: 46, Failures: 0, Errors: 0
+26 scenarios (26 passed)
+227 steps (227 passed)
+Tests run: 67, Failures: 0, Errors: 0
 ```
+
+Os cenários chamam os casos de uso, então não cobrem o corpo JSON dos controllers. `ModeloHttpTest` fecha essa lacuna pelo mesmo caminho do navegador (MockMvc) — foi assim que apareceu um `codigoModelo` que faltava no `record` de requisição e passava despercebido pelo BDD.
 
 ## Endpoints
 
@@ -106,9 +120,13 @@ GET  /api/prazos/agenda?ate=YYYY-MM-DD         agenda ordenada por vencimento
 POST /api/prazos/{id}/cumprir                  registra cumprimento
 POST /api/prazos/varredura?hoje=YYYY-MM-DD     roda o motor de prazos
 
-POST /api/documentos                           gera peça por template
+POST /api/documentos                           gera peça (campo codigoModelo opcional escolhe o modelo)
 GET  /api/documentos?processo=                 lista peças
 GET  /api/documentos/{id}?oab=                 baixa a peça (passa pelo Proxy; 403 se não habilitada)
+
+POST   /api/modelos                            cadastra modelo de peça (corpo e pedidos com {{campo}})
+GET    /api/modelos                            lista modelos e os campos que cada um espera
+DELETE /api/modelos/{id}                       remove modelo
 
 POST   /api/feriados                           cadastra feriado (data única ou anual; nacional/estadual/comarcal)
 GET    /api/feriados                           lista o calendário cadastrado
@@ -142,6 +160,23 @@ curl 'localhost:8080/api/feriados/dia-util?data=2026-10-15'
 # -> {"diaUtil":false,"proximoDiaUtil":"2026-10-16"}  e o mesmo em 2027, porque e anual
 ```
 
+Peça nova sem tocar no código, cadastrando um modelo:
+
+```bash
+curl -X POST localhost:8080/api/modelos -H 'Content-Type: application/json' -d '{
+  "codigo":"ACORDO","nome":"Acordo extrajudicial","tipo":"PECA_AVULSA",
+  "titulo":"Instrumento particular de acordo",
+  "corpo":"As partes {{cliente}} e {{outraParte}} ajustam {{valorAcordo}}.",
+  "pedidos":"CLAUSULAS a) quitacao reciproca.","enderecaAoJuizo":false}'
+# -> camposEsperados: ["outraParte","valorAcordo"]  (cliente vem dos autos)
+
+curl -X POST localhost:8080/api/documentos -H 'Content-Type: application/json' -d '{
+  "numeroProcesso":"0001234-56.2026.8.17.0001","tipo":"PECA_AVULSA",
+  "codigoModelo":"ACORDO","oabSolicitante":"PE12345",
+  "campos":{"outraParte":"Imobiliaria Beta ME","valorAcordo":"R$ 9.000,00"}}'
+# -> peca com o mesmo esqueleto das compiladas, sem linguagem de juizo
+```
+
 ## Documentação
 
 - [`docs/dominio.md`](docs/dominio.md) — descrição do domínio e linguagem onipresente, DDD nos 4 níveis
@@ -158,4 +193,7 @@ curl 'localhost:8080/api/feriados/dia-util?data=2026-10-15'
 - Sem autenticação: a OAB do solicitante é informada na requisição, não extraída de sessão.
 - O foro dos feriados é único e vem de propriedade (`praxis.foro.*`), não de cada processo: o `Processo` guarda a comarca, mas não a UF. Feriado por processo exigiria derivar a UF do código do tribunal no número CNJ.
 - O cadastro de feriados é mantido em memória pelo adaptador (`FeriadoRepositorioJpa`), porque o calendário pergunta dia a dia ao percorrer um prazo. A escrita descarta o cache — suficiente para instância única, não para escala horizontal.
+- O modelo de documento define corpo e pedidos, não a ordem das seções: o esqueleto é regra do domínio. Modelo que precise de estrutura própria exigiria nova subclasse de `GeradorDocumento`.
+- Modelos não têm versão. Editar o modelo não afeta peça já gerada (o documento persiste o conteúdo), mas o histórico do próprio modelo não é guardado.
+- Os campos do modelo são texto simples, sem tipo nem obrigatoriedade: campo esquecido sai como `(nome a preencher)` na peça, e não barra a geração.
 - O arquivo `.cml` não foi validado com o plugin do Context Mapper nesta máquina (extensão não instalada).

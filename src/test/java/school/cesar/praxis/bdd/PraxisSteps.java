@@ -10,6 +10,7 @@ import io.cucumber.java.pt.Quando;
 import org.springframework.beans.factory.annotation.Autowired;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.application.port.in.FeriadosUseCases;
+import school.cesar.praxis.application.port.in.ModelosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
@@ -27,6 +28,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,6 +52,10 @@ public class PraxisSteps {
     private DocumentosUseCases.BaixarDocumento baixarDocumento;
     @Autowired
     private DocumentosUseCases.ListarDocumentos listarDocumentos;
+    @Autowired
+    private ModelosUseCases.CadastrarModelo cadastrarModelo;
+    @Autowired
+    private ModelosUseCases.RemoverModelo removerModelo;
     @Autowired
     private FeriadosUseCases.CadastrarFeriado cadastrarFeriado;
     @Autowired
@@ -78,6 +84,9 @@ public class PraxisSteps {
     private DocumentoGerado documento;
     private final List<AlertaPrazo> alertas = new ArrayList<>();
     private final List<Long> feriadosDoCenario = new ArrayList<>();
+    private final List<Long> modelosDoCenario = new ArrayList<>();
+    private ModelosUseCases.ItemModelo modelo;
+    private RuntimeException falhaEsperada;
 
     @Before
     public void limparEstado() {
@@ -89,6 +98,8 @@ public class PraxisSteps {
         alertas.clear();
         prazo = null;
         documento = null;
+        modelo = null;
+        falhaEsperada = null;
         segredoJustica = false;
     }
 
@@ -102,6 +113,13 @@ public class PraxisSteps {
     public void removerFeriadosDoCenario() {
         feriadosDoCenario.forEach(removerFeriado::executar);
         feriadosDoCenario.clear();
+    }
+
+    /** Mesma regra dos feriados: os modelos de exemplo tem de sobreviver. */
+    @After
+    public void removerModelosDoCenario() {
+        modelosDoCenario.forEach(removerModelo::executar);
+        modelosDoCenario.clear();
     }
 
     // --- Contexto ---
@@ -206,6 +224,89 @@ public class PraxisSteps {
         assertTrue(painel.getEntregues().stream()
                 .anyMatch(notificacao -> notificacao.destinatario().equals(email)
                         && notificacao.assunto().contains("VENCIDO")));
+    }
+
+    // --- Cadastro de modelos de documento ---
+
+    @Dado("o modelo cadastrado:")
+    public void oModeloCadastrado(DataTable tabela) {
+        Map<String, String> dados = tabela.asMap(String.class, String.class);
+        modelo = cadastrarModelo.executar(new ModelosUseCases.CadastrarModelo.Comando(
+                dados.get("codigo"),
+                dados.get("nome"),
+                TipoDocumento.valueOf(dados.get("tipo")),
+                dados.get("titulo"),
+                dados.get("corpo"),
+                dados.get("pedidos"),
+                "sim".equals(dados.get("juizo"))));
+        modelosDoCenario.add(modelo.id());
+    }
+
+    @Quando("eu gero a peca pelo modelo {string} com os campos:")
+    public void euGeroPeloModelo(String codigo, DataTable tabela) {
+        gerarPeloModelo(codigo, tabela.asMap(String.class, String.class));
+    }
+
+    @Quando("eu gero a peca pelo modelo {string} sem informar campos")
+    public void euGeroPeloModeloSemCampos(String codigo) {
+        gerarPeloModelo(codigo, Map.of());
+    }
+
+    @Quando("eu removo o modelo cadastrado")
+    public void euRemovoOModelo() {
+        removerModelo.executar(modelosDoCenario.remove(modelosDoCenario.size() - 1));
+    }
+
+    @Quando("eu tento cadastrar outro modelo com o codigo {string}")
+    public void euTentoCadastrarComCodigoRepetido(String codigo) {
+        falhaEsperada = assertThrows(IllegalArgumentException.class,
+                () -> cadastrarModelo.executar(new ModelosUseCases.CadastrarModelo.Comando(
+                        codigo, "Segundo modelo", TipoDocumento.PETICAO_INICIAL, null,
+                        "Outro corpo.", "Outros pedidos.", true)));
+    }
+
+    @Quando("eu tento gerar a peca {string} sem modelo")
+    public void euTentoGerarSemModelo(String tipo) {
+        falhaEsperada = assertThrows(IllegalArgumentException.class,
+                () -> gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
+                        numeroProcesso, TipoDocumento.valueOf(tipo), Map.of(), oabResponsavel)));
+    }
+
+    @E("eu tento gerar a peca pelo modelo {string}")
+    public void euTentoGerarPeloModelo(String codigo) {
+        falhaEsperada = assertThrows(NoSuchElementException.class,
+                () -> gerarPeloModelo(codigo, Map.of()));
+    }
+
+    @Entao("o tipo da peca gerada deve ser {string}")
+    public void oTipoDaPecaDeveSer(String tipo) {
+        assertEquals(TipoDocumento.valueOf(tipo), documento.getTipo());
+    }
+
+    @Entao("o cadastro do modelo deve ser recusado")
+    public void oCadastroDoModeloDeveSerRecusado() {
+        assertNotNull(falhaEsperada, "o cadastro duplicado foi aceito");
+        assertTrue(falhaEsperada.getMessage().contains("ja existe modelo"),
+                "motivo inesperado: " + falhaEsperada.getMessage());
+    }
+
+    @Entao("a geracao deve ser recusada por falta de gerador")
+    public void recusadaPorFaltaDeGerador() {
+        assertNotNull(falhaEsperada, "a geracao foi aceita");
+        assertTrue(falhaEsperada.getMessage().contains("nao tem gerador compilado"),
+                "motivo inesperado: " + falhaEsperada.getMessage());
+    }
+
+    @Entao("a geracao deve ser recusada por modelo inexistente")
+    public void recusadaPorModeloInexistente() {
+        assertNotNull(falhaEsperada, "a geracao foi aceita");
+        assertTrue(falhaEsperada.getMessage().contains("modelo nao encontrado"),
+                "motivo inesperado: " + falhaEsperada.getMessage());
+    }
+
+    private void gerarPeloModelo(String codigo, Map<String, String> campos) {
+        documento = gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
+                numeroProcesso, TipoDocumento.PECA_AVULSA, campos, oabResponsavel, codigo));
     }
 
     // --- Cadastro de feriados ---
