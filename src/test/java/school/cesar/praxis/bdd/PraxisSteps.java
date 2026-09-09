@@ -1,6 +1,7 @@
 package school.cesar.praxis.bdd;
 
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.pt.Dado;
 import io.cucumber.java.pt.E;
@@ -8,11 +9,13 @@ import io.cucumber.java.pt.Entao;
 import io.cucumber.java.pt.Quando;
 import org.springframework.beans.factory.annotation.Autowired;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
+import school.cesar.praxis.application.port.in.FeriadosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.documento.DocumentoProxy;
 import school.cesar.praxis.domain.documento.TipoDocumento;
+import school.cesar.praxis.domain.feriado.Abrangencia;
 import school.cesar.praxis.domain.notificacao.Notificacao;
 import school.cesar.praxis.domain.prazo.AlertaPrazo;
 import school.cesar.praxis.domain.prazo.Prazo;
@@ -48,6 +51,12 @@ public class PraxisSteps {
     @Autowired
     private DocumentosUseCases.ListarDocumentos listarDocumentos;
     @Autowired
+    private FeriadosUseCases.CadastrarFeriado cadastrarFeriado;
+    @Autowired
+    private FeriadosUseCases.RemoverFeriado removerFeriado;
+    @Autowired
+    private FeriadosUseCases.ConsultarDiaUtil consultarDiaUtil;
+    @Autowired
     private NotificadorPainel painel;
 
     @Autowired
@@ -68,6 +77,7 @@ public class PraxisSteps {
     private Prazo prazo;
     private DocumentoGerado documento;
     private final List<AlertaPrazo> alertas = new ArrayList<>();
+    private final List<Long> feriadosDoCenario = new ArrayList<>();
 
     @Before
     public void limparEstado() {
@@ -80,6 +90,18 @@ public class PraxisSteps {
         prazo = null;
         documento = null;
         segredoJustica = false;
+    }
+
+    /**
+     * Remove apenas os feriados criados pelo cenario - a carga de referencia
+     * (feriados nacionais) tem de sobreviver, porque os cenarios de prazo
+     * dependem dela. A remocao passa pelo caso de uso, e nao pelo repositorio
+     * JPA, para que o cache do adaptador seja invalidado.
+     */
+    @After
+    public void removerFeriadosDoCenario() {
+        feriadosDoCenario.forEach(removerFeriado::executar);
+        feriadosDoCenario.clear();
     }
 
     // --- Contexto ---
@@ -184,6 +206,78 @@ public class PraxisSteps {
         assertTrue(painel.getEntregues().stream()
                 .anyMatch(notificacao -> notificacao.destinatario().equals(email)
                         && notificacao.assunto().contains("VENCIDO")));
+    }
+
+    // --- Cadastro de feriados ---
+
+    @Dado("o feriado {string} cadastrado em {string} valido em todo o pais")
+    public void oFeriadoNacional(String descricao, String data) {
+        cadastrar(descricao, data, false, Abrangencia.Nivel.NACIONAL, null);
+    }
+
+    @Quando("o feriado {string} e cadastrado em {string} valido em todo o pais")
+    public void oFeriadoNacionalECadastrado(String descricao, String data) {
+        cadastrar(descricao, data, false, Abrangencia.Nivel.NACIONAL, null);
+    }
+
+    @Dado("o feriado {string} cadastrado em {string} repetindo todo ano")
+    public void oFeriadoAnual(String descricao, String data) {
+        cadastrar(descricao, data, true, Abrangencia.Nivel.NACIONAL, null);
+    }
+
+    @Dado("o feriado {string} cadastrado em {string} so na comarca de {string}")
+    public void oFeriadoDaComarca(String descricao, String data, String comarcaDoFeriado) {
+        cadastrar(descricao, data, false, Abrangencia.Nivel.COMARCAL, comarcaDoFeriado);
+    }
+
+    @Quando("eu removo o feriado cadastrado")
+    public void euRemovoOFeriado() {
+        removerFeriado.executar(feriadosDoCenario.remove(feriadosDoCenario.size() - 1));
+    }
+
+    @Entao("o dia {string} nao deve correr prazo")
+    public void oDiaNaoDeveCorrerPrazo(String data) {
+        assertFalse(consultarDiaUtil.executar(LocalDate.parse(data)).diaUtil(),
+                data + " deveria estar sem expediente forense");
+    }
+
+    @Entao("o dia {string} deve correr prazo")
+    public void oDiaDeveCorrerPrazo(String data) {
+        assertTrue(consultarDiaUtil.executar(LocalDate.parse(data)).diaUtil(),
+                data + " deveria ser dia util");
+    }
+
+    @E("o proximo dia util depois de {string} deve ser {string}")
+    public void oProximoDiaUtilDeveSer(String data, String esperado) {
+        assertEquals(LocalDate.parse(esperado),
+                consultarDiaUtil.executar(LocalDate.parse(data)).proximoDiaUtil());
+    }
+
+    @Entao("o vencimento do prazo ja lancado deve continuar {string}")
+    public void oVencimentoJaLancadoDeveContinuar(String vencimento) {
+        // Le do banco de novo: o vencimento ficou congelado na abertura.
+        LocalDate persistido = prazosJpa.findById(prazo.getId()).orElseThrow().getVencimento();
+        assertEquals(LocalDate.parse(vencimento), persistido);
+    }
+
+    @E("um novo prazo fatal de {int} dias uteis intimado em {string} deve vencer em {string}")
+    public void umNovoPrazoDeveVencerEm(int dias, String intimacao, String vencimento) {
+        Prazo novo = abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
+                numeroProcesso, "Prazo aberto depois do feriado", LocalDate.parse(intimacao),
+                dias, true, RegimeContagem.DIAS_UTEIS));
+
+        assertEquals(LocalDate.parse(vencimento), novo.getVencimento());
+    }
+
+    private void cadastrar(String descricao,
+                           String data,
+                           boolean repeteTodoAno,
+                           Abrangencia.Nivel nivel,
+                           String abrangencia) {
+        FeriadosUseCases.ItemFeriado item = cadastrarFeriado.executar(
+                new FeriadosUseCases.CadastrarFeriado.Comando(
+                        descricao, LocalDate.parse(data), repeteTodoAno, nivel, abrangencia));
+        feriadosDoCenario.add(item.id());
     }
 
     // --- Geracao de documentos ---

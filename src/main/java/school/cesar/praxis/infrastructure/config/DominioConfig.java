@@ -1,5 +1,6 @@
 package school.cesar.praxis.infrastructure.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import school.cesar.praxis.domain.compartilhado.Relogio;
@@ -7,6 +8,8 @@ import school.cesar.praxis.domain.documento.Contestacao;
 import school.cesar.praxis.domain.documento.GeradorDocumento;
 import school.cesar.praxis.domain.documento.PeticaoInicial;
 import school.cesar.praxis.domain.documento.Procuracao;
+import school.cesar.praxis.domain.feriado.FonteDeFeriados;
+import school.cesar.praxis.domain.feriado.Jurisdicao;
 import school.cesar.praxis.domain.honorario.*;
 import school.cesar.praxis.domain.notificacao.AdvogadoResponsavel;
 import school.cesar.praxis.domain.notificacao.Notificador;
@@ -19,7 +22,6 @@ import school.cesar.praxis.infrastructure.persistence.repository.NotificacaoJpaR
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Composicao do dominio. As classes de dominio nao tem anotacao de framework:
@@ -28,23 +30,23 @@ import java.util.Set;
 @Configuration
 public class DominioConfig {
 
-    /** Feriados nacionais de 2026 relevantes para o forense. */
+    /**
+     * Foro em que o escritorio atua. Define quais feriados estaduais e
+     * comarcais entram na contagem de prazo.
+     */
     @Bean
-    public CalendarioForense calendarioForense() {
-        return new CalendarioForense(Set.of(
-                LocalDate.of(2026, 1, 1),
-                LocalDate.of(2026, 2, 16),
-                LocalDate.of(2026, 2, 17),
-                LocalDate.of(2026, 4, 3),
-                LocalDate.of(2026, 4, 21),
-                LocalDate.of(2026, 5, 1),
-                LocalDate.of(2026, 6, 4),
-                LocalDate.of(2026, 9, 7),
-                LocalDate.of(2026, 10, 12),
-                LocalDate.of(2026, 11, 2),
-                LocalDate.of(2026, 11, 15),
-                LocalDate.of(2026, 11, 20),
-                LocalDate.of(2026, 12, 25)));
+    public Jurisdicao foroDoEscritorio(@Value("${praxis.foro.uf:PE}") String uf,
+                                       @Value("${praxis.foro.comarca:Recife}") String comarca) {
+        return Jurisdicao.de(uf, comarca);
+    }
+
+    /**
+     * Calendario montado sobre o cadastro de feriados, e nao sobre uma lista
+     * fixa: cadastrar feriado passa a valer sem reiniciar a aplicacao.
+     */
+    @Bean
+    public CalendarioForense calendarioForense(FonteDeFeriados feriados, Jurisdicao foro) {
+        return CalendarioForense.doForo(feriados, foro);
     }
 
     @Bean

@@ -1,11 +1,17 @@
 package school.cesar.praxis.infrastructure.persistence.mapper;
 
 import school.cesar.praxis.domain.documento.DocumentoGerado;
+import school.cesar.praxis.domain.feriado.Abrangencia;
+import school.cesar.praxis.domain.feriado.DataUnica;
+import school.cesar.praxis.domain.feriado.Feriado;
+import school.cesar.praxis.domain.feriado.RecorrenciaAnualFixa;
+import school.cesar.praxis.domain.feriado.RegraRecorrencia;
 import school.cesar.praxis.domain.prazo.NivelAlerta;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.PrazoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ProcessoEntity;
 
@@ -154,5 +160,31 @@ public final class PersistenciaMapper {
                 entidade.getGeradoPorOab(),
                 entidade.isSegredoJustica(),
                 oabs);
+    }
+
+    // --- Feriado ---
+
+    public static FeriadoEntity paraEntidade(Feriado feriado) {
+        FeriadoEntity entidade = new FeriadoEntity();
+        entidade.setId(feriado.getId());
+        entidade.setDescricao(feriado.getDescricao());
+        entidade.setData(feriado.getRecorrencia().dataDeReferencia());
+        entidade.setRepeteTodoAno(feriado.getRecorrencia() instanceof RecorrenciaAnualFixa);
+        entidade.setAbrangenciaNivel(feriado.getAbrangencia().nivel());
+        entidade.setAbrangenciaValor(feriado.getAbrangencia().valor());
+        return entidade;
+    }
+
+    public static Feriado paraDominio(FeriadoEntity entidade) {
+        // A flag no banco e o que decide qual Strategy reconstruir.
+        RegraRecorrencia recorrencia = entidade.isRepeteTodoAno()
+                ? RecorrenciaAnualFixa.de(entidade.getData())
+                : new DataUnica(entidade.getData());
+
+        return new Feriado(
+                entidade.getId(),
+                entidade.getDescricao(),
+                recorrencia,
+                new Abrangencia(entidade.getAbrangenciaNivel(), entidade.getAbrangenciaValor()));
     }
 }

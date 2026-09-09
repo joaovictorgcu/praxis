@@ -15,6 +15,8 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 - Interface web: <http://localhost:8080/painel>
 - Console do banco: <http://localhost:8080/h2-console> (`jdbc:h2:mem:praxis`, usuário `sa`, sem senha)
 - A aplicação sobe com carga de exemplo (dois processos, um deles em segredo de justiça, e três prazos em estados diferentes). Desligue com `praxis.dados-exemplo=false`.
+- O calendário nasce com os feriados nacionais, mais um estadual e um comarcal de exemplo. Desligue com `praxis.feriados-iniciais=false`.
+- O foro do escritório define quais feriados estaduais e comarcais contam: `praxis.foro.uf=PE` e `praxis.foro.comarca=Recife`.
 
 ## Funcionalidades implementadas nesta entrega
 
@@ -35,6 +37,15 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 - Documento herda o **segredo de justiça** do processo e a lista de OABs habilitadas nos autos; leitura por OAB não habilitada é bloqueada (CPC art. 189) — verificado também via HTTP (`403`).
 - Geração avisa o advogado responsável.
 
+### 3. Cadastro de feriados
+
+- Feriado com **data única** (ponto facultativo de um ano só) ou **recorrência anual fixa** (Natal, Tiradentes), escolhido por Strategy.
+- **Abrangência** nacional, estadual (UF) ou da comarca: feriado de Olinda não suspende prazo que corre em Recife.
+- O calendário forense passou a ser montado sobre o cadastro, e não sobre lista fixa no código: **feriado cadastrado vale na contagem seguinte, sem reiniciar** a aplicação.
+- Prazo **já lançado não se move**, porque o vencimento fica congelado na abertura — verificado em cenário BDD.
+- Fim de semana e recesso forense (art. 220) continuam no código, como regras de lei que o usuário não pode apagar por engano.
+- Carga de referência com os feriados nacionais na subida, mais um exemplo estadual (PE) e um comarcal (Recife).
+
 Funcionalidades de apoio já no repositório: cadastro de processo, registro de andamento com linha do tempo cronológica, e cálculo de honorários (fixo, por hora, quota litis com limite ético de 30%).
 
 ## Arquitetura limpa
@@ -54,16 +65,17 @@ Regra de dependência: **nada no `domain` importa Spring ou JPA**. As entidades 
 |---|---|
 | Preliminar | [`docs/dominio.md`](docs/dominio.md) — problema, e por que estas duas funcionalidades primeiro |
 | Estratégico | 4 subdomínios / bounded contexts e suas relações — [`docs/praxis.cml`](docs/praxis.cml) (Context Mapper) |
-| Tático | Agregados `Processo`, `Prazo`, `DocumentoGerado`; VOs `NumeroCnj`, `Advogado`, `AlertaPrazo`, `BaseCalculo`; serviços `MotorDePrazos`, `CalendarioForense`; eventos em `EventoProcesso` |
+| Tático | Agregados `Processo`, `Prazo`, `DocumentoGerado`, `Feriado`; VOs `NumeroCnj`, `Advogado`, `AlertaPrazo`, `BaseCalculo`, `Abrangencia`, `Jurisdicao`; serviços `MotorDePrazos`, `CalendarioForense`; eventos em `EventoProcesso` |
 | Operacional | Casos de uso em `application.usecase`, job de varredura, endpoints REST e telas |
 
-Linguagem onipresente preservada no código: processo, andamento, intimação, citação, prazo fatal, termo inicial, dias úteis, recesso forense, cumprir, peça, endereçamento, qualificação, procuração ad judicia, segredo de justiça, OAB habilitada, quota litis.
+Linguagem onipresente preservada no código: processo, andamento, intimação, citação, prazo fatal, termo inicial, dias úteis, recesso forense, cumprir, peça, endereçamento, qualificação, procuração ad judicia, segredo de justiça, OAB habilitada, quota litis, feriado, abrangência, comarca, foro.
 
-## Padrões de projeto (6 dos 6 da lista do enunciado)
+## Padrões de projeto (os 6 da lista do enunciado, mais Composite)
 
 | Padrão | Onde | Problema real que resolve |
 |---|---|---|
-| **Strategy** | `ContagemPrazoStrategy` → `ContagemDiasUteis` / `ContagemDiasCorridos`; `CalculoHonorarioStrategy` → fixo / hora / quota litis | A lei define regimes distintos de contagem e de cobrança; o agregado não deve saber qual está em vigor |
+| **Strategy** | `ContagemPrazoStrategy` → `ContagemDiasUteis` / `ContagemDiasCorridos`; `CalculoHonorarioStrategy` → fixo / hora / quota litis; `RegraRecorrencia` → `DataUnica` / `RecorrenciaAnualFixa` | A lei define regimes distintos de contagem e de cobrança; o agregado não deve saber qual está em vigor. No feriado, separa *quando incide* de *onde vale* |
+| **Composite** | `RegraDiaNaoUtil` → `FimDeSemana`, `RecessoForense`, `FeriadosFixos`, `FeriadosDoForo`, combinadas por `CalendarioForense` | Cada motivo de suspensão do expediente é independente; o calendário combina todos sem saber quantos são, e a origem dos feriados (constante em teste, cadastro em banco em produção) troca sem tocar no calendário |
 | **Template Method** | `GeradorDocumento` → `PeticaoInicial`, `Contestacao`, `Procuracao` | A ordem das seções da peça é regra do domínio (`gerar()` é `final`); só corpo e pedidos mudam. `Procuracao` sobrescreve os hooks porque não se endereça ao juízo |
 | **Observer** | `Processo` e `MotorDePrazos` publicam `EventoProcesso`; `AdvogadoResponsavel` observa | Novo andamento e prazo em risco precisam avisar o responsável sem o agregado conhecer e-mail nem banco |
 | **Decorator** | `NotificadorPainel` decorado por `NotificadorEmail` e `NotificadorAuditoria` | Canais e trilha de auditoria empilháveis sobre a notificação base, sem `if` de canal |
@@ -77,9 +89,9 @@ Cenários em português em [`src/test/resources/features`](src/test/resources/fe
 > **Dado** um processo com prazo fatal em 5 dias úteis, **quando** faltarem 3 dias, **então** o advogado responsável deve ser notificado.
 
 ```
-12 scenarios (12 passed)
-80 steps (80 passed)
-Tests run: 29, Failures: 0, Errors: 0
+18 scenarios (18 passed)
+135 steps (135 passed)
+Tests run: 46, Failures: 0, Errors: 0
 ```
 
 ## Endpoints
@@ -97,6 +109,11 @@ POST /api/prazos/varredura?hoje=YYYY-MM-DD     roda o motor de prazos
 POST /api/documentos                           gera peça por template
 GET  /api/documentos?processo=                 lista peças
 GET  /api/documentos/{id}?oab=                 baixa a peça (passa pelo Proxy; 403 se não habilitada)
+
+POST   /api/feriados                           cadastra feriado (data única ou anual; nacional/estadual/comarcal)
+GET    /api/feriados                           lista o calendário cadastrado
+DELETE /api/feriados/{id}                      remove feriado
+GET    /api/feriados/dia-util?data=YYYY-MM-DD  corre prazo neste dia? (efeito do cadastro no motor)
 ```
 
 Exemplo:
@@ -109,6 +126,20 @@ curl -X POST localhost:8080/api/prazos -H 'Content-Type: application/json' -d '{
 
 curl -X POST 'localhost:8080/api/prazos/varredura?hoje=2026-09-09'
 # -> alerta URGENTE, 3 dias restantes
+```
+
+O cadastro de feriados muda a contagem sem reiniciar a aplicação:
+
+```bash
+curl 'localhost:8080/api/feriados/dia-util?data=2026-10-15'
+# -> {"diaUtil":true,...}
+
+curl -X POST localhost:8080/api/feriados -H 'Content-Type: application/json' -d '{
+  "descricao":"Aniversario do Recife","data":"2026-10-15",
+  "repeteTodoAno":true,"nivel":"COMARCAL","abrangencia":"Recife"}'
+
+curl 'localhost:8080/api/feriados/dia-util?data=2026-10-15'
+# -> {"diaUtil":false,"proximoDiaUtil":"2026-10-16"}  e o mesmo em 2027, porque e anual
 ```
 
 ## Documentação
@@ -125,4 +156,6 @@ curl -X POST 'localhost:8080/api/prazos/varredura?hoje=2026-09-09'
 - Observadores são reanexados pela camada de aplicação a cada carregamento do agregado — suficiente para instância única, não para escala horizontal.
 - H2 em memória: dados se perdem no shutdown. Trocar para PostgreSQL altera apenas `application.properties`.
 - Sem autenticação: a OAB do solicitante é informada na requisição, não extraída de sessão.
+- O foro dos feriados é único e vem de propriedade (`praxis.foro.*`), não de cada processo: o `Processo` guarda a comarca, mas não a UF. Feriado por processo exigiria derivar a UF do código do tribunal no número CNJ.
+- O cadastro de feriados é mantido em memória pelo adaptador (`FeriadoRepositorioJpa`), porque o calendário pergunta dia a dia ao percorrer um prazo. A escrita descarta o cache — suficiente para instância única, não para escala horizontal.
 - O arquivo `.cml` não foi validado com o plugin do Context Mapper nesta máquina (extensão não instalada).
