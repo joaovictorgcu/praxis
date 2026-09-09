@@ -6,6 +6,7 @@ import school.cesar.praxis.domain.feriado.DataUnica;
 import school.cesar.praxis.domain.feriado.Feriado;
 import school.cesar.praxis.domain.feriado.RecorrenciaAnualFixa;
 import school.cesar.praxis.domain.feriado.RegraRecorrencia;
+import school.cesar.praxis.domain.anexo.ArquivoAnexo;
 import school.cesar.praxis.domain.modelo.CodigoModelo;
 import school.cesar.praxis.domain.modelo.ModeloDocumento;
 import school.cesar.praxis.domain.modelo.TextoModelo;
@@ -13,6 +14,7 @@ import school.cesar.praxis.domain.prazo.NivelAlerta;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.ArquivoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
@@ -190,6 +192,49 @@ public final class PersistenciaMapper {
                 entidade.getDescricao(),
                 recorrencia,
                 new Abrangencia(entidade.getAbrangenciaNivel(), entidade.getAbrangenciaValor()));
+    }
+
+    // --- Arquivo anexado ---
+
+    public static ArquivoEntity paraEntidade(ArquivoAnexo anexo) {
+        ArquivoEntity entidade = new ArquivoEntity();
+        entidade.setId(anexo.getId());
+        entidade.setNumeroProcesso(anexo.getNumeroProcesso().valor());
+        entidade.setNome(anexo.getNome());
+        entidade.setTipo(anexo.getTipo());
+        entidade.setConteudo(anexo.getConteudo());
+        entidade.setDescricao(anexo.getDescricao());
+        entidade.setAnexadoEm(anexo.getAnexadoEm());
+        entidade.setAnexadoPorOab(anexo.getAnexadoPorOab());
+        entidade.setSegredoJustica(anexo.isSegredoJustica());
+        entidade.setOabsHabilitadas(String.join(",", anexo.getOabsHabilitadas()));
+        return entidade;
+    }
+
+    public static ArquivoAnexo paraDominio(ArquivoEntity entidade) {
+        return new ArquivoAnexo(
+                entidade.getId(),
+                NumeroCnj.de(entidade.getNumeroProcesso()),
+                entidade.getNome(),
+                entidade.getTipo(),
+                entidade.getConteudo(),
+                entidade.getDescricao(),
+                entidade.getAnexadoEm(),
+                entidade.getAnexadoPorOab(),
+                entidade.isSegredoJustica(),
+                lerOabs(entidade.getOabsHabilitadas()));
+    }
+
+    /** OABs habilitadas ficam em coluna unica, separadas por virgula. */
+    private static Set<String> lerOabs(String valor) {
+        Set<String> oabs = new LinkedHashSet<>();
+        if (valor != null && !valor.isBlank()) {
+            Arrays.stream(valor.split(","))
+                    .map(String::trim)
+                    .filter(oab -> !oab.isEmpty())
+                    .forEach(oabs::add);
+        }
+        return oabs;
     }
 
     // --- Modelo de documento ---

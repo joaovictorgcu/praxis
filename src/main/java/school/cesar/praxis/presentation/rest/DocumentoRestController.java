@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
-import school.cesar.praxis.domain.documento.DocumentoProxy;
+import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.TipoDocumento;
 
 import java.util.List;
@@ -69,7 +69,7 @@ public class DocumentoRestController {
                             "attachment; filename=\"" + documento.nomeArquivo() + "\"")
                     .contentType(MediaType.TEXT_PLAIN)
                     .body(documento.getConteudo());
-        } catch (DocumentoProxy.AcessoNegadoException negado) {
+        } catch (ProxyDeAcesso.AcessoNegadoException negado) {
             return ResponseEntity.status(403).body(negado.getMessage());
         }
     }

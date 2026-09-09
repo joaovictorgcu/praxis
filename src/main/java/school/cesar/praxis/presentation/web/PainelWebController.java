@@ -7,7 +7,7 @@ import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.application.port.in.ModelosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
-import school.cesar.praxis.domain.documento.DocumentoProxy;
+import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.TipoDocumento;
 import school.cesar.praxis.infrastructure.notificacao.NotificadorPainel;
 
@@ -123,7 +123,7 @@ public class PainelWebController {
             model.addAttribute("previa", documento.getConteudo());
             model.addAttribute("documentos", listar.executar(documento.getNumeroProcesso().valor()));
             model.addAttribute("processoFiltro", documento.getNumeroProcesso().valor());
-        } catch (DocumentoProxy.AcessoNegadoException negado) {
+        } catch (ProxyDeAcesso.AcessoNegadoException negado) {
             model.addAttribute("erro", negado.getMessage());
             model.addAttribute("documentos", listar.executar(null));
         }

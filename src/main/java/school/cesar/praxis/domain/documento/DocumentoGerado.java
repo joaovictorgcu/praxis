@@ -1,5 +1,6 @@
 package school.cesar.praxis.domain.documento;
 
+import school.cesar.praxis.domain.compartilhado.ConteudoRestrito;
 import school.cesar.praxis.domain.processo.NumeroCnj;
 
 import java.time.LocalDate;
@@ -14,7 +15,7 @@ import java.util.Set;
  * porque quem decide se um documento pode ser lido e o proprio documento - o
  * {@link DocumentoProxy} apenas faz cumprir.
  */
-public class DocumentoGerado {
+public class DocumentoGerado implements ConteudoRestrito {
 
     private final Long id;
     private final NumeroCnj numeroProcesso;
@@ -52,6 +53,7 @@ public class DocumentoGerado {
     }
 
     /** Art. 189 do CPC: em segredo de justica, so quem esta habilitado nos autos le. */
+    @Override
     public boolean podeSerLidoPor(String oabSolicitante) {
         if (!segredoJustica) {
             return true;

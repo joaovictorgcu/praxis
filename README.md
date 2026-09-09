@@ -8,7 +8,7 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 ## Como rodar
 
 ```bash
-./mvnw test            # 67 testes: unidade + contrato HTTP + 26 cenários BDD (227 steps)
+./mvnw test            # 84 testes: unidade + contrato HTTP + 32 cenários BDD (271 steps)
 ./mvnw spring-boot:run # sobe em http://localhost:8080
 ```
 
@@ -57,6 +57,17 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 - Editar modelo não altera peça já gerada, porque o documento persiste o próprio conteúdo.
 - Sobe com dois modelos de exemplo (`COBRANCA_ALUGUEL` e `ACORDO_EXTRAJUDICIAL`). Desligue com `praxis.modelos-iniciais=false`.
 
+### 5. Upload e anexação de arquivos ao processo
+
+- Arquivo recebido de fora (procuração assinada, comprovante, laudo) é juntado aos autos e guardado **no banco**, em BLOB.
+- **Agregado próprio** (`ArquivoAnexo`), e não um documento gerado com bytes: a peça nasce de template e tem seções; o anexo é binário opaco, com nome original, tipo e tamanho.
+- O que os dois têm em comum é só a **regra de acesso**, extraída em `ConteudoRestrito`: o mesmo Proxy do segredo de justiça protege peça gerada e anexo, sem duplicar a checagem do art. 189.
+- O anexo copia segredo de justiça e OABs habilitadas do processo **no momento da juntada** — anexo juntado quando os autos eram públicos não passa a ser sigiloso depois.
+- Tipos aceitos são uma lista curta (PDF, JPEG, PNG, texto) e o limite é de 10 MB: autos eletrônicos não recebem binário qualquer, e recusar na porta evita anexo que o juízo não abre.
+- O nome vem do computador de quem envia, então **não é confiável**: caminho de diretório é descartado (bloqueia `../`) e a extensão do tipo aceito é garantida.
+- Juntada avisa o advogado responsável, pelo mesmo Observer dos demais eventos.
+- Não existe caso de uso de remoção: documento juntado aos autos não se desanexa — retirar peça depende de decisão judicial (desentranhamento), que não é operação de tela.
+
 Funcionalidades de apoio já no repositório: cadastro de processo, registro de andamento com linha do tempo cronológica, e cálculo de honorários (fixo, por hora, quota litis com limite ético de 30%).
 
 ## Arquitetura limpa
@@ -64,7 +75,7 @@ Funcionalidades de apoio já no repositório: cadastro de processo, registro de 
 ```
 presentation/   REST (/api/**) e web Thymeleaf (/painel/**) — só traduz HTTP em caso de uso
 application/    port/in (casos de uso), port/out (repositórios), usecase (orquestração)
-domain/         processo, prazo, documento, modelo, feriado, notificacao, honorario, compartilhado — Java puro
+domain/         processo, prazo, documento, modelo, anexo, feriado, notificacao, honorario, compartilhado — Java puro
 infrastructure/ persistence (JPA + mappers + adapters), notificacao, scheduler, config
 ```
 
@@ -76,7 +87,7 @@ Regra de dependência: **nada no `domain` importa Spring ou JPA**. As entidades 
 |---|---|
 | Preliminar | [`docs/dominio.md`](docs/dominio.md) — problema, e por que estas duas funcionalidades primeiro |
 | Estratégico | 4 subdomínios / bounded contexts e suas relações — [`docs/praxis.cml`](docs/praxis.cml) (Context Mapper) |
-| Tático | Agregados `Processo`, `Prazo`, `DocumentoGerado`, `Feriado`, `ModeloDocumento`; VOs `NumeroCnj`, `Advogado`, `AlertaPrazo`, `BaseCalculo`, `Abrangencia`, `Jurisdicao`, `CodigoModelo`, `TextoModelo`; serviços `MotorDePrazos`, `CalendarioForense`; eventos em `EventoProcesso` |
+| Tático | Agregados `Processo`, `Prazo`, `DocumentoGerado`, `Feriado`, `ModeloDocumento`, `ArquivoAnexo`; VOs `NumeroCnj`, `Advogado`, `AlertaPrazo`, `BaseCalculo`, `Abrangencia`, `Jurisdicao`, `CodigoModelo`, `TextoModelo`; núcleo compartilhado `ConteudoRestrito`; serviços `MotorDePrazos`, `CalendarioForense`; eventos em `EventoProcesso` |
 | Operacional | Casos de uso em `application.usecase`, job de varredura, endpoints REST e telas |
 
 Linguagem onipresente preservada no código: processo, andamento, intimação, citação, prazo fatal, termo inicial, dias úteis, recesso forense, cumprir, peça, endereçamento, qualificação, procuração ad judicia, segredo de justiça, OAB habilitada, quota litis, feriado, abrangência, comarca, foro.
@@ -91,7 +102,7 @@ Linguagem onipresente preservada no código: processo, andamento, intimação, c
 | **Interpreter** | `ExpressaoTexto` → `Literal` / `ReferenciaCampo`, montadas por `TextoModelo` e avaliadas contra `ContextoTexto` | O texto do modelo é uma linguagem mínima (trecho fixo + referência a campo); cada termo sabe se interpretar, então o modelo não faz varredura de string a cada geração nem precisa saber quais campos existem |
 | **Observer** | `Processo` e `MotorDePrazos` publicam `EventoProcesso`; `AdvogadoResponsavel` observa | Novo andamento e prazo em risco precisam avisar o responsável sem o agregado conhecer e-mail nem banco |
 | **Decorator** | `NotificadorPainel` decorado por `NotificadorEmail` e `NotificadorAuditoria` | Canais e trilha de auditoria empilháveis sobre a notificação base, sem `if` de canal |
-| **Proxy** | `DocumentoProxy` | Segredo de justiça conferido antes de o conteúdo sair da persistência; impossível esquecer a checagem, porque o caso de uso só tem acesso ao Proxy |
+| **Proxy** | `ProxyDeAcesso` sobre `ConteudoRestrito`, especializado em `DocumentoProxy` e `ArquivoProxy` | Segredo de justiça conferido antes de o conteúdo sair da persistência; impossível esquecer a checagem, porque o caso de uso só tem acesso ao Proxy. A regra do art. 189 é escrita uma vez e vale para peça gerada e arquivo anexado |
 | **Iterator** | `Processo implements Iterable<Andamento>` | Linha do tempo em ordem cronológica sem expor a coleção interna |
 
 ## BDD
@@ -101,12 +112,12 @@ Cenários em português em [`src/test/resources/features`](src/test/resources/fe
 > **Dado** um processo com prazo fatal em 5 dias úteis, **quando** faltarem 3 dias, **então** o advogado responsável deve ser notificado.
 
 ```
-26 scenarios (26 passed)
-227 steps (227 passed)
-Tests run: 67, Failures: 0, Errors: 0
+32 scenarios (32 passed)
+271 steps (271 passed)
+Tests run: 84, Failures: 0, Errors: 0
 ```
 
-Os cenários chamam os casos de uso, então não cobrem o corpo JSON dos controllers. `ModeloHttpTest` fecha essa lacuna pelo mesmo caminho do navegador (MockMvc) — foi assim que apareceu um `codigoModelo` que faltava no `record` de requisição e passava despercebido pelo BDD.
+Os cenários chamam os casos de uso, então não cobrem o corpo da requisição dos controllers. `ModeloHttpTest` e `AnexoHttpTest` fecham essa lacuna pelo mesmo caminho do navegador (MockMvc) — foi assim que apareceram um `codigoModelo` faltando no `record` de requisição e um `500` onde devia haver `400`, ambos invisíveis para o BDD.
 
 ## Endpoints
 
@@ -127,6 +138,10 @@ GET  /api/documentos/{id}?oab=                 baixa a peça (passa pelo Proxy; 
 POST   /api/modelos                            cadastra modelo de peça (corpo e pedidos com {{campo}})
 GET    /api/modelos                            lista modelos e os campos que cada um espera
 DELETE /api/modelos/{id}                       remove modelo
+
+POST /api/anexos                               junta arquivo aos autos (multipart)
+GET  /api/anexos?processo=                     lista anexos (sem os bytes)
+GET  /api/anexos/{id}?oab=                     baixa o arquivo (passa pelo Proxy; 403 se não habilitada)
 
 POST   /api/feriados                           cadastra feriado (data única ou anual; nacional/estadual/comarcal)
 GET    /api/feriados                           lista o calendário cadastrado
@@ -177,6 +192,23 @@ curl -X POST localhost:8080/api/documentos -H 'Content-Type: application/json' -
 # -> peca com o mesmo esqueleto das compiladas, sem linguagem de juizo
 ```
 
+Juntada de arquivo e o sigilo dos autos:
+
+```bash
+curl -X POST localhost:8080/api/anexos \
+  -F 'numeroProcesso=0007654-32.2026.8.17.0002' \
+  -F 'arquivo=@laudo.pdf;type=application/pdf' \
+  -F 'descricao=Laudo pericial' -F 'oab=PE54321'
+# -> {"id":1,...,"segredoJustica":true}   (herdado do processo)
+
+curl 'localhost:8080/api/anexos/1?oab=PE54321'   # -> 200, o arquivo
+curl 'localhost:8080/api/anexos/1?oab=PE99999'   # -> 403, barrado pelo Proxy
+```
+
+Falha de domínio vira status HTTP correto (`TratadorDeErrosRest`): invariante violada
+pela requisição é `400`, agregado inexistente é `404` e segredo de justiça é `403` —
+nunca `500`.
+
 ## Documentação
 
 - [`docs/dominio.md`](docs/dominio.md) — descrição do domínio e linguagem onipresente, DDD nos 4 níveis
@@ -196,4 +228,7 @@ curl -X POST localhost:8080/api/documentos -H 'Content-Type: application/json' -
 - O modelo de documento define corpo e pedidos, não a ordem das seções: o esqueleto é regra do domínio. Modelo que precise de estrutura própria exigiria nova subclasse de `GeradorDocumento`.
 - Modelos não têm versão. Editar o modelo não afeta peça já gerada (o documento persiste o conteúdo), mas o histórico do próprio modelo não é guardado.
 - Os campos do modelo são texto simples, sem tipo nem obrigatoriedade: campo esquecido sai como `(nome a preencher)` na peça, e não barra a geração.
+- Anexos são guardados em BLOB no banco. Simplifica o backup e a transação (arquivo e metadados commitam juntos), mas não escala para volume alto — a troca por armazenamento de objetos afeta apenas `ArquivoRepositorioJpa`.
+- O conteúdo do anexo não é inspecionado: confia-se no `Content-Type` declarado no upload. Um PDF renomeado passaria. Validar assinatura de arquivo (magic number) e antivírus fica para produção.
+- Anexo não tem versão nem desentranhamento: a juntada é definitiva na tela.
 - O arquivo `.cml` não foi validado com o plugin do Context Mapper nesta máquina (extensão não instalada).

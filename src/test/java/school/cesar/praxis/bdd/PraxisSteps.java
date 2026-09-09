@@ -6,15 +6,18 @@ import io.cucumber.java.Before;
 import io.cucumber.java.pt.Dado;
 import io.cucumber.java.pt.E;
 import io.cucumber.java.pt.Entao;
+import io.cucumber.java.pt.Mas;
 import io.cucumber.java.pt.Quando;
 import org.springframework.beans.factory.annotation.Autowired;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
+import school.cesar.praxis.application.port.in.AnexosUseCases;
 import school.cesar.praxis.application.port.in.FeriadosUseCases;
 import school.cesar.praxis.application.port.in.ModelosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
-import school.cesar.praxis.domain.documento.DocumentoProxy;
+import school.cesar.praxis.domain.anexo.ArquivoAnexo;
+import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.TipoDocumento;
 import school.cesar.praxis.domain.feriado.Abrangencia;
 import school.cesar.praxis.domain.notificacao.Notificacao;
@@ -53,6 +56,12 @@ public class PraxisSteps {
     @Autowired
     private DocumentosUseCases.ListarDocumentos listarDocumentos;
     @Autowired
+    private AnexosUseCases.AnexarArquivo anexarArquivo;
+    @Autowired
+    private AnexosUseCases.ListarAnexos listarAnexos;
+    @Autowired
+    private AnexosUseCases.BaixarAnexo baixarAnexo;
+    @Autowired
     private ModelosUseCases.CadastrarModelo cadastrarModelo;
     @Autowired
     private ModelosUseCases.RemoverModelo removerModelo;
@@ -86,6 +95,7 @@ public class PraxisSteps {
     private final List<Long> feriadosDoCenario = new ArrayList<>();
     private final List<Long> modelosDoCenario = new ArrayList<>();
     private ModelosUseCases.ItemModelo modelo;
+    private AnexosUseCases.ItemAnexo anexo;
     private RuntimeException falhaEsperada;
 
     @Before
@@ -99,6 +109,7 @@ public class PraxisSteps {
         prazo = null;
         documento = null;
         modelo = null;
+        anexo = null;
         falhaEsperada = null;
         segredoJustica = false;
     }
@@ -426,7 +437,97 @@ public class PraxisSteps {
 
     @E("a leitura da peca pela OAB {string} deve ser negada")
     public void leituraNegada(String oab) {
-        assertThrows(DocumentoProxy.AcessoNegadoException.class,
+        assertThrows(ProxyDeAcesso.AcessoNegadoException.class,
                 () -> baixarDocumento.executar(documento.getId(), oab));
+    }
+
+    // --- Anexacao de arquivos ao processo ---
+
+    @Quando("eu junto aos autos o arquivo {string} do tipo {string}")
+    public void euJuntoOArquivo(String nome, String mime) {
+        anexo = juntar(numeroProcesso, nome, mime, "conteudo de teste".getBytes());
+    }
+
+    @Quando("eu tento juntar aos autos o arquivo {string} do tipo {string}")
+    public void euTentoJuntarTipoInvalido(String nome, String mime) {
+        falhaEsperada = assertThrows(IllegalArgumentException.class,
+                () -> juntar(numeroProcesso, nome, mime, "conteudo de teste".getBytes()));
+    }
+
+    @Quando("eu tento juntar aos autos um arquivo vazio")
+    public void euTentoJuntarArquivoVazio() {
+        falhaEsperada = assertThrows(IllegalArgumentException.class,
+                () -> juntar(numeroProcesso, "vazio.pdf", "application/pdf", new byte[0]));
+    }
+
+    @Quando("eu tento juntar o arquivo {string} ao processo {string}")
+    public void euTentoJuntarEmProcessoInexistente(String nome, String numero) {
+        falhaEsperada = assertThrows(NoSuchElementException.class,
+                () -> juntar(numero, nome, "application/pdf", "conteudo".getBytes()));
+    }
+
+    @Entao("o anexo deve constar na lista de arquivos do processo")
+    public void oAnexoDeveConstarNaLista() {
+        assertTrue(listarAnexos.executar(numeroProcesso).stream()
+                        .anyMatch(item -> item.id().equals(anexo.id())),
+                "anexo nao aparece na lista do processo");
+    }
+
+    @Entao("o nome do anexo deve ser {string}")
+    public void oNomeDoAnexoDeveSer(String nome) {
+        assertEquals(nome, anexo.nome());
+    }
+
+    @Entao("o anexo deve poder ser lido pela OAB {string}")
+    public void anexoLidoPor(String oab) {
+        ArquivoAnexo lido = baixarAnexo.executar(anexo.id(), oab);
+        assertEquals(anexo.id(), lido.getId());
+        assertTrue(lido.tamanhoBytes() > 0);
+    }
+
+    @Mas("a leitura do anexo pela OAB {string} deve ser negada")
+    public void leituraDoAnexoNegada(String oab) {
+        assertThrows(ProxyDeAcesso.AcessoNegadoException.class,
+                () -> baixarAnexo.executar(anexo.id(), oab));
+    }
+
+    @E("a leitura do anexo sem OAB deve ser negada")
+    public void leituraDoAnexoSemOab() {
+        assertThrows(ProxyDeAcesso.AcessoNegadoException.class,
+                () -> baixarAnexo.executar(anexo.id(), "  "));
+    }
+
+    @E("o advogado responsavel deve ser notificado sobre o arquivo juntado")
+    public void notificadoSobreAnexo() {
+        List<Notificacao> entregues = painel.getEntregues();
+        assertTrue(entregues.stream()
+                        .anyMatch(notificacao -> notificacao.assunto().startsWith("Arquivo juntado")),
+                "painel nao recebeu aviso de arquivo juntado: " + entregues);
+    }
+
+    @Entao("a juntada deve ser recusada por tipo nao aceito")
+    public void recusadaPorTipo() {
+        assertRecusa("tipo de arquivo nao aceito");
+    }
+
+    @Entao("a juntada deve ser recusada por falta de conteudo")
+    public void recusadaPorConteudo() {
+        assertRecusa("anexo sem conteudo");
+    }
+
+    @Entao("a juntada deve ser recusada por processo inexistente")
+    public void recusadaPorProcesso() {
+        assertRecusa("processo nao encontrado");
+    }
+
+    private AnexosUseCases.ItemAnexo juntar(String numero, String nome, String mime, byte[] bytes) {
+        return anexarArquivo.executar(new AnexosUseCases.AnexarArquivo.Comando(
+                numero, nome, mime, bytes, "arquivo de teste", oabResponsavel));
+    }
+
+    private void assertRecusa(String motivoEsperado) {
+        assertNotNull(falhaEsperada, "a operacao foi aceita");
+        assertTrue(falhaEsperada.getMessage().contains(motivoEsperado),
+                "motivo inesperado: " + falhaEsperada.getMessage());
     }
 }
