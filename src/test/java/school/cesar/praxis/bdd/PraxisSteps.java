@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.application.port.in.AnexosUseCases;
 import school.cesar.praxis.application.port.in.FeriadosUseCases;
+import school.cesar.praxis.application.port.in.HonorariosUseCases;
 import school.cesar.praxis.application.port.in.ModelosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
@@ -27,6 +28,7 @@ import school.cesar.praxis.domain.prazo.RegimeContagem;
 import school.cesar.praxis.infrastructure.notificacao.NotificadorPainel;
 import school.cesar.praxis.infrastructure.persistence.repository.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +74,10 @@ public class PraxisSteps {
     @Autowired
     private FeriadosUseCases.ConsultarDiaUtil consultarDiaUtil;
     @Autowired
+    private HonorariosUseCases.CadastrarContrato cadastrarContrato;
+    @Autowired
+    private HonorariosUseCases.ListarContratos listarContratos;
+    @Autowired
     private NotificadorPainel painel;
 
     @Autowired
@@ -82,6 +88,8 @@ public class PraxisSteps {
     private DocumentoJpaRepository documentosJpa;
     @Autowired
     private NotificacaoJpaRepository notificacoesJpa;
+    @Autowired
+    private ContratoHonorarioJpaRepository contratosJpa;
     @Autowired
     private DocumentosUseCases.EnviarDocumentoParaRevisao enviarParaRevisao;
     @Autowired
@@ -106,6 +114,7 @@ public class PraxisSteps {
     private final List<Long> modelosDoCenario = new ArrayList<>();
     private ModelosUseCases.ItemModelo modelo;
     private AnexosUseCases.ItemAnexo anexo;
+    private HonorariosUseCases.ItemContrato contrato;
     private RuntimeException falhaEsperada;
 
     @Before
@@ -113,6 +122,7 @@ public class PraxisSteps {
         prazosJpa.deleteAll();
         documentosJpa.deleteAll();
         notificacoesJpa.deleteAll();
+        contratosJpa.deleteAll();
         processosJpa.deleteAll();
         painel.limpar();
         alertas.clear();
@@ -120,6 +130,7 @@ public class PraxisSteps {
         documento = null;
         modelo = null;
         anexo = null;
+        contrato = null;
         falhaEsperada = null;
         segredoJustica = false;
     }
@@ -589,5 +600,75 @@ public class PraxisSteps {
         assertNotNull(falhaEsperada, "a operacao foi aceita");
         assertTrue(falhaEsperada.getMessage().contains(motivoEsperado),
                 "motivo inesperado: " + falhaEsperada.getMessage());
+    }
+
+    @Quando("eu contrato honorario fixo de {string}")
+    public void euContratoHonorarioFixo(String valor) {
+        contrato = contratarFixo(numeroProcesso, valor);
+    }
+
+    @Dado("que eu contratei honorario fixo de {string}")
+    public void queEuContrateiHonorarioFixo(String valor) {
+        contrato = contratarFixo(numeroProcesso, valor);
+    }
+
+    @Quando("eu tento contratar honorario fixo de {string} no processo {string}")
+    public void euTentoContratarHonorarioFixoNoProcesso(String valor, String numero) {
+        falhaEsperada = assertThrows(NoSuchElementException.class,
+                () -> contratarFixo(numero, valor));
+    }
+
+    @Quando("eu contrato honorario por hora de {string} com {int} horas trabalhadas")
+    public void euContratoHonorarioPorHora(String valorHora, int horas) {
+        contrato = cadastrarContrato.executar(new HonorariosUseCases.CadastrarContrato.Comando(
+                numeroProcesso, "POR_HORA", LocalDate.now(), null, new BigDecimal(valorHora), horas,
+                null, null));
+    }
+
+    @Quando("eu contrato honorario quota litis de {int}% sobre causa de {string}")
+    public void euContratoHonorarioQuotaLitis(int percentual, String valorCausa) {
+        contrato = cadastrarContrato.executar(new HonorariosUseCases.CadastrarContrato.Comando(
+                numeroProcesso, "QUOTA_LITIS", LocalDate.now(), null, null, 0,
+                new BigDecimal(valorCausa), BigDecimal.valueOf(percentual)));
+    }
+
+    @Quando("eu tento contratar honorario quota litis de {int}% sobre causa de {string}")
+    public void euTentoContratarHonorarioQuotaLitis(int percentual, String valorCausa) {
+        falhaEsperada = assertThrows(IllegalArgumentException.class,
+                () -> cadastrarContrato.executar(new HonorariosUseCases.CadastrarContrato.Comando(
+                        numeroProcesso, "QUOTA_LITIS", LocalDate.now(), null, null, 0,
+                        new BigDecimal(valorCausa), BigDecimal.valueOf(percentual))));
+    }
+
+    @Entao("o valor contratado deve ser {string}")
+    public void oValorContratadoDeveSer(String valor) {
+        assertEquals(new BigDecimal(valor), contrato.valorContratado());
+    }
+
+    @E("a modalidade do contrato deve ser {string}")
+    public void aModalidadeDoContratoDeveSer(String modalidade) {
+        assertEquals(modalidade, contrato.modalidade());
+    }
+
+    @Entao("o contrato deve constar na lista de honorarios do processo")
+    public void oContratoDeveConstarNaLista() {
+        assertTrue(listarContratos.executar(numeroProcesso).stream()
+                        .anyMatch(item -> item.id().equals(contrato.id())),
+                "contrato nao aparece na lista do processo");
+    }
+
+    @Entao("a contratacao deve ser recusada por limite etico")
+    public void aContratacaoDeveSerRecusadaPorLimiteEtico() {
+        assertRecusa("limite etico");
+    }
+
+    @Entao("a contratacao deve ser recusada por processo inexistente")
+    public void aContratacaoDeveSerRecusadaPorProcessoInexistente() {
+        assertRecusa("processo nao encontrado");
+    }
+
+    private HonorariosUseCases.ItemContrato contratarFixo(String numero, String valor) {
+        return cadastrarContrato.executar(new HonorariosUseCases.CadastrarContrato.Comando(
+                numero, "FIXO", LocalDate.now(), new BigDecimal(valor), null, 0, null, null));
     }
 }

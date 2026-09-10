@@ -9,6 +9,8 @@ import school.cesar.praxis.domain.feriado.Feriado;
 import school.cesar.praxis.domain.feriado.RecorrenciaAnualFixa;
 import school.cesar.praxis.domain.feriado.RegraRecorrencia;
 import school.cesar.praxis.domain.anexo.ArquivoAnexo;
+import school.cesar.praxis.domain.honorario.BaseCalculo;
+import school.cesar.praxis.domain.honorario.ContratoHonorario;
 import school.cesar.praxis.domain.modelo.CodigoModelo;
 import school.cesar.praxis.domain.modelo.ModeloDocumento;
 import school.cesar.praxis.domain.modelo.TextoModelo;
@@ -17,6 +19,7 @@ import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ArquivoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.ContratoHonorarioEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
@@ -271,6 +274,37 @@ public final class PersistenciaMapper {
                     .forEach(oabs::add);
         }
         return oabs;
+    }
+
+    public static ContratoHonorarioEntity paraEntidade(ContratoHonorario contrato) {
+        BaseCalculo base = contrato.getBaseCalculo();
+        ContratoHonorarioEntity entidade = new ContratoHonorarioEntity();
+        entidade.setId(contrato.getId());
+        entidade.setNumeroProcesso(contrato.getNumeroProcesso().valor());
+        entidade.setModalidade(contrato.getModalidade());
+        entidade.setCelebradoEm(contrato.getCelebradoEm());
+        entidade.setValorFixo(base.valorFixo());
+        entidade.setValorHora(base.valorHora());
+        entidade.setHorasTrabalhadas(base.horasTrabalhadas());
+        entidade.setValorCausa(base.valorCausa());
+        entidade.setPercentualExito(base.percentualExito());
+        entidade.setValorContratado(contrato.getValorContratado());
+        return entidade;
+    }
+
+    public static ContratoHonorario paraDominio(ContratoHonorarioEntity entidade) {
+        return new ContratoHonorario(
+                entidade.getId(),
+                NumeroCnj.de(entidade.getNumeroProcesso()),
+                entidade.getModalidade(),
+                new BaseCalculo(
+                        entidade.getValorFixo(),
+                        entidade.getValorHora(),
+                        entidade.getHorasTrabalhadas(),
+                        entidade.getValorCausa(),
+                        entidade.getPercentualExito()),
+                entidade.getCelebradoEm(),
+                entidade.getValorContratado());
     }
 
     // --- Modelo de documento ---
