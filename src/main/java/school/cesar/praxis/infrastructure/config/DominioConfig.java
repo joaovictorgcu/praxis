@@ -133,4 +133,9 @@ public class DominioConfig {
     public CalculoHonorarioStrategy honorarioQuotaLitis() {
         return new HonorarioQuotaLitis();
     }
+
+    @Bean
+    public MotorDeHonorarios motorDeHonorarios(List<CalculoHonorarioStrategy> estrategias) {
+        return new MotorDeHonorarios(estrategias);
+    }
 }

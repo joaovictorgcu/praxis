@@ -87,6 +87,43 @@ class GeracaoDeDocumentosTest {
     }
 
     @Test
+    @DisplayName("habilitar OAB da acesso a documento sigiloso que antes era negado")
+    void habilitarOabDaAcesso() {
+        DocumentoGerado sigiloso = new DocumentoGerado(3L,
+                NumeroCnj.de("0007654-32.2026.8.17.0002"), TipoDocumento.PETICAO_INICIAL,
+                "conteudo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true, Set.of("PE54321"));
+
+        assertFalse(sigiloso.podeSerLidoPor("PE99999"));
+        sigiloso.habilitarOab("PE99999");
+        assertTrue(sigiloso.podeSerLidoPor("PE99999"));
+    }
+
+    @Test
+    @DisplayName("revogar OAB tira o acesso que ela tinha")
+    void revogarOabTiraAcesso() {
+        DocumentoGerado sigiloso = new DocumentoGerado(4L,
+                NumeroCnj.de("0007654-32.2026.8.17.0002"), TipoDocumento.PETICAO_INICIAL,
+                "conteudo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true,
+                new java.util.LinkedHashSet<>(Set.of("PE54321", "PE99999")));
+
+        sigiloso.revogarOab("PE99999");
+
+        assertFalse(sigiloso.podeSerLidoPor("PE99999"));
+        assertTrue(sigiloso.podeSerLidoPor("PE54321"));
+    }
+
+    @Test
+    @DisplayName("nao pode revogar a ultima OAB habilitada de documento sigiloso")
+    void naoRevogaUltimaOabDeSigiloso() {
+        DocumentoGerado sigiloso = new DocumentoGerado(5L,
+                NumeroCnj.de("0007654-32.2026.8.17.0002"), TipoDocumento.PETICAO_INICIAL,
+                "conteudo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true, Set.of("PE54321"));
+
+        assertThrows(IllegalArgumentException.class, () -> sigiloso.revogarOab("PE54321"));
+        assertTrue(sigiloso.podeSerLidoPor("PE54321"));
+    }
+
+    @Test
     @DisplayName("Decorator: painel, e-mail e auditoria recebem a mesma notificacao")
     void cadeiaDeDecorators() {
         List<Notificacao> painel = new ArrayList<>();
