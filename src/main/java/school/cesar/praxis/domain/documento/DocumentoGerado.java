@@ -27,7 +27,7 @@ public class DocumentoGerado implements ConteudoRestrito {
     private final LocalDate geradoEm;
     private final String geradoPorOab;
     private final boolean segredoJustica;
-    private final Set<String> oabsHabilitadas;
+    private final Set<String> oabsHabilitadas = new LinkedHashSet<>();
 
     private StatusDocumento status;
     private final List<RegistroAprovacao> historico = new ArrayList<>();
@@ -53,9 +53,9 @@ public class DocumentoGerado implements ConteudoRestrito {
         this.geradoEm = geradoEm;
         this.geradoPorOab = geradoPorOab;
         this.segredoJustica = segredoJustica;
-        this.oabsHabilitadas = oabsHabilitadas == null
-                ? Set.of()
-                : Set.copyOf(new LinkedHashSet<>(oabsHabilitadas));
+        if (oabsHabilitadas != null) {
+            this.oabsHabilitadas.addAll(oabsHabilitadas);
+        }
         this.status = new Rascunho();
     }
 
@@ -122,5 +122,20 @@ public class DocumentoGerado implements ConteudoRestrito {
     public LocalDate getGeradoEm() { return geradoEm; }
     public String getGeradoPorOab() { return geradoPorOab; }
     public boolean isSegredoJustica() { return segredoJustica; }
-    public Set<String> getOabsHabilitadas() { return oabsHabilitadas; }
+    public Set<String> getOabsHabilitadas() { return Set.copyOf(oabsHabilitadas); }
+
+    public void habilitarOab(String oab) {
+        if (oab == null || oab.isBlank()) {
+            throw new IllegalArgumentException("OAB e obrigatoria");
+        }
+        oabsHabilitadas.add(oab);
+    }
+
+    public void revogarOab(String oab) {
+        if (segredoJustica && oabsHabilitadas.size() == 1 && oabsHabilitadas.contains(oab)) {
+            throw new IllegalArgumentException(
+                    "documento em segredo de justica exige ao menos uma OAB habilitada");
+        }
+        oabsHabilitadas.remove(oab);
+    }
 }
