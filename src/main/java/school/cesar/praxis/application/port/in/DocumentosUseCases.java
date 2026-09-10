@@ -78,4 +78,14 @@ public interface DocumentosUseCases {
         record Comando(Long documentoId) {}
         DocumentoGerado executar(Comando comando);
     }
+
+    interface HabilitarOab {
+        record Comando(Long documentoId, String oab) {}
+        DocumentoGerado executar(Comando comando);
+    }
+
+    interface RevogarOab {
+        record Comando(Long documentoId, String oab) {}
+        DocumentoGerado executar(Comando comando);
+    }
 }
