@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logs ###
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+### Database ###
+*.h2.db
+*.mv.db
