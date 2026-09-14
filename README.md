@@ -8,7 +8,7 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 ## Como rodar
 
 ```bash
-./mvnw test            # 160 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
+./mvnw test            # 161 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
 ./mvnw spring-boot:run # sobe em http://localhost:8080
 ```
 
@@ -156,7 +156,7 @@ Cenários em português em [`src/test/resources/features`](src/test/resources/fe
 ```
 53 scenarios (53 passed)
 481 steps (481 passed)
-Tests run: 160, Failures: 0, Errors: 0
+Tests run: 161, Failures: 0, Errors: 0
 ```
 
 Os cenários chamam os casos de uso, então não cobrem o corpo da requisição dos controllers. `ModeloHttpTest`, `AnexoHttpTest` e `LoginHttpTest` fecham essa lacuna pelo mesmo caminho do navegador (MockMvc) — foi assim que apareceram um `codigoModelo` faltando no `record` de requisição e um `500` onde devia haver `400`, ambos invisíveis para o BDD.

@@ -34,30 +34,36 @@
                placeholder="0001234-56.2026.8.17.0001" required>
       </label>
       <label>Tipo de peca
-        <select name="tipo">
+        <select name="tipo" id="tipo-peca">
           <option th:each="tipo : ${tipos}" th:value="${tipo}" th:text="${tipo.rotulo()}">peca</option>
         </select>
       </label>
       <label>Modelo cadastrado
-        <select name="codigoModelo">
+        <select name="codigoModelo" id="codigo-modelo">
           <option value="">-- sem modelo (peca compilada) --</option>
           <option th:each="modelo : ${modelos}" th:value="${modelo.codigo()}"
+                  th:attr="data-campos=${#strings.setJoin(modelo.camposEsperados(), ',')},data-tipo=${modelo.rotuloTipo()}"
                   th:text="${modelo.nome()} + ' (' + ${modelo.codigo()} + ')'">modelo</option>
         </select>
       </label>
-      <label class="largo">Dos fatos
+
+      <!-- Peca compilada: campos fixos de cada tipo. -->
+      <label class="largo so-compilado" data-tipos="PETICAO_INICIAL,CONTESTACAO">Dos fatos
         <textarea name="fatos" rows="3" placeholder="Narrativa dos fatos"></textarea>
       </label>
-      <label class="largo">Do direito
+      <label class="largo so-compilado" data-tipos="PETICAO_INICIAL,CONTESTACAO">Do direito
         <textarea name="fundamentos" rows="3" placeholder="Fundamentos juridicos"></textarea>
       </label>
-      <label class="largo">Poderes especiais (procuracao)
+      <label class="largo so-compilado" data-tipos="PROCURACAO">Poderes especiais (procuracao)
         <input type="text" name="poderesEspeciais" placeholder="receber citacao, dar quitacao">
       </label>
-      <label class="largo">Campos do modelo (um <code>campo=valor</code> por linha)
-        <textarea name="camposLivres" rows="3"
-                  placeholder="valorDivida=R$ 12.500,00&#10;prazoAcordo=30 dias"></textarea>
-      </label>
+
+      <!-- Modelo cadastrado: um campo por marcador {{campo}} que o modelo espera (gerado em praxis.js). -->
+      <fieldset class="largo campos-modelo" id="campos-modelo" hidden>
+        <legend>Campos pedidos pelo modelo</legend>
+        <p class="apoio vazio-modelo">Este modelo so usa campos dos autos (cliente, comarca, processo, advogado, OAB): nada a preencher.</p>
+        <div class="grade-campos"></div>
+      </fieldset>
       <div>
         <button type="submit">Gerar peca</button>
       </div>

@@ -27,7 +27,8 @@
       Qualquer outro nome sera pedido na hora de gerar a peca.
     </p>
 
-    <form th:action="@{/painel/modelos}" method="post" class="empilhado">
+    <form th:action="@{/painel/modelos}" method="post" class="empilhado" id="form-modelo"
+          th:attr="data-reservados=${#strings.setJoin(reservados, ',')}">
       <input type="hidden" name="_csrf" th:value="${csrf}">
       <div class="linha">
         <label for="codigo">Codigo
@@ -54,15 +55,18 @@
       </div>
 
       <label for="corpo">Corpo
-        <textarea id="corpo" name="corpo" rows="6" required
+        <textarea id="corpo" name="corpo" rows="6" required class="modelo-texto" data-marcadores
                   placeholder="DOS FATOS&#10;O locatario {{cliente}} deixou de pagar {{valorDivida}}."></textarea>
       </label>
 
       <label for="pedidos">Pedidos
-        <textarea id="pedidos" name="pedidos" rows="4" required
+        <textarea id="pedidos" name="pedidos" rows="4" required class="modelo-texto" data-marcadores
                   placeholder="DOS PEDIDOS&#10;a) a condenacao ao pagamento de {{valorDivida}}."></textarea>
       </label>
 
+      <p class="apoio campos-detectados" id="campos-detectados" aria-live="polite">
+        Campos que serao pedidos ao gerar a peca: <strong>nenhum ainda</strong>
+      </p>
       <div>
         <button type="submit">Cadastrar modelo</button>
       </div>

@@ -49,6 +49,9 @@ public class PainelWebController {
     private final ModelosUseCases.ListarModelos listarModelos;
     private final NotificadorPainel painel;
 
+    /** Prefixo dos inputs gerados pela tela para os marcadores do modelo. */
+    private static final String PREFIXO_CAMPO = "campo_";
+
     public PainelWebController(PrazosUseCases.ConsultarAgenda agenda,
                                PrazosUseCases.VarrerPrazos varredura,
                                PrazosUseCases.CumprirPrazo cumprir,
@@ -147,13 +150,20 @@ public class PainelWebController {
                                  @RequestParam(required = false) String fundamentos,
                                  @RequestParam(required = false) String poderesEspeciais,
                                  @RequestParam(required = false) String camposLivres,
+                                 @RequestParam Map<String, String> todosOsParametros,
                                  UsuarioLogado usuario,
                                  Model model) {
         Map<String, String> campos = new LinkedHashMap<>();
         adicionar(campos, "fatos", fatos);
         adicionar(campos, "fundamentos", fundamentos);
         adicionar(campos, "poderesEspeciais", poderesEspeciais);
-        campos.putAll(lerCamposLivres(camposLivres));
+        // Campos do modelo: um input por marcador, gerado na tela como campo_<nome>.
+        todosOsParametros.forEach((nome, valor) -> {
+            if (nome.startsWith(PREFIXO_CAMPO)) {
+                adicionar(campos, nome.substring(PREFIXO_CAMPO.length()), valor);
+            }
+        });
+        campos.putAll(lerCamposLivres(camposLivres)); // compatibilidade: "campo=valor" por linha
 
         model.addAttribute("processoFiltro", numeroProcesso);
         try {

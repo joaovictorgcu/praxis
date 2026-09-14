@@ -238,6 +238,29 @@ class GestaoHttpTest {
     }
 
     @Test
+    @DisplayName("gerar peca por modelo: campos chegam como campo_<nome> e a tela expoe os campos esperados")
+    void camposDoModeloPelaTela() throws Exception {
+        MockHttpSession ana = advogada();
+
+        mvc.perform(get("/painel/documentos").session(ana))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-campos=\"")))
+                .andExpect(content().string(containsString("id=\"campos-modelo\"")))
+                .andExpect(content().string(not(containsString("camposLivres"))));
+
+        mvc.perform(post("/painel/documentos").session(ana)
+                        .param("numeroProcesso", "0001234-56.2026.8.17.0001")
+                        .param("tipo", "PETICAO_INICIAL")
+                        .param("codigoModelo", "COBRANCA_ALUGUEL")
+                        .param("campo_valorDivida", "R$ 12.500,00")
+                        .param("campo_enderecoImovel", "Rua das Flores, 10"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("acumulando R$ 12.500,00")))
+                .andExpect(content().string(containsString("Rua das Flores, 10")))
+                .andExpect(content().string(not(containsString("a preencher)"))));
+    }
+
+    @Test
     @DisplayName("painel: resumo do dia aparece e o nome no cabecalho leva a minha conta")
     void resumoDoPainel() throws Exception {
         mvc.perform(get("/painel").session(chefe()))
