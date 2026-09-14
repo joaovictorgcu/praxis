@@ -4,21 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>praxis - modelos de peca</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
 </head>
 <body>
-<header>
-  <h1>praxis</h1>
-  <nav>
-    <a th:href="@{/painel}">Agenda de prazos</a>
-    <a th:href="@{/painel/documentos}">Documentos</a>
-    <a th:href="@{/painel/anexos}">Anexos</a>
-    <a th:href="@{/painel/modelos}" class="ativo">Modelos</a>
-    <a th:href="@{/painel/feriados}">Feriados</a>
-  </nav>
-</header>
+<header th:replace="~{fragmentos :: cabecalho('modelos')}"></header>
 
 <main>
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
   <section class="cartao">
     <h2>Cadastrar modelo de peca</h2>
     <p class="apoio">
@@ -32,79 +27,91 @@
       Qualquer outro nome sera pedido na hora de gerar a peca.
     </p>
 
-    <p th:if="${erro}" class="etiqueta vermelha" th:text="${erro}">erro</p>
-
-    <form th:action="@{/painel/modelos}" method="post">
+    <form th:action="@{/painel/modelos}" method="post" class="empilhado">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
       <div class="linha">
-        <label for="codigo">Codigo</label>
-        <input type="text" id="codigo" name="codigo" required placeholder="COBRANCA_ALUGUEL">
-
-        <label for="nome">Nome</label>
-        <input type="text" id="nome" name="nome" required placeholder="Cobranca de aluguel">
-
-        <label for="tipo">Peca produzida</label>
-        <select id="tipo" name="tipo">
-          <option th:each="item : ${tipos}" th:value="${item}" th:text="${item.rotulo()}">Peca</option>
-        </select>
-      </div>
-
-      <div class="linha">
-        <label for="titulo">Titulo proprio (opcional)</label>
-        <input type="text" id="titulo" name="titulo" placeholder="Acordo extrajudicial">
-
-        <label for="enderecaAoJuizo">
-          <input type="checkbox" id="enderecaAoJuizo" name="enderecaAoJuizo" value="true" checked>
-          Enderaca ao juizo
+        <label for="codigo">Codigo
+          <input type="text" id="codigo" name="codigo" required placeholder="COBRANCA_ALUGUEL">
+        </label>
+        <label for="nome">Nome
+          <input type="text" id="nome" name="nome" required placeholder="Cobranca de aluguel">
+        </label>
+        <label for="tipo">Peca produzida
+          <select id="tipo" name="tipo">
+            <option th:each="item : ${tipos}" th:value="${item}" th:text="${item.rotulo()}">Peca</option>
+          </select>
         </label>
       </div>
 
-      <label for="corpo">Corpo</label>
-      <textarea id="corpo" name="corpo" rows="6" required
-                placeholder="DOS FATOS&#10;O locatario {{cliente}} deixou de pagar {{valorDivida}}."></textarea>
+      <div class="linha">
+        <label for="titulo">Titulo proprio (opcional)
+          <input type="text" id="titulo" name="titulo" placeholder="Acordo extrajudicial">
+        </label>
+        <label for="enderecaAoJuizo" class="marcador">
+          <input type="checkbox" id="enderecaAoJuizo" name="enderecaAoJuizo" value="true" checked>
+          Endereca ao juizo
+        </label>
+      </div>
 
-      <label for="pedidos">Pedidos</label>
-      <textarea id="pedidos" name="pedidos" rows="4" required
-                placeholder="DOS PEDIDOS&#10;a) a condenacao ao pagamento de {{valorDivida}}."></textarea>
+      <label for="corpo">Corpo
+        <textarea id="corpo" name="corpo" rows="6" required
+                  placeholder="DOS FATOS&#10;O locatario {{cliente}} deixou de pagar {{valorDivida}}."></textarea>
+      </label>
 
-      <button type="submit">Cadastrar modelo</button>
+      <label for="pedidos">Pedidos
+        <textarea id="pedidos" name="pedidos" rows="4" required
+                  placeholder="DOS PEDIDOS&#10;a) a condenacao ao pagamento de {{valorDivida}}."></textarea>
+      </label>
+
+      <div>
+        <button type="submit">Cadastrar modelo</button>
+      </div>
     </form>
   </section>
 
   <section class="cartao">
     <h2>Modelos cadastrados</h2>
-    <table>
-      <thead>
-      <tr>
-        <th>Codigo</th>
-        <th>Nome</th>
-        <th>Peca produzida</th>
-        <th>Campos a informar</th>
-        <th></th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="modelo : ${modelos}">
-        <td><code th:text="${modelo.codigo()}">-</code></td>
-        <td th:text="${modelo.nome()}">-</td>
-        <td>
-          <span th:text="${modelo.rotuloTipo()}">-</span>
-          <span th:unless="${modelo.enderecaAoJuizo()}" class="etiqueta cinza">sem enderecamento</span>
-        </td>
-        <td>
-          <span th:if="${#sets.isEmpty(modelo.camposEsperados())}" class="apoio">nenhum</span>
-          <span th:text="${#strings.setJoin(modelo.camposEsperados(), ', ')}">campos</span>
-        </td>
-        <td>
-          <form th:action="@{'/painel/modelos/' + ${modelo.id()} + '/remover'}" method="post">
-            <button type="submit" class="secundario">Remover</button>
-          </form>
-        </td>
-      </tr>
-      <tr th:if="${#lists.isEmpty(modelos)}">
-        <td colspan="5" class="vazio">Nenhum modelo cadastrado.</td>
-      </tr>
-      </tbody>
-    </table>
+    <p class="apoio" th:unless="${usuario.chefe()}">
+      Remover modelo e acao do chefe do escritorio.
+    </p>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Codigo</th>
+          <th>Nome</th>
+          <th>Peca produzida</th>
+          <th>Campos a informar</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="modelo : ${modelos}">
+          <td><code th:text="${modelo.codigo()}">-</code></td>
+          <td th:text="${modelo.nome()}">-</td>
+          <td>
+            <span th:text="${modelo.rotuloTipo()}">-</span>
+            <span th:unless="${modelo.enderecaAoJuizo()}" class="etiqueta cinza">sem enderecamento</span>
+          </td>
+          <td>
+            <span th:if="${#sets.isEmpty(modelo.camposEsperados())}" class="apoio">nenhum</span>
+            <span th:text="${#strings.setJoin(modelo.camposEsperados(), ', ')}">campos</span>
+          </td>
+          <td class="acoes">
+            <form th:if="${usuario.chefe()}"
+                  th:action="@{'/painel/modelos/' + ${modelo.id()} + '/remover'}" method="post"
+                  th:attr="data-confirmar='Remover o modelo ' + ${modelo.codigo()} + '?'">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button type="submit" class="perigo pequeno">Remover</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(modelos)}">
+          <td colspan="5" class="vazio">Nenhum modelo cadastrado.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 </main>
 </body>

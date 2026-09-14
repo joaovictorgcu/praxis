@@ -10,8 +10,6 @@ import school.cesar.praxis.domain.documento.ComandoRejeitarDocumento;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 
 import java.util.NoSuchElementException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
 
 @Service
 public class FluxoAprovacaoDocumentoService implements
@@ -22,7 +20,6 @@ public class FluxoAprovacaoDocumentoService implements
         DocumentosUseCases.ProtocolarDocumento {
 
     private final DocumentoRepositorio documentos;
-    private final Map<Long, ComandoDocumento> ultimoComando = new ConcurrentHashMap<>();
 
     public FluxoAprovacaoDocumentoService(DocumentoRepositorio documentos) {
         this.documentos = documentos;
@@ -50,7 +47,6 @@ public class FluxoAprovacaoDocumentoService implements
         DocumentoGerado documento = buscar(comando.documentoId());
         ComandoDocumento cmd = new ComandoAprovarDocumento(documento, comando.oabAprovador(), comando.comentario());
         cmd.executar();
-        ultimoComando.put(documento.getId(), cmd);
         return documentos.salvar(documento);
     }
 
@@ -60,19 +56,18 @@ public class FluxoAprovacaoDocumentoService implements
         DocumentoGerado documento = buscar(comando.documentoId());
         ComandoDocumento cmd = new ComandoRejeitarDocumento(documento, comando.oabAprovador(), comando.motivo());
         cmd.executar();
-        ultimoComando.put(documento.getId(), cmd);
         return documentos.salvar(documento);
     }
 
     @Override
     @Transactional
     public DocumentoGerado executar(DocumentosUseCases.DesfazerDecisaoDocumento.Comando comando) {
-        ComandoDocumento cmd = ultimoComando.remove(comando.documentoId());
-        if (cmd == null) {
-            throw new IllegalStateException("nao ha decisao para desfazer neste documento");
-        }
-        cmd.desfazer();
-        return documentos.salvar(cmd.documento());
+        // O desfazer opera sobre o agregado recem-carregado, e nao sobre um snapshot
+        // guardado em memoria: sobrevive a reinicio e nao descarta alteracoes feitas
+        // entre a decisao e o desfazer (ex.: OAB habilitada depois da aprovacao).
+        DocumentoGerado documento = buscar(comando.documentoId());
+        documento.desfazerUltimaDecisao();
+        return documentos.salvar(documento);
     }
 
     @Override

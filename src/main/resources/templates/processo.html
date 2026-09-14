@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="'praxis - processo ' + ${processo.numero.valor()}">praxis - processo</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
+</head>
+<body>
+<header th:replace="~{fragmentos :: cabecalho('processos')}"></header>
+
+<main>
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>
+        Processo <span th:text="${processo.numero.valor()}">CNJ</span>
+        <span th:replace="~{fragmentos :: sigilo(${processo.segredoJustica})}"></span>
+      </h2>
+      <a class="botao secundario pequeno" th:href="@{/painel/processos}">Todos os processos</a>
+    </div>
+    <dl class="ficha">
+      <div><dt>Cliente</dt><dd th:text="${processo.cliente}">-</dd></div>
+      <div><dt>Comarca</dt><dd th:text="${processo.comarca}">-</dd></div>
+      <div><dt>Responsavel</dt>
+        <dd>
+          <span th:text="${processo.responsavel.nome()}">-</span>
+          <span class="apoio" th:text="'OAB ' + ${processo.responsavel.oab()} + ' - ' + ${processo.responsavel.email()}">-</span>
+        </dd>
+      </div>
+      <div><dt>Ultima intimacao</dt>
+        <dd th:with="ult=${processo.ultimaIntimacao()}">
+          <span th:if="${ult != null}" th:text="${#temporals.format(ult.data, 'dd/MM/yyyy')} + ' - ' + ${ult.descricao}">-</span>
+          <span th:if="${ult == null}" class="apoio">nenhuma</span>
+        </dd>
+      </div>
+    </dl>
+    <p th:if="${processo.segredoJustica and !podeLer}" class="mensagem erro" role="alert">
+      Autos em segredo de justica: sua OAB nao esta habilitada; peca e anexo deste processo
+      serao recusados pelo Proxy. Peca ao chefe para habilitar a OAB na peca.
+    </p>
+    <div class="fluxo">
+      <a class="botao pequeno" th:href="@{/painel/documentos(processo=${processo.numero.valor()})}">Gerar peca</a>
+      <a class="botao secundario pequeno" th:href="@{/painel/anexos(processo=${processo.numero.valor()})}">Juntar arquivo</a>
+    </div>
+  </section>
+
+  <div class="duas-colunas">
+    <section class="cartao">
+      <h2>Registrar andamento</h2>
+      <p class="apoio">Intimacao e citacao iniciam contagem de prazo; o responsavel e avisado (Observer).</p>
+      <form th:action="@{'/painel/processos/' + ${processo.numero.valor()} + '/andamentos'}" method="post" class="empilhado">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+        <label>Data
+          <input type="date" name="data" th:value="${hoje}" required>
+        </label>
+        <label>Tipo
+          <select name="tipo">
+            <option th:each="t : ${tiposAndamento}" th:value="${t}" th:text="${#strings.capitalize(#strings.toLowerCase(t))}">Tipo</option>
+          </select>
+        </label>
+        <label>Descricao
+          <input type="text" name="descricao" required placeholder="Intimacao para contestar">
+        </label>
+        <div><button type="submit">Registrar</button></div>
+      </form>
+    </section>
+
+    <section class="cartao">
+      <h2>Abrir prazo</h2>
+      <p class="apoio">
+        Vencimento calculado pelo motor: termo inicial no primeiro dia util apos a intimacao,
+        feriados do foro e recesso forense (CPC arts. 219, 220 e 224). Fica congelado na abertura.
+      </p>
+      <form th:action="@{'/painel/processos/' + ${processo.numero.valor()} + '/prazos'}" method="post" class="empilhado">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+        <label>Descricao
+          <input type="text" name="descricao" required placeholder="Contestacao">
+        </label>
+        <div class="linha" style="margin:0">
+          <label>Intimacao em
+            <input type="date" name="intimacao" th:value="${hoje}" required>
+          </label>
+          <label>Dias
+            <input type="number" name="quantidadeDias" min="1" value="15" required style="width:90px">
+          </label>
+          <label>Regime
+            <select name="regime">
+              <option th:each="r : ${regimes}" th:value="${r}"
+                      th:text="${r.name() == 'DIAS_UTEIS'} ? 'Dias uteis' : 'Dias corridos'">Regime</option>
+            </select>
+          </label>
+        </div>
+        <label class="marcador">
+          <input type="checkbox" name="fatal" value="true" checked>
+          Prazo fatal (gera alertas escalonados)
+        </label>
+        <div><button type="submit">Abrir prazo</button></div>
+      </form>
+    </section>
+  </div>
+
+  <section class="cartao">
+    <h2>Linha do tempo</h2>
+    <ol class="linha-do-tempo">
+      <li th:each="a : ${andamentos}">
+        <time th:text="${#temporals.format(a.data, 'dd/MM/yyyy')}">data</time>
+        <span class="etiqueta" th:classappend="${a.iniciaContagemDePrazo()} ? 'ambar' : 'cinza'"
+              th:text="${#strings.toLowerCase(a.tipo)}">tipo</span>
+        <span th:text="${a.descricao}">descricao</span>
+      </li>
+      <li th:if="${processo.quantidadeAndamentos() == 0}" class="vazio">Nenhum andamento registrado.</li>
+    </ol>
+  </section>
+
+  <section class="cartao">
+    <h2>Prazos</h2>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Prazo</th>
+          <th>Vencimento</th>
+          <th>Dias restantes</th>
+          <th>Fatal</th>
+          <th>Situacao</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${prazos}"
+            th:classappend="${item.cumprido()} ? '' : (${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : ''))">
+          <td th:text="${item.descricao()}">-</td>
+          <td th:text="${#temporals.format(item.vencimento(), 'dd/MM/yyyy')}">-</td>
+          <td>
+            <span th:if="${item.cumprido()}" class="apoio">-</span>
+            <span th:if="${!item.cumprido() and item.vencido()}" class="etiqueta vermelha">vencido</span>
+            <span th:if="${!item.cumprido() and !item.vencido()}" th:text="${item.diasRestantes()}">0</span>
+          </td>
+          <td>
+            <span th:if="${item.fatal()}" class="etiqueta vermelha">fatal</span>
+            <span th:unless="${item.fatal()}" class="etiqueta cinza">comum</span>
+          </td>
+          <td>
+            <span th:if="${item.cumprido()}" class="etiqueta verde">cumprido</span>
+            <span th:unless="${item.cumprido()}" class="etiqueta azul">em aberto</span>
+          </td>
+          <td class="acoes">
+            <form th:unless="${item.cumprido()}"
+                  th:action="@{'/painel/processos/' + ${processo.numero.valor()} + '/prazos/' + ${item.prazoId()} + '/cumprir'}"
+                  method="post"
+                  th:attr="data-confirmar='Registrar o prazo \'' + ${item.descricao()} + '\' como cumprido?'">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button type="submit" class="secundario pequeno">Cumprir</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(prazos)}">
+          <td colspan="6" class="vazio">Nenhum prazo lancado.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="duas-colunas">
+    <section class="cartao">
+      <h2>Pecas</h2>
+      <div class="tabela">
+        <table>
+          <thead><tr><th>#</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+          <tr th:each="d : ${documentos}">
+            <td th:text="${d.id()}">1</td>
+            <td th:text="${d.tipo().rotulo()}">-</td>
+            <td><span th:replace="~{fragmentos :: status(${d.status()})}"></span></td>
+            <td class="acoes">
+              <a class="botao secundario pequeno" th:href="@{'/painel/documentos/' + ${d.id()}}">Abrir</a>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(documentos)}"><td colspan="4" class="vazio">Nenhuma peca.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cartao">
+      <h2>Anexos</h2>
+      <div class="tabela">
+        <table>
+          <thead><tr><th>Arquivo</th><th>Tipo</th><th>Juntado em</th><th></th></tr></thead>
+          <tbody>
+          <tr th:each="a : ${anexos}">
+            <td th:text="${a.nome()}">-</td>
+            <td th:text="${a.rotuloTipo()}">-</td>
+            <td th:text="${#temporals.format(a.anexadoEm(), 'dd/MM/yyyy')}">-</td>
+            <td class="acoes">
+              <a class="botao secundario pequeno"
+                 th:href="@{'/api/anexos/' + ${a.id()} + '?oab=' + ${usuario.oab()}}">Baixar</a>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(anexos)}"><td colspan="4" class="vazio">Nenhum anexo.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

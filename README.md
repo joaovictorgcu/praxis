@@ -3,20 +3,31 @@
 Sistema web de gestão para escritórios de advocacia — processos, prazos e honorários.
 Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR School), com **DDD**, **arquitetura limpa**, **padrões de projeto GoF**, persistência relacional com ORM e cenários **BDD automatizados com Cucumber**.
 
-**Stack:** Java 17 · Spring Boot 4.1.1 (WebMVC, Data JPA, Validation, Thymeleaf) · H2 · JUnit 5 · Cucumber 7 · Maven Wrapper.
+**Stack:** Java 17 · Spring Boot 4.1.1 (WebMVC, Data JPA, Validation, Thymeleaf) · H2 (dev/test) · PostgreSQL + Flyway (prod) · JUnit 5 · Cucumber 7 · Maven Wrapper.
 
 ## Como rodar
 
 ```bash
-./mvnw test            # 84 testes: unidade + contrato HTTP + 32 cenários BDD (271 steps)
+./mvnw test            # 159 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
 ./mvnw spring-boot:run # sobe em http://localhost:8080
 ```
 
-- Interface web: <http://localhost:8080/painel>
+- Interface web: <http://localhost:8080/painel> (pede login; veja [Acesso ao painel](#acesso-ao-painel-advogados-e-chefes))
 - Console do banco: <http://localhost:8080/h2-console> (`jdbc:h2:mem:praxis`, usuário `sa`, sem senha)
 - A aplicação sobe com carga de exemplo (dois processos, um deles em segredo de justiça, e três prazos em estados diferentes). Desligue com `praxis.dados-exemplo=false`.
 - O calendário nasce com os feriados nacionais, mais um estadual e um comarcal de exemplo. Desligue com `praxis.feriados-iniciais=false`.
 - O foro do escritório define quais feriados estaduais e comarcais contam: `praxis.foro.uf=PE` e `praxis.foro.comarca=Recife`.
+
+### Produção: PostgreSQL + Flyway
+
+```bash
+SPRING_PROFILES_ACTIVE=prod PRAXIS_DB_URL=jdbc:postgresql://localhost:5432/praxis PRAXIS_DB_USER=praxis PRAXIS_DB_PASSWORD=segredo PRAXIS_SENHA_INICIAL=troque-ja ./mvnw spring-boot:run
+```
+
+- O esquema é versionado em [`src/main/resources/db/migration`](src/main/resources/db/migration) (`V1__esquema_inicial.sql`); o Hibernate roda com `ddl-auto=validate`, então toda mudança de entidade exige uma nova `V{n}__*.sql`.
+- Em dev/test o Flyway fica desligado e o H2 em memória segue com `ddl-auto=update`. `MigracaoFlywayTest` sobe a aplicação com H2 em modo PostgreSQL, aplica a migração e deixa o Hibernate validar — migração e entidades não divergem sem um teste quebrar.
+- Binário e texto longo são `bytea`/`text` (colunas comuns), não large objects (`oid`): entram em backup e transação como qualquer coluna.
+- No perfil prod os usuários iniciais nascem com **senha provisória** (`praxis.exigir-troca-senha-inicial=true`): o primeiro acesso cai na troca de senha; a carga de exemplo não roda; cookie de sessão `Secure`.
 
 ## Funcionalidades implementadas nesta entrega
 
@@ -24,7 +35,7 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 
 - Contagem legal em **dias úteis** (CPC art. 219) ou **dias corridos**, com termo inicial no primeiro dia útil seguinte à intimação (art. 224), feriados e **recesso forense** de 20/12 a 20/01 (art. 220).
 - Vencimento **congelado** na abertura do prazo: alterar o calendário depois não move prazo já lançado.
-- Alerta **escalonado** por dias contáveis restantes: `ATENCAO` (≤5), `URGENTE` (≤3), `CRITICO` (≤1), `VENCE_HOJE` (0 ou vencido) — sempre o nível mais severo aplicável.
+- Alerta **escalonado** por dias contáveis restantes: `ATENCAO` (≤5), `URGENTE` (≤3), `CRITICO` (≤1), `VENCE_HOJE` (0) e `VENCIDO` (em aberto após o vencimento, aviso de perda) — sempre o nível mais severo aplicável.
 - **Idempotência por marco**: cada nível é notificado uma única vez por prazo, então rodar a varredura duas vezes no mesmo dia não gera aviso repetido.
 - Varredura automática todo dia útil às 7h (`@Scheduled`) e endpoint manual que chama **o mesmo caso de uso**.
 - Notificação entregue por cadeia de canais (painel, e-mail, trilha de auditoria em banco).
@@ -68,15 +79,45 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 - Juntada avisa o advogado responsável, pelo mesmo Observer dos demais eventos.
 - Não existe caso de uso de remoção: documento juntado aos autos não se desanexa — retirar peça depende de decisão judicial (desentranhamento), que não é operação de tela.
 
+### 6. Acesso ao painel: advogados e chefes
+
+- Todo o painel (`/painel/**`) exige **login por e-mail e senha**; a sessão HTTP guarda só uma projeção do usuário (nome, OAB e papel), nunca a senha.
+- Dois **papéis**: `ADVOGADO` conduz os autos (gera peça, envia para revisão, protocola, junta anexo, cadastra feriado e modelo); `CHEFE` (sócio/coordenador) faz tudo isso e ainda **aprova, rejeita e desfaz decisão** sobre peça, **habilita OAB** em peça sigilosa e **remove** feriado e modelo.
+- A **OAB do solicitante deixou de ser digitada nas telas**: sai da sessão. O Proxy de segredo de justiça passa a conferir quem realmente está logado.
+- Ação do chefe é marcada com `@SomenteChefe` e barrada pelo `SessaoInterceptor` com `403`, mesmo que o advogado monte o POST na mão; a tela apenas esconde o botão.
+- Senha protegida com **PBKDF2-HMAC-SHA256** (sal por usuário, 120 mil iterações) do próprio JDK, atrás da porta de domínio `CodificadorDeSenha` — o agregado `Usuario` não sabe o algoritmo.
+- E-mail desconhecido e senha errada recebem a **mesma mensagem**, para não revelar quem tem conta; destino pós-login só aceita caminho interno do painel; a sessão é recriada ao autenticar (evita fixação).
+- A **API REST continua aberta** e recebendo a OAB na requisição, como antes — é o contrato dos testes HTTP e dos scripts abaixo.
+- O **fluxo de aprovação** de peça (rascunho → em revisão → aprovado/rejeitado → protocolado), antes só na API, agora está na tela de documentos, com histórico de transições.
+- **Gestão de usuários** pela tela (`/painel/usuarios`, chefe): cadastrar com senha provisória e remover — nunca a si mesmo nem o último chefe. **Minha conta** (`/painel/conta`): troca de senha exigindo a atual; a sessão é encerrada para entrar de novo.
+- **Freio de força bruta** no login: 5 falhas seguidas para o mesmo e-mail bloqueiam aquele e-mail por 1 minuto.
+- **CSRF**: todo POST do painel (e o `/sair`) leva um token sincronizado com a sessão (`_csrf` hidden ou cabeçalho `X-CSRF-Token`); sem ele, `403`. Sessão só por cookie (`HttpOnly`, `SameSite=Lax`, sem `;jsessionid` em URL).
+- **Cabeçalhos de segurança** em toda resposta: `Content-Security-Policy` (`script-src 'self'`, `frame-ancestors 'none'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, e `Cache-Control: no-store` nas páginas autenticadas. Por isso as telas não têm JavaScript inline: o comportamento (confirmações, anti-duplo-clique) está em `/js/praxis.js` via atributos `data-*`.
+- **Senha provisória**: usuário cadastrado pelo chefe entra e só consegue abrir *Minha conta* até trocar a senha; ao trocar, a flag cai.
+- **Tela de processos** (`/painel/processos`): cadastrar processo escolhendo o responsável entre os usuários, ficha com linha do tempo (Iterator), prazos, peças e anexos; registrar andamento e abrir prazo pela tela — antes só via API.
+- **Resumo do dia** no painel: prazos vencidos, críticos, sob sua responsabilidade, peças aguardando revisão e rascunhos a retrabalhar.
+
+#### Acesso ao painel (advogados e chefes)
+
+A aplicação sobe com três usuários (desligue com `praxis.usuarios-iniciais=false`; a senha inicial é `praxis.senha-inicial`, padrão `praxis123` — troque em produção):
+
+| Papel | Nome | E-mail | OAB |
+|---|---|---|---|
+| Chefe | Carla Mendes | `carla.mendes@praxis.adv.br` | PE00001 |
+| Advogado | Ana Beatriz Souza | `ana.souza@praxis.adv.br` | PE12345 (responsável pelo processo público de exemplo) |
+| Advogado | Bruno Carvalho | `bruno.carvalho@praxis.adv.br` | PE54321 (responsável pelo processo em segredo de justiça) |
+
+Entre como Bruno para ler a peça sigilosa; como Ana, o Proxy recusa. Entre como Carla para aprovar a peça que Ana enviou para revisão.
+
 Funcionalidades de apoio já no repositório: cadastro de processo, registro de andamento com linha do tempo cronológica, e cálculo de honorários (fixo, por hora, quota litis com limite ético de 30%).
 
 ## Arquitetura limpa
 
 ```
-presentation/   REST (/api/**) e web Thymeleaf (/painel/**) — só traduz HTTP em caso de uso
+presentation/   REST (/api/**) e web Thymeleaf (/painel/**, login e guarda de sessão) — só traduz HTTP em caso de uso
 application/    port/in (casos de uso), port/out (repositórios), usecase (orquestração)
-domain/         processo, prazo, documento, modelo, anexo, feriado, notificacao, honorario, compartilhado — Java puro
-infrastructure/ persistence (JPA + mappers + adapters), notificacao, scheduler, config
+domain/         processo, prazo, documento, modelo, anexo, feriado, notificacao, honorario, usuario, compartilhado — Java puro
+infrastructure/ persistence (JPA + mappers + adapters), notificacao, scheduler, seguranca (PBKDF2), config
 ```
 
 Regra de dependência: **nada no `domain` importa Spring ou JPA**. As entidades JPA vivem em `infrastructure.persistence.entity` e o `PersistenciaMapper` traduz nos dois sentidos; quem instancia e liga as classes de domínio é `infrastructure.config.DominioConfig`.
@@ -87,7 +128,7 @@ Regra de dependência: **nada no `domain` importa Spring ou JPA**. As entidades 
 |---|---|
 | Preliminar | [`docs/dominio.md`](docs/dominio.md) — problema, e por que estas duas funcionalidades primeiro |
 | Estratégico | 4 subdomínios / bounded contexts e suas relações — [`docs/praxis.cml`](docs/praxis.cml) (Context Mapper) |
-| Tático | Agregados `Processo`, `Prazo`, `DocumentoGerado`, `Feriado`, `ModeloDocumento`, `ArquivoAnexo`; VOs `NumeroCnj`, `Advogado`, `AlertaPrazo`, `BaseCalculo`, `Abrangencia`, `Jurisdicao`, `CodigoModelo`, `TextoModelo`; núcleo compartilhado `ConteudoRestrito`; serviços `MotorDePrazos`, `CalendarioForense`; eventos em `EventoProcesso` |
+| Tático | Agregados `Processo`, `Prazo`, `DocumentoGerado`, `Feriado`, `ModeloDocumento`, `ArquivoAnexo`, `Usuario`; VOs `NumeroCnj`, `Advogado`, `AlertaPrazo`, `BaseCalculo`, `Abrangencia`, `Jurisdicao`, `CodigoModelo`, `TextoModelo`; núcleo compartilhado `ConteudoRestrito`; serviços `MotorDePrazos`, `CalendarioForense`; eventos em `EventoProcesso` |
 | Operacional | Casos de uso em `application.usecase`, job de varredura, endpoints REST e telas |
 
 Linguagem onipresente preservada no código: processo, andamento, intimação, citação, prazo fatal, termo inicial, dias úteis, recesso forense, cumprir, peça, endereçamento, qualificação, procuração ad judicia, segredo de justiça, OAB habilitada, quota litis, feriado, abrangência, comarca, foro.
@@ -112,12 +153,12 @@ Cenários em português em [`src/test/resources/features`](src/test/resources/fe
 > **Dado** um processo com prazo fatal em 5 dias úteis, **quando** faltarem 3 dias, **então** o advogado responsável deve ser notificado.
 
 ```
-32 scenarios (32 passed)
-271 steps (271 passed)
-Tests run: 84, Failures: 0, Errors: 0
+53 scenarios (53 passed)
+481 steps (481 passed)
+Tests run: 159, Failures: 0, Errors: 0
 ```
 
-Os cenários chamam os casos de uso, então não cobrem o corpo da requisição dos controllers. `ModeloHttpTest` e `AnexoHttpTest` fecham essa lacuna pelo mesmo caminho do navegador (MockMvc) — foi assim que apareceram um `codigoModelo` faltando no `record` de requisição e um `500` onde devia haver `400`, ambos invisíveis para o BDD.
+Os cenários chamam os casos de uso, então não cobrem o corpo da requisição dos controllers. `ModeloHttpTest`, `AnexoHttpTest` e `LoginHttpTest` fecham essa lacuna pelo mesmo caminho do navegador (MockMvc) — foi assim que apareceram um `codigoModelo` faltando no `record` de requisição e um `500` onde devia haver `400`, ambos invisíveis para o BDD.
 
 ## Endpoints
 
@@ -147,6 +188,28 @@ POST   /api/feriados                           cadastra feriado (data única ou 
 GET    /api/feriados                           lista o calendário cadastrado
 DELETE /api/feriados/{id}                      remove feriado
 GET    /api/feriados/dia-util?data=YYYY-MM-DD  corre prazo neste dia? (efeito do cadastro no motor)
+
+POST /api/documentos/{id}/enviar-revisao       rascunho -> em revisão
+POST /api/documentos/{id}/aprovar              {oab, texto}   em revisão -> aprovado
+POST /api/documentos/{id}/rejeitar             {oab, texto}   em revisão -> rejeitado
+POST /api/documentos/{id}/desfazer             desfaz a última decisão (volta a em revisão)
+POST /api/documentos/{id}/protocolar           aprovado -> protocolado
+POST /api/documentos/{id}/oabs                 {oab}  habilita OAB nos autos da peça
+```
+
+Telas (exigem sessão):
+
+```
+GET  /login                        formulário; POST /login autentica; POST /sair encerra
+GET  /painel                       resumo do dia, agenda de prazos e avisos
+GET  /painel/processos             lista/busca e cadastro de processos
+GET  /painel/processos/{cnj}       ficha: linha do tempo, prazos, peças, anexos; POST andamentos e prazos
+GET  /painel/documentos            gerar peça, fluxo de aprovação (botões por papel), abrir com a OAB da sessão
+GET  /painel/anexos                juntar e baixar arquivos com a OAB da sessão
+GET  /painel/modelos               cadastro de modelos (remover: chefe)
+GET  /painel/feriados              cadastro de feriados (remover: chefe)
+GET  /painel/usuarios              gestão de usuários (chefe)
+GET  /painel/conta                 minha conta; POST /painel/conta/senha troca a senha
 ```
 
 Exemplo:
@@ -206,8 +269,9 @@ curl 'localhost:8080/api/anexos/1?oab=PE99999'   # -> 403, barrado pelo Proxy
 ```
 
 Falha de domínio vira status HTTP correto (`TratadorDeErrosRest`): invariante violada
-pela requisição é `400`, agregado inexistente é `404` e segredo de justiça é `403` —
-nunca `500`.
+pela requisição é `400` (inclusive data ou enum mal formados), agregado inexistente é `404`,
+segredo de justiça é `403`, transição de estado inválida (aprovar rascunho, cumprir prazo já
+cumprido) e violação de unicidade no banco são `409` — nunca `500`.
 
 ## Documentação
 
@@ -222,7 +286,10 @@ nunca `500`.
 - E-mail é registrado em log e memória (o `NotificadorEmail` é o ponto de troca por `JavaMailSender`).
 - Observadores são reanexados pela camada de aplicação a cada carregamento do agregado — suficiente para instância única, não para escala horizontal.
 - H2 em memória: dados se perdem no shutdown. Trocar para PostgreSQL altera apenas `application.properties`.
-- Sem autenticação: a OAB do solicitante é informada na requisição, não extraída de sessão.
+- Autenticação é de sessão HTTP, própria (sem Spring Security), e vale só para o painel: a API REST continua recebendo a OAB na requisição. Não há recuperação de senha por e-mail: quem esquece pede ao chefe para recadastrar.
+- O freio de força bruta do login é em memória, por instância — suficiente para instância única.
+- `AgendaDeAudiencias` (domínio) não é usado pelo serviço de audiências, que consulta o repositório diretamente; a classe ficou como modelo de referência e as regras vigentes são as da JPQL.
+- Papel é binário (advogado/chefe); não há vínculo entre usuário e processo além da OAB, então qualquer advogado logado vê a agenda inteira do escritório.
 - O foro dos feriados é único e vem de propriedade (`praxis.foro.*`), não de cada processo: o `Processo` guarda a comarca, mas não a UF. Feriado por processo exigiria derivar a UF do código do tribunal no número CNJ.
 - O cadastro de feriados é mantido em memória pelo adaptador (`FeriadoRepositorioJpa`), porque o calendário pergunta dia a dia ao percorrer um prazo. A escrita descarta o cache — suficiente para instância única, não para escala horizontal.
 - O modelo de documento define corpo e pedidos, não a ordem das seções: o esqueleto é regra do domínio. Modelo que precise de estrutura própria exigiria nova subclasse de `GeradorDocumento`.

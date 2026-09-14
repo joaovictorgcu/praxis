@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>praxis - minha conta</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
+</head>
+<body>
+<header th:replace="~{fragmentos :: cabecalho('conta')}"></header>
+
+<main>
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <p th:if="${usuario.senhaProvisoria()}" class="mensagem erro" role="alert">
+    Sua senha e provisoria (definida pelo chefe). Troque-a abaixo para liberar o restante do painel.
+  </p>
+
+  <section class="cartao">
+    <h2>Minha conta</h2>
+    <dl class="ficha">
+      <div><dt>Nome</dt><dd th:text="${usuario.nome()}">-</dd></div>
+      <div><dt>E-mail</dt><dd th:text="${usuario.email()}">-</dd></div>
+      <div><dt>OAB</dt><dd th:text="${usuario.oab()}">-</dd></div>
+      <div><dt>Papel</dt>
+        <dd><span class="papel" th:classappend="${usuario.chefe()} ? 'chefe'" th:text="${usuario.rotuloPapel()}">-</span></dd>
+      </div>
+    </dl>
+    <p class="apoio">
+      A OAB acima e a que o sistema usa para assinar pecas, registrar juntadas e conferir o
+      segredo de justica. Nome, e-mail e OAB sao alterados pelo chefe do escritorio.
+    </p>
+  </section>
+
+  <section class="cartao">
+    <h2>Trocar senha</h2>
+    <p class="apoio">Minimo de 6 caracteres. Ao confirmar, a sessao e encerrada e voce entra de novo com a nova senha.</p>
+    <form th:action="@{/painel/conta/senha}" method="post" class="formulario">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <label>Senha atual
+        <input type="password" name="senhaAtual" required autocomplete="current-password">
+      </label>
+      <label>Nova senha
+        <input type="password" name="novaSenha" required minlength="6" autocomplete="new-password">
+      </label>
+      <label>Confirmar nova senha
+        <input type="password" name="confirmacao" required minlength="6" autocomplete="new-password">
+      </label>
+      <div>
+        <button type="submit">Alterar senha</button>
+      </div>
+    </form>
+  </section>
+</main>
+</body>
+</html>

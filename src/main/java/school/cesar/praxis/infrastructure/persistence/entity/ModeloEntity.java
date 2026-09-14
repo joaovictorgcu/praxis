@@ -1,6 +1,7 @@
 package school.cesar.praxis.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+
 import school.cesar.praxis.domain.documento.TipoDocumento;
 
 /** Mapeamento objeto-relacional do agregado ModeloDocumento. */
@@ -8,6 +9,9 @@ import school.cesar.praxis.domain.documento.TipoDocumento;
 @Table(name = "modelo_documento",
         uniqueConstraints = @UniqueConstraint(name = "uk_modelo_codigo", columnNames = "codigo"))
 public class ModeloEntity {
+
+    /** Acima de 10 485 760 o dialeto PostgreSQL vira text; abaixo, varchar(n). */
+    static final int TEXTO_LONGO = 1_000_000;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,12 +31,10 @@ public class ModeloEntity {
     @Column(length = 160)
     private String titulo;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, length = TEXTO_LONGO)
     private String corpo;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, length = TEXTO_LONGO)
     private String pedidos;
 
     @Column(name = "endereca_ao_juizo", nullable = false)

@@ -22,7 +22,9 @@ import java.util.NoSuchElementException;
 @Service
 public class ProcessoAppService implements ProcessosUseCases.CadastrarProcesso,
         ProcessosUseCases.RegistrarAndamento,
-        ProcessosUseCases.ConsultarLinhaDoTempo {
+        ProcessosUseCases.ConsultarLinhaDoTempo,
+        ProcessosUseCases.ListarProcessos,
+        ProcessosUseCases.ConsultarProcesso {
 
     private final ProcessoRepositorio processos;
     private final ObservadorProcesso observador;
@@ -62,6 +64,19 @@ public class ProcessoAppService implements ProcessosUseCases.CadastrarProcesso,
             timeline.add(andamento);
         }
         return timeline;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Processo> executar() {
+        return processos.listar();
+    }
+
+    /** Publico para a tela do processo; e o mesmo carregamento dos demais casos de uso. */
+    @Override
+    @Transactional(readOnly = true)
+    public Processo consultar(String numeroCnj) {
+        return carregar(numeroCnj);
     }
 
     private Processo carregar(String numeroCnj) {

@@ -19,6 +19,9 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
      */
     Optional<Cliente> findByCpfOuCnpjAndAtivoTrue(String cpfOuCnpj);
 
+    /** Inclui inativos: a coluna e unica no banco, entao a checagem precisa ser igual. */
+    Optional<Cliente> findByCpfOuCnpj(String cpfOuCnpj);
+
     /**
      * Busca cliente ativo por nome
      */

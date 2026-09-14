@@ -19,7 +19,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/audiencias")
-@CrossOrigin(origins = "*")
 public class AudienciaController {
 
     private final AgendaDeAudienciasUseCase agendaUseCase;
