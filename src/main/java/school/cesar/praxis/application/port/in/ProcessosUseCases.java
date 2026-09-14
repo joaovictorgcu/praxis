@@ -39,4 +39,15 @@ public interface ProcessosUseCases {
 
         List<Andamento> executar(String numeroCnj);
     }
+
+    interface ListarProcessos {
+
+        List<Processo> executar();
+    }
+
+    /** Agregado inteiro (com andamentos), para a tela do processo. */
+    interface ConsultarProcesso {
+
+        Processo consultar(String numeroCnj);
+    }
 }

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>praxis - erro</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
+</head>
+<body>
+<header>
+  <h1><a th:href="@{/painel}">praxis</a></h1>
+</header>
+<main>
+  <section class="cartao erro-pagina">
+    <h2 th:text="${status} ?: 'Erro'">500</h2>
+    <p>
+      <strong th:text="${error} ?: 'Algo deu errado.'">erro</strong>
+      <span th:if="${message}" th:text="${message}">detalhe</span>
+    </p>
+    <a class="botao secundario" th:href="@{/painel}">Voltar ao painel</a>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <title>fragmentos</title>
+</head>
+<body>
+
+<!--
+  Cabecalho comum a todas as telas do painel. Recebe o nome da tela ativa e
+  le ${usuario} (posto no modelo pelo SessaoControllerAdvice) para mostrar
+  quem esta logado, o papel e o botao de sair.
+-->
+<header th:fragment="cabecalho(ativo)">
+  <h1><a th:href="@{/painel}">praxis</a></h1>
+  <nav aria-label="Secoes do painel">
+    <a th:href="@{/painel}" th:classappend="${ativo == 'painel'} ? 'ativo'">Agenda</a>
+    <a th:href="@{/painel/processos}" th:classappend="${ativo == 'processos'} ? 'ativo'">Processos</a>
+    <a th:href="@{/painel/documentos}" th:classappend="${ativo == 'documentos'} ? 'ativo'">Documentos</a>
+    <a th:href="@{/painel/anexos}" th:classappend="${ativo == 'anexos'} ? 'ativo'">Anexos</a>
+    <a th:href="@{/painel/modelos}" th:classappend="${ativo == 'modelos'} ? 'ativo'">Modelos</a>
+    <a th:href="@{/painel/feriados}" th:classappend="${ativo == 'feriados'} ? 'ativo'">Feriados</a>
+    <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/usuarios}"
+       th:classappend="${ativo == 'usuarios'} ? 'ativo'">Usuarios</a>
+  </nav>
+  <div class="sessao" th:if="${usuario != null}">
+    <a class="quem" th:href="@{/painel/conta}" title="Minha conta">
+      <strong th:text="${usuario.nome()}">Nome</strong>
+      <span th:text="'OAB ' + ${usuario.oab()}">OAB</span>
+    </a>
+    <span class="papel" th:classappend="${usuario.chefe()} ? 'chefe'"
+          th:text="${usuario.rotuloPapel()}">Advogado</span>
+    <form th:action="@{/sair}" method="post">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <button type="submit" title="Encerrar sessao">Sair</button>
+    </form>
+  </div>
+</header>
+
+<!-- Resultado da ultima acao (flash do POST-redirect-GET) ou recusa do dominio. -->
+<div th:fragment="mensagens" th:remove="tag">
+  <p th:if="${mensagem}" class="mensagem sucesso" role="status" th:text="${mensagem}">ok</p>
+  <p th:if="${erro}" class="mensagem erro" role="alert" th:text="${erro}">erro</p>
+</div>
+
+<!-- Etiqueta do estado do fluxo de aprovacao de uma peca. -->
+<span th:fragment="status(nome)" class="etiqueta"
+      th:classappend="${nome == 'APROVADO' or nome == 'PROTOCOLADO'} ? 'verde'
+                      : (${nome == 'EM_REVISAO'} ? 'ambar'
+                      : (${nome == 'REJEITADO'} ? 'vermelha' : 'azul'))"
+      th:text="${#strings.replace(#strings.toLowerCase(nome), '_', ' ')}">rascunho</span>
+
+<!-- Etiqueta de sigilo dos autos. -->
+<span th:fragment="sigilo(segredo)" th:remove="tag">
+  <span th:if="${segredo}" class="etiqueta vermelha">segredo</span>
+  <span th:unless="${segredo}" class="etiqueta cinza">publico</span>
+</span>
+
+</body>
+</html>

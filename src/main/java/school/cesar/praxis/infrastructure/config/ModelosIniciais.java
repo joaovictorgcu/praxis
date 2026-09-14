@@ -1,8 +1,7 @@
 package school.cesar.praxis.infrastructure.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.stereotype.Component;
 import school.cesar.praxis.application.port.out.ModeloRepositorio;
 import school.cesar.praxis.domain.documento.TipoDocumento;
@@ -17,7 +16,7 @@ import school.cesar.praxis.domain.modelo.TextoModelo;
 @Component
 @ConditionalOnProperty(name = "praxis.modelos-iniciais", havingValue = "true",
         matchIfMissing = true)
-public class ModelosIniciais {
+public class ModelosIniciais implements SmartInitializingSingleton {
 
     private final ModeloRepositorio modelos;
 
@@ -25,7 +24,16 @@ public class ModelosIniciais {
         this.modelos = modelos;
     }
 
-    @EventListener(ContextRefreshedEvent.class)
+    /**
+     * Roda depois de todos os singletons existirem e ANTES de o servidor web abrir a
+     * porta (ContextRefreshedEvent dispara depois do servidor subir: um login no
+     * primeiro segundo encontraria a tabela vazia). Roda tambem no @SpringBootTest.
+     */
+    @Override
+    public void afterSingletonsInstantiated() {
+        carregar();
+    }
+
     public void carregar() {
         if (!modelos.listar().isEmpty()) {
             return;

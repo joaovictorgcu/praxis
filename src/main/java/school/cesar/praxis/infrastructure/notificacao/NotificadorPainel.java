@@ -3,7 +3,8 @@ package school.cesar.praxis.infrastructure.notificacao;
 import school.cesar.praxis.domain.notificacao.Notificacao;
 import school.cesar.praxis.domain.notificacao.Notificador;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 
 /**
@@ -12,18 +13,24 @@ import java.util.List;
  */
 public class NotificadorPainel implements Notificador {
 
-    private final List<Notificacao> entregues = new ArrayList<>();
+    /** O painel mostra as ultimas; a trilha completa esta no banco (NotificadorAuditoria). */
+    static final int LIMITE = 200;
+
+    private final Deque<Notificacao> entregues = new ArrayDeque<>();
 
     @Override
-    public void enviar(Notificacao notificacao) {
-        entregues.add(notificacao);
+    public synchronized void enviar(Notificacao notificacao) {
+        if (entregues.size() >= LIMITE) {
+            entregues.removeFirst();
+        }
+        entregues.addLast(notificacao);
     }
 
-    public List<Notificacao> getEntregues() {
+    public synchronized List<Notificacao> getEntregues() {
         return List.copyOf(entregues);
     }
 
-    public void limpar() {
+    public synchronized void limpar() {
         entregues.clear();
     }
 }

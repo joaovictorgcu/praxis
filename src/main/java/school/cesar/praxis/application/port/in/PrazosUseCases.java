@@ -48,9 +48,16 @@ public interface PrazosUseCases {
                           int diasRestantes,
                           boolean fatal,
                           boolean vencido,
-                          String responsavel) {
+                          String responsavel,
+                          boolean cumprido) {
         }
 
         List<ItemAgenda> executar(LocalDate ate);
+    }
+
+    /** Todos os prazos (abertos e cumpridos) de um processo, para a tela do processo. */
+    interface ConsultarPrazosDoProcesso {
+
+        List<ConsultarAgenda.ItemAgenda> executar(String numeroProcesso);
     }
 }

@@ -6,7 +6,8 @@ import school.cesar.praxis.domain.notificacao.Notificacao;
 import school.cesar.praxis.domain.notificacao.Notificador;
 import school.cesar.praxis.domain.notificacao.NotificadorDecorator;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 
 /**
@@ -18,7 +19,9 @@ public class NotificadorEmail extends NotificadorDecorator {
 
     private static final Logger log = LoggerFactory.getLogger(NotificadorEmail.class);
 
-    private final List<String> enviados = new ArrayList<>();
+    static final int LIMITE = 200;
+
+    private final Deque<String> enviados = new ArrayDeque<>();
 
     public NotificadorEmail(Notificador delegado) {
         super(delegado);
@@ -28,10 +31,17 @@ public class NotificadorEmail extends NotificadorDecorator {
     public void enviar(Notificacao notificacao) {
         super.enviar(notificacao);
         log.info("[e-mail] para={} assunto={}", notificacao.destinatario(), notificacao.assunto());
-        enviados.add(notificacao.destinatario() + " | " + notificacao.assunto());
+        synchronized (enviados) {
+            if (enviados.size() >= LIMITE) {
+                enviados.removeFirst();
+            }
+            enviados.addLast(notificacao.destinatario() + " | " + notificacao.assunto());
+        }
     }
 
     public List<String> getEnviados() {
-        return List.copyOf(enviados);
+        synchronized (enviados) {
+            return List.copyOf(enviados);
+        }
     }
 }

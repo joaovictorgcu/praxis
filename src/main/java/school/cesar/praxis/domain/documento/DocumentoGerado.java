@@ -94,6 +94,21 @@ public class DocumentoGerado implements ConteudoRestrito {
         historico.add(new RegistroAprovacao(deEstado, status.nome(), responsavelOab, comentario, LocalDateTime.now()));
     }
 
+    /**
+     * Desfaz a ultima decisao (aprovacao ou rejeicao), voltando a EM_REVISAO. Le a
+     * decisao do proprio historico, entao funciona sobre o agregado recem-carregado
+     * do banco - nao depende de nada guardado em memoria entre requisicoes.
+     */
+    public void desfazerUltimaDecisao() {
+        String atual = status.nome();
+        if (!"APROVADO".equals(atual) && !"REJEITADO".equals(atual)) {
+            throw new IllegalStateException("nao ha decisao para desfazer em um documento " + atual);
+        }
+        RegistroAprovacao ultima = historico.isEmpty() ? null : historico.get(historico.size() - 1);
+        String oab = ultima == null ? null : ultima.getResponsavelOab();
+        transicionar(new EmRevisao(), oab, "desfeito: decisao revertida");
+    }
+
     public void restaurarStatus(StatusDocumento statusAnterior, String responsavelOab, String comentario) {
         transicionar(statusAnterior, responsavelOab, comentario);
     }

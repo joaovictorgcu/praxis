@@ -9,7 +9,9 @@ public enum NivelAlerta {
     ATENCAO(5),
     URGENTE(3),
     CRITICO(1),
-    VENCE_HOJE(0);
+    VENCE_HOJE(0),
+    /** Prazo em aberto apos o vencimento: aviso de perda, distinto do "vence hoje". */
+    VENCIDO(-1);
 
     private final int diasRestantes;
 

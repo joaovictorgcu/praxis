@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>praxis - processos</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
+</head>
+<body>
+<header th:replace="~{fragmentos :: cabecalho('processos')}"></header>
+
+<main>
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <section class="cartao">
+    <h2>Cadastrar processo</h2>
+    <p class="apoio">
+      O responsavel e escolhido entre os usuarios do escritorio: a OAB dele e a que fica
+      habilitada nos autos. Processo em <strong>segredo de justica</strong> so tem peca e anexo
+      lidos por OAB habilitada (CPC art. 189).
+    </p>
+    <form th:action="@{/painel/processos}" method="post" class="formulario">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <label>Numero CNJ
+        <input type="text" name="numeroCnj" required placeholder="0001234-56.2026.8.17.0001"
+               pattern="\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}"
+               title="Formato NNNNNNN-DD.AAAA.J.TR.OOOO">
+      </label>
+      <label>Cliente
+        <input type="text" name="cliente" required placeholder="Construtora Alfa Ltda.">
+      </label>
+      <label>Comarca
+        <input type="text" name="comarca" required placeholder="Recife">
+      </label>
+      <label>Advogado responsavel
+        <select name="responsavelOab" required>
+          <option th:each="adv : ${advogados}" th:value="${adv.oab}"
+                  th:selected="${usuario != null and adv.oab == usuario.oab()}"
+                  th:text="${adv.nome} + ' (OAB ' + ${adv.oab} + ')'">Advogado</option>
+        </select>
+      </label>
+      <label class="marcador">
+        <input type="checkbox" name="segredoJustica" value="true">
+        Segredo de justica
+      </label>
+      <div>
+        <button type="submit">Cadastrar processo</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>Processos do escritorio</h2>
+      <form th:action="@{/painel/processos}" method="get" class="linha" style="margin:0">
+        <input type="search" name="busca" th:value="${busca}" placeholder="CNJ, cliente ou responsavel">
+        <button type="submit" class="secundario">Buscar</button>
+      </form>
+    </div>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Numero CNJ</th>
+          <th>Cliente</th>
+          <th>Comarca</th>
+          <th>Responsavel</th>
+          <th>Sigilo</th>
+          <th>Andamentos</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${processos}">
+          <td><a th:href="@{'/painel/processos/' + ${p.numero.valor()}}" th:text="${p.numero.valor()}">-</a></td>
+          <td th:text="${p.cliente}">-</td>
+          <td th:text="${p.comarca}">-</td>
+          <td>
+            <span th:text="${p.responsavel.nome()}">-</span>
+            <span class="apoio" th:text="'OAB ' + ${p.responsavel.oab()}">-</span>
+            <span th:if="${usuario != null and p.responsavel.oab() == usuario.oab()}" class="etiqueta azul">voce</span>
+          </td>
+          <td><span th:replace="~{fragmentos :: sigilo(${p.segredoJustica})}"></span></td>
+          <td th:text="${p.quantidadeAndamentos()}">0</td>
+          <td class="acoes">
+            <a class="botao secundario pequeno" th:href="@{'/painel/processos/' + ${p.numero.valor()}}">Abrir</a>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(processos)}">
+          <td colspan="7" class="vazio">Nenhum processo encontrado.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

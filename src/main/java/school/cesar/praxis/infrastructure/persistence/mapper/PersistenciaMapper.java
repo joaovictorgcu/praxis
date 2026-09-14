@@ -17,6 +17,7 @@ import school.cesar.praxis.domain.modelo.TextoModelo;
 import school.cesar.praxis.domain.prazo.NivelAlerta;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
+import school.cesar.praxis.domain.usuario.Usuario;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ArquivoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ContratoHonorarioEntity;
@@ -25,7 +26,11 @@ import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.PrazoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ProcessoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.UsuarioEntity;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -179,14 +184,19 @@ public final class PersistenciaMapper {
         return documento;
     }
 
+    /**
+     * Historico em coluna texto: campos separados por '|' e registros por ';'.
+     * Cada campo e percent-encoded, entao um comentario "faltou procuracao; refazer"
+     * nao quebra a leitura de todo o documento.
+     */
     private static String serializarHistorico(List<RegistroAprovacao> historico) {
         return historico.stream()
                 .map(r -> String.join("|",
-                        r.getDeEstado(),
-                        r.getParaEstado(),
-                        r.getResponsavelOab() == null ? "" : r.getResponsavelOab(),
-                        r.getComentario() == null ? "" : r.getComentario(),
-                        r.getQuando().toString()))
+                        codificar(r.getDeEstado()),
+                        codificar(r.getParaEstado()),
+                        codificar(r.getResponsavelOab()),
+                        codificar(r.getComentario()),
+                        codificar(r.getQuando().toString())))
                 .collect(Collectors.joining(";"));
     }
 
@@ -197,14 +207,25 @@ public final class PersistenciaMapper {
         }
         for (String entrada : valor.split(";")) {
             String[] partes = entrada.split("\\|", -1);
+            if (partes.length < 5) {
+                continue; // registro truncado por versao anterior: nao derruba a leitura
+            }
             historico.add(new RegistroAprovacao(
-                    partes[0],
-                    partes[1],
-                    partes[2].isEmpty() ? null : partes[2],
-                    partes[3].isEmpty() ? null : partes[3],
-                    LocalDateTime.parse(partes[4])));
+                    decodificar(partes[0]),
+                    decodificar(partes[1]),
+                    decodificar(partes[2]),
+                    decodificar(partes[3]),
+                    LocalDateTime.parse(decodificar(partes[4]))));
         }
         return historico;
+    }
+
+    private static String codificar(String valor) {
+        return valor == null ? "" : URLEncoder.encode(valor, StandardCharsets.UTF_8);
+    }
+
+    private static String decodificar(String valor) {
+        return valor == null || valor.isEmpty() ? null : URLDecoder.decode(valor, StandardCharsets.UTF_8);
     }
 
     // --- Feriado ---
@@ -332,5 +353,30 @@ public final class PersistenciaMapper {
                 new TextoModelo(entidade.getCorpo()),
                 new TextoModelo(entidade.getPedidos()),
                 entidade.isEnderecaAoJuizo());
+    }
+
+    // --- Usuario ---
+
+    public static UsuarioEntity paraEntidade(Usuario usuario) {
+        UsuarioEntity entidade = new UsuarioEntity();
+        entidade.setId(usuario.getId());
+        entidade.setNome(usuario.getNome());
+        entidade.setEmail(usuario.getEmail());
+        entidade.setOab(usuario.getOab());
+        entidade.setPapel(usuario.getPapel());
+        entidade.setSenhaCodificada(usuario.getSenhaCodificada());
+        entidade.setSenhaProvisoria(usuario.isSenhaProvisoria());
+        return entidade;
+    }
+
+    public static Usuario paraDominio(UsuarioEntity entidade) {
+        return new Usuario(
+                entidade.getId(),
+                entidade.getNome(),
+                entidade.getEmail(),
+                entidade.getOab(),
+                entidade.getPapel(),
+                entidade.getSenhaCodificada(),
+                entidade.isSenhaProvisoria());
     }
 }

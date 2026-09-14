@@ -4,21 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>praxis - feriados</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
 </head>
 <body>
-<header>
-  <h1>praxis</h1>
-  <nav>
-    <a th:href="@{/painel}">Agenda de prazos</a>
-    <a th:href="@{/painel/documentos}">Documentos</a>
-    <a th:href="@{/painel/anexos}">Anexos</a>
-    <a th:href="@{/painel/modelos}">Modelos</a>
-    <a th:href="@{/painel/feriados}" class="ativo">Feriados</a>
-  </nav>
-</header>
+<header th:replace="~{fragmentos :: cabecalho('feriados')}"></header>
 
 <main>
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
   <section class="cartao">
     <h2>Cadastrar feriado</h2>
     <p class="apoio">
@@ -27,29 +22,27 @@
       Prazo ja lancado nao se move: o vencimento fica congelado na abertura.
     </p>
 
-    <p th:if="${erro}" class="etiqueta vermelha" th:text="${erro}">erro</p>
-
     <form th:action="@{/painel/feriados}" method="post" class="linha">
-      <label for="descricao">Descricao</label>
-      <input type="text" id="descricao" name="descricao" required
-             placeholder="Nossa Senhora da Conceicao">
-
-      <label for="data">Data</label>
-      <input type="date" id="data" name="data" required>
-
-      <label for="nivel">Abrangencia</label>
-      <select id="nivel" name="nivel">
-        <option th:each="item : ${niveis}" th:value="${item}" th:text="${item}">NACIONAL</option>
-      </select>
-
-      <label for="abrangencia">UF ou comarca</label>
-      <input type="text" id="abrangencia" name="abrangencia" placeholder="PE ou Recife">
-
-      <label for="repeteTodoAno">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <label for="descricao">Descricao
+        <input type="text" id="descricao" name="descricao" required
+               placeholder="Nossa Senhora da Conceicao">
+      </label>
+      <label for="data">Data
+        <input type="date" id="data" name="data" required>
+      </label>
+      <label for="nivel">Abrangencia
+        <select id="nivel" name="nivel">
+          <option th:each="item : ${niveis}" th:value="${item}" th:text="${item}">NACIONAL</option>
+        </select>
+      </label>
+      <label for="abrangencia">UF ou comarca
+        <input type="text" id="abrangencia" name="abrangencia" placeholder="PE ou Recife">
+      </label>
+      <label for="repeteTodoAno" class="marcador">
         <input type="checkbox" id="repeteTodoAno" name="repeteTodoAno" value="true">
         Repete todo ano
       </label>
-
       <button type="submit">Cadastrar</button>
     </form>
   </section>
@@ -57,7 +50,7 @@
   <section class="cartao">
     <div class="cartao-cabecalho">
       <h2>Feriados cadastrados</h2>
-      <form th:action="@{/painel/feriados}" method="get" class="linha">
+      <form th:action="@{/painel/feriados}" method="get" class="linha" style="margin:0">
         <label for="verificar">Corre prazo em</label>
         <input type="date" id="verificar" name="verificar">
         <button type="submit" class="secundario">Verificar</button>
@@ -65,40 +58,48 @@
     </div>
 
     <p th:if="${consulta}" class="apoio">
-      <span th:if="${consulta.diaUtil()}" class="etiqueta cinza">dia util</span>
+      <span th:if="${consulta.diaUtil()}" class="etiqueta verde">dia util</span>
       <span th:unless="${consulta.diaUtil()}" class="etiqueta vermelha">sem expediente</span>
       <strong th:text="${consulta.data()}">2026-09-07</strong> &middot;
       proximo dia util: <strong th:text="${consulta.proximoDiaUtil()}">2026-09-08</strong>
     </p>
+    <p class="apoio" th:unless="${usuario.chefe()}">
+      Remover feriado altera a contagem de todo o escritorio: acao do chefe.
+    </p>
 
-    <table>
-      <thead>
-      <tr>
-        <th>Descricao</th>
-        <th>Quando incide</th>
-        <th>Onde vale</th>
-        <th></th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="feriado : ${feriados}">
-        <td th:text="${feriado.descricao()}">-</td>
-        <td>
-          <span th:text="${feriado.recorrencia()}">-</span>
-          <span th:if="${feriado.repeteTodoAno()}" class="etiqueta cinza">anual</span>
-        </td>
-        <td th:text="${feriado.abrangencia()}">-</td>
-        <td>
-          <form th:action="@{'/painel/feriados/' + ${feriado.id()} + '/remover'}" method="post">
-            <button type="submit" class="secundario">Remover</button>
-          </form>
-        </td>
-      </tr>
-      <tr th:if="${#lists.isEmpty(feriados)}">
-        <td colspan="4" class="vazio">Nenhum feriado cadastrado.</td>
-      </tr>
-      </tbody>
-    </table>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Descricao</th>
+          <th>Quando incide</th>
+          <th>Onde vale</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="feriado : ${feriados}">
+          <td th:text="${feriado.descricao()}">-</td>
+          <td>
+            <span th:text="${feriado.recorrencia()}">-</span>
+            <span th:if="${feriado.repeteTodoAno()}" class="etiqueta cinza">anual</span>
+          </td>
+          <td th:text="${feriado.abrangencia()}">-</td>
+          <td class="acoes">
+            <form th:if="${usuario.chefe()}"
+                  th:action="@{'/painel/feriados/' + ${feriado.id()} + '/remover'}" method="post"
+                  th:attr="data-confirmar='Remover o feriado ' + ${feriado.descricao()} + '? Prazos ja lancados nao mudam.'">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button type="submit" class="perigo pequeno">Remover</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(feriados)}">
+          <td colspan="4" class="vazio">Nenhum feriado cadastrado.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 </main>
 </body>
