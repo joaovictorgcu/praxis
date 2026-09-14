@@ -3,6 +3,99 @@
 Sistema web de gestão para escritórios de advocacia — processos, prazos e honorários.
 Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR School), com **DDD**, **arquitetura limpa**, **padrões de projeto GoF**, persistência relacional com ORM e cenários **BDD automatizados com Cucumber**.
 
+## Objetivo
+
+Um escritório de advocacia perde causas por **prazo** e perde tempo por **retrabalho**. O praxis existe para duas coisas:
+
+1. **Nenhum prazo processual passa em silêncio.** O advogado lança a intimação; o sistema calcula o vencimento pela regra do CPC (dias úteis, feriados do foro, recesso), congela essa data e avisa o responsável de forma escalonada — 5, 3, 1 e 0 dias antes, e de novo se o prazo for perdido — sem repetir o mesmo aviso.
+2. **Nenhuma peça sai do escritório sem estrutura nem revisão.** Petição, contestação e procuração nascem de template com esqueleto fixo (ou de modelo cadastrado pelo próprio escritório), ficam registradas nos autos, respeitam o segredo de justiça e só são protocoladas depois de passar pela revisão do chefe.
+
+Em volta disso ficam os apoios que o dia a dia exige: cadastro de processos com linha do tempo, anexos, feriados, modelos, honorários, audiências, clientes e partes contrárias — e o controle de quem pode fazer o quê (advogado × chefe).
+
+## Telas
+
+Capturas da interface real, logado como chefe (`admin`) e como advogada (`ana.souza`). Todas em [`docs/prototipos/`](docs/prototipos/).
+
+| | |
+|---|---|
+| **Login** — usuário curto ou e-mail; 5 erros bloqueiam o e-mail por 1 min ![login](docs/prototipos/login.png) | **Agenda** — resumo do dia, prazos por vencimento, avisos do motor ![agenda](docs/prototipos/painel-agenda.png) |
+| **Processos** — busca, cadastro com responsável escolhido entre os usuários ![processos](docs/prototipos/processos.png) | **Ficha do processo** — linha do tempo, prazos, peças, anexos; registrar andamento e abrir prazo ![ficha](docs/prototipos/processo-ficha.png) |
+| **Gerar peça** — escolhido um modelo, um campo por marcador `{{…}}` ![gerar](docs/prototipos/documentos-gerar.png) | **Revisão da peça** — chefe aprova/rejeita, habilita OAB, vê o histórico ![aprovacao](docs/prototipos/documento-aprovacao.png) |
+| **Modelos** — corpo e pedidos com `{{campos}}`; os que serão pedidos aparecem enquanto digita ![modelos](docs/prototipos/modelos.png) | **Feriados** — data única ou anual; nacional, estadual ou da comarca; "corre prazo em…" ![feriados](docs/prototipos/feriados.png) |
+| **Anexos** — juntada com a OAB da sessão; download passa pelo Proxy ![anexos](docs/prototipos/anexos.png) | **Segredo de justiça** — advogada sem OAB habilitada é avisada; peça e anexo respondem 403 ![sigilo](docs/prototipos/processo-sigiloso-sem-oab.png) |
+| **Usuários** (chefe) — cadastro com senha provisória, papel, remoção protegida ![usuarios](docs/prototipos/usuarios.png) | **Minha conta** — troca de senha exigindo a atual ![conta](docs/prototipos/conta.png) |
+
+## Regras de negócio
+
+Consolidação das regras que o domínio faz cumprir (cada uma tem teste de unidade ou cenário BDD). Artigos citados são do CPC/2015.
+
+**Processo e andamentos**
+- Processo tem número **CNJ** válido (`NNNNNNN-DD.AAAA.J.TR.OOOO`), cliente, comarca e **um advogado responsável** (nome, e-mail, OAB); número é único.
+- Pode nascer em **segredo de justiça** (art. 189): a OAB do responsável fica habilitada nos autos; qualquer outra precisa ser habilitada pelo chefe.
+- Andamento tem data, descrição e tipo (intimação, citação, audiência, despacho, sentença, juntada, outro). A linha do tempo é sempre **cronológica**, independente da ordem de registro.
+- **Intimação e citação** são os andamentos que iniciam contagem de prazo; registrar andamento avisa o responsável.
+
+**Prazos (motor de prazos)**
+- Prazo tem descrição, data da intimação, quantidade de dias (≥ 1), regime e é **fatal** ou comum; o responsável é o do processo.
+- Regime **dias úteis** (art. 219, regra para prazos processuais) ou **dias corridos** (prazos materiais).
+- **Termo inicial**: o primeiro dia útil seguinte à intimação (art. 224); o vencimento cai no último dia da contagem e, se for dia sem expediente, prorroga para o próximo útil.
+- Não contam como dia útil: **fim de semana**, **feriados** do calendário que valem para o foro (nacional, da UF ou da comarca) e o **recesso forense de 20/12 a 20/01** (art. 220). Fim de semana e recesso são regra de lei, não cadastráveis.
+- O vencimento é **calculado e congelado na abertura**: cadastrar ou remover feriado depois não move prazo já lançado.
+- Alertas por dias contáveis restantes: `ATENCAO` (≤ 5), `URGENTE` (≤ 3), `CRITICO` (≤ 1), `VENCE_HOJE` (0) e `VENCIDO` (em aberto após o vencimento). Sempre o mais severo aplicável.
+- **Idempotência por marco**: cada nível é avisado uma única vez por prazo — rodar a varredura duas vezes no dia não repete aviso.
+- Política padrão do escritório: **só prazo fatal gera alerta**; prazo comum entra na agenda mas não dispara aviso (política "inclusiva" existe para quem quiser).
+- Prazo **cumprido** sai da varredura e não pode ser cumprido de novo.
+- A varredura roda todo dia útil às 7h e também sob demanda, pelo mesmo caso de uso; notificação segue para painel, e-mail (log) e trilha de auditoria em banco.
+
+**Peças (geração de documentos)**
+- Toda peça tem o mesmo **esqueleto**: cabeçalho, endereçamento, qualificação, corpo, pedidos e assinatura com nome e OAB do responsável. A ordem é regra do domínio e não pode ser alterada por modelo.
+- Tipos compilados: **petição inicial** (fatos, direito), **contestação** (preliminares, mérito) e **procuração ad judicia** (poderes especiais; não se endereça ao juízo). **Peça avulsa** é o tipo dos modelos que não são nenhum dos três.
+- A peça **herda o segredo de justiça** do processo e a lista de OABs habilitadas no momento da geração; a OAB de quem gerou entra na lista.
+- Leitura de peça sigilosa só por **OAB habilitada** — na tela (OAB da sessão) e na API (`403`). Peça sigilosa exige ao menos uma OAB habilitada; não se revoga a última.
+- O tipo da peça registrada vem do **gerador** (modelo ou compilado), não do que o usuário pediu.
+- Gerar peça avisa o advogado responsável.
+
+**Fluxo de aprovação da peça**
+- Estados: `RASCUNHO → EM_REVISAO → APROVADO | REJEITADO → (APROVADO) PROTOCOLADO`.
+- Só rascunho ou rejeitada vai para revisão; só em revisão pode ser aprovada ou rejeitada; só aprovada pode ser protocolada; protocolada não muda mais.
+- **Aprovar, rejeitar e desfazer decisão são do chefe**; aprovação exige OAB do aprovador; rejeição exige motivo.
+- Desfazer volta a peça para `EM_REVISAO` e fica no histórico; toda transição registra de/para, OAB e comentário.
+- Transição inválida é erro do cliente (`409`), nunca do servidor.
+
+**Modelos de peça**
+- Modelo tem código único (maiúsculas/underscore), nome, tipo de peça produzida, título opcional, **corpo e pedidos** com marcadores `{{campo}}`, e diz se **endereça ao juízo**.
+- Marcadores reservados vêm dos autos: `cliente`, `comarca`, `processo`, `advogado`, `oab`. Qualquer outro é **pedido ao gerar** a peça; o cadastro informa quais.
+- Campo não informado vira marcador visível na peça — `(valorDivida a preencher)` — nunca lacuna silenciosa.
+- Modelo que não endereça ao juízo dispensa endereçamento, qualificação e fecho de uma vez.
+- Editar ou remover modelo não altera peça já gerada (a peça persiste o próprio texto). Remover modelo é ação do chefe.
+
+**Anexos**
+- Aceitos: **PDF, JPEG, PNG e texto**, até **10 MB**; tipo é conferido pelo `Content-Type` e a extensão correta é garantida no nome.
+- O nome do arquivo é saneado: caminho de diretório (`../`) é descartado.
+- O anexo **copia** segredo de justiça e OABs habilitadas do processo **no momento da juntada**; a leitura passa pelo mesmo Proxy das peças.
+- Não existe remoção de anexo: documento juntado aos autos não se desanexa (desentranhamento é decisão judicial).
+- Juntada avisa o responsável.
+
+**Feriados e calendário**
+- Feriado tem descrição, **recorrência** (data única ou anual fixa) e **abrangência** (nacional, estadual com UF, comarcal com comarca).
+- Só entram na contagem os feriados que valem para o **foro do escritório** (`praxis.foro.uf` / `comarca`): feriado de Olinda não suspende prazo em Recife.
+- Feriado cadastrado vale na **próxima contagem**, sem reiniciar. Remover feriado é ação do chefe.
+
+**Honorários**
+- Contrato por processo em uma de três modalidades: **fixo**, **por hora** (valor × horas) ou **quota litis** (percentual sobre o valor da causa).
+- Quota litis acima de **30 %** é recusada (limite ético do Código de Ética da OAB).
+
+**Audiências, clientes e partes contrárias**
+- Audiência tem processo, parte autora, início, fim (posterior ao início) e sala; **duas audiências não se sobrepõem na mesma sala**; edição respeita a mesma regra e conflitos podem ser consultados antes de gravar.
+- Cliente (pessoa física ou jurídica) tem CPF/CNPJ **único**; exclusão é lógica (inativa) e reativação é possível; edição é parcial (campo omitido mantém o valor).
+- Parte contrária segue o mesmo modelo, sem unicidade de documento.
+
+**Acesso**
+- Todo o painel exige login; dois papéis: **advogado** (conduz os autos) e **chefe** (tudo do advogado + aprovar peça, habilitar OAB, remover feriado/modelo, gerir usuários).
+- E-mail e OAB são **únicos**; senha mínima de 6 caracteres pela tela; usuário criado pelo chefe entra com **senha provisória** e só libera o painel depois de trocá-la.
+- Ninguém remove a si mesmo, e o escritório precisa de **ao menos um chefe**.
+- 5 falhas de login seguidas bloqueiam o e-mail por 1 minuto; e-mail desconhecido e senha errada recebem a mesma resposta.
+
 **Stack:** Java 17 · Spring Boot 4.1.1 (WebMVC, Data JPA, Validation, Thymeleaf) · H2 (dev/test) · PostgreSQL + Flyway (prod) · JUnit 5 · Cucumber 7 · Maven Wrapper.
 
 ## Como rodar

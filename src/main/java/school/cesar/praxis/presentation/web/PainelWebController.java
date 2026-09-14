@@ -148,6 +148,8 @@ public class PainelWebController {
                                  @RequestParam(required = false) String codigoModelo,
                                  @RequestParam(required = false) String fatos,
                                  @RequestParam(required = false) String fundamentos,
+                                 @RequestParam(required = false) String preliminares,
+                                 @RequestParam(required = false) String merito,
                                  @RequestParam(required = false) String poderesEspeciais,
                                  @RequestParam(required = false) String camposLivres,
                                  @RequestParam Map<String, String> todosOsParametros,
@@ -156,6 +158,8 @@ public class PainelWebController {
         Map<String, String> campos = new LinkedHashMap<>();
         adicionar(campos, "fatos", fatos);
         adicionar(campos, "fundamentos", fundamentos);
+        adicionar(campos, "preliminares", preliminares);
+        adicionar(campos, "merito", merito);
         adicionar(campos, "poderesEspeciais", poderesEspeciais);
         // Campos do modelo: um input por marcador, gerado na tela como campo_<nome>.
         todosOsParametros.forEach((nome, valor) -> {

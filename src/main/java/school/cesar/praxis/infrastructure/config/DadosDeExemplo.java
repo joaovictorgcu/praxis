@@ -85,8 +85,8 @@ public class DadosDeExemplo implements CommandLineRunner {
         // Uma peca ja em revisao, para o chefe encontrar trabalho ao entrar.
         DocumentoGerado contestacao = gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
                 PROCESSO_PUBLICO, TipoDocumento.CONTESTACAO,
-                Map.of("fatos", "A re nega o inadimplemento alegado na inicial.",
-                        "fundamentos", "Art. 336 do CPC: toda a materia de defesa e alegada na contestacao."),
+                Map.of("preliminares", "Ilegitimidade passiva: a re nao figura no contrato de locacao.",
+                        "merito", "A re nega o inadimplemento alegado; os alugueis foram pagos (art. 336 do CPC)."),
                 "PE12345"));
         enviarParaRevisao.executar(new DocumentosUseCases.EnviarDocumentoParaRevisao.Comando(contestacao.getId()));
     }

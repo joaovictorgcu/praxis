@@ -461,3 +461,6 @@ textarea.modelo-texto { font-family: "Cascadia Mono", Consolas, monospace; font-
 
 @media (max-width: 600px) { .grade-campos { grid-template-columns: 1fr; } }
 select.ignorado { color: var(--cinza); background: #f3f4f6; }
+
+/* Atributo hidden vence qualquer display do CSS (labels sao flex). */
+[hidden] { display: none !important; }
