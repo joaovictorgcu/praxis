@@ -67,6 +67,21 @@ class LoginHttpTest {
     }
 
     @Test
+    @DisplayName("admin entra digitando so o usuario; e chefe; nao aparece como provisorio")
+    void adminLoginCurto() throws Exception {
+        MvcResult resultado = mvc.perform(post("/login")
+                        .param("email", "admin")
+                        .param("senha", "123"))
+                .andExpect(redirectedUrl("/painel"))
+                .andReturn();
+        UsuarioLogado admin = UsuarioLogado.da((MockHttpSession) resultado.getRequest().getSession(false));
+        assertEquals("admin@praxis.adv.br", admin.email());
+        assertEquals("ADMIN", admin.oab());
+        assertTrue(admin.chefe());
+        assertFalse(admin.senhaProvisoria());
+    }
+
+    @Test
     @DisplayName("senha errada volta ao formulario com a mesma mensagem de e-mail desconhecido")
     void senhaErrada() throws Exception {
         mvc.perform(post("/login")

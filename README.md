@@ -8,7 +8,7 @@ Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR 
 ## Como rodar
 
 ```bash
-./mvnw test            # 159 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
+./mvnw test            # 160 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
 ./mvnw spring-boot:run # sobe em http://localhost:8080
 ```
 
@@ -103,11 +103,12 @@ A aplicação sobe com três usuários (desligue com `praxis.usuarios-iniciais=f
 
 | Papel | Nome | E-mail | OAB |
 |---|---|---|---|
+| Chefe (admin) | Administrador | `admin` (ou `admin@praxis.adv.br`), senha `123` — `praxis.admin.*`; em prod só existe com `PRAXIS_ADMIN_SENHA` | ADMIN |
 | Chefe | Carla Mendes | `carla.mendes@praxis.adv.br` | PE00001 |
 | Advogado | Ana Beatriz Souza | `ana.souza@praxis.adv.br` | PE12345 (responsável pelo processo público de exemplo) |
 | Advogado | Bruno Carvalho | `bruno.carvalho@praxis.adv.br` | PE54321 (responsável pelo processo em segredo de justiça) |
 
-Entre como Bruno para ler a peça sigilosa; como Ana, o Proxy recusa. Entre como Carla para aprovar a peça que Ana enviou para revisão.
+No login basta o nome do usuário (`admin`, `ana.souza`): sem `@`, o domínio `praxis.dominio-email` é completado. Entre como Bruno para ler a peça sigilosa; como Ana, o Proxy recusa. Entre como Carla (ou admin) para aprovar a peça que Ana enviou para revisão.
 
 Funcionalidades de apoio já no repositório: cadastro de processo, registro de andamento com linha do tempo cronológica, e cálculo de honorários (fixo, por hora, quota litis com limite ético de 30%).
 
@@ -155,7 +156,7 @@ Cenários em português em [`src/test/resources/features`](src/test/resources/fe
 ```
 53 scenarios (53 passed)
 481 steps (481 passed)
-Tests run: 159, Failures: 0, Errors: 0
+Tests run: 160, Failures: 0, Errors: 0
 ```
 
 Os cenários chamam os casos de uso, então não cobrem o corpo da requisição dos controllers. `ModeloHttpTest`, `AnexoHttpTest` e `LoginHttpTest` fecham essa lacuna pelo mesmo caminho do navegador (MockMvc) — foi assim que apareceram um `codigoModelo` faltando no `record` de requisição e um `500` onde devia haver `400`, ambos invisíveis para o BDD.

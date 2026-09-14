@@ -18,9 +18,9 @@
 
   <form th:action="@{/login}" method="post" class="empilhado">
     <input type="hidden" name="proximo" th:value="${proximo}">
-    <label>E-mail
-      <input type="email" name="email" th:value="${email}" required autofocus
-             autocomplete="username" placeholder="voce@praxis.adv.br">
+    <label>Usuario ou e-mail
+      <input type="text" name="email" th:value="${email}" required autofocus
+             autocomplete="username" placeholder="admin ou voce@praxis.adv.br">
     </label>
     <label>Senha
       <input type="password" name="senha" required autocomplete="current-password">

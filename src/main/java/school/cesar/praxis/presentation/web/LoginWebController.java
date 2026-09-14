@@ -2,6 +2,7 @@ package school.cesar.praxis.presentation.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,10 +24,13 @@ public class LoginWebController {
 
     private final UsuariosUseCases.Autenticar autenticar;
     private final ProtecaoForcaBruta protecao;
+    private final String dominioEmail;
 
-    public LoginWebController(UsuariosUseCases.Autenticar autenticar, ProtecaoForcaBruta protecao) {
+    public LoginWebController(UsuariosUseCases.Autenticar autenticar, ProtecaoForcaBruta protecao,
+                              @Value("${praxis.dominio-email:praxis.adv.br}") String dominioEmail) {
         this.autenticar = autenticar;
         this.protecao = protecao;
+        this.dominioEmail = dominioEmail;
     }
 
     @GetMapping("/login")
@@ -45,6 +49,10 @@ public class LoginWebController {
                          @RequestParam(required = false) String proximo,
                          HttpServletRequest requisicao,
                          Model model) {
+        // Login curto ("admin") vira e-mail do dominio do escritorio.
+        if (email != null && !email.isBlank() && !email.contains("@")) {
+            email = email.trim() + "@" + dominioEmail;
+        }
         model.addAttribute("email", email);
         model.addAttribute("proximo", destinoSeguro(proximo));
 
