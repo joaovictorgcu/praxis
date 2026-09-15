@@ -189,6 +189,7 @@ SPRING_PROFILES_ACTIVE=prod PRAXIS_DB_URL=jdbc:postgresql://localhost:5432/praxi
 - **Senha provisória**: usuário cadastrado pelo chefe entra e só consegue abrir *Minha conta* até trocar a senha; ao trocar, a flag cai.
 - **Tela de processos** (`/painel/processos`): cadastrar processo escolhendo o responsável entre os usuários, ficha com linha do tempo (Iterator), prazos, peças e anexos; registrar andamento e abrir prazo pela tela — antes só via API.
 - **Resumo do dia** no painel: prazos vencidos, críticos, sob sua responsabilidade, peças aguardando revisão e rascunhos a retrabalhar.
+- **Administração** (`/painel/admin`, chefe): uma tela só com o panorama do escritório — usuários, processos, prazos (inclusive os já cumpridos, que a agenda do dia esconde), peças, anexos, clientes, partes contrárias, audiências, contratos de honorário, modelos, feriados e os avisos emitidos —, mais a ficha da instância (perfil ativo, banco, Flyway, dados de exemplo, Java, tempo no ar) e atalhos para as telas de cadastro. **Só lê**: criar e remover continua em cada cadastro, onde a regra vive; e a senha codificada não sai do banco para a tela. Advogado que pedir a URL na mão recebe `403` (`@SomenteChefe`).
 
 #### Acesso ao painel (advogados e chefes)
 
@@ -304,6 +305,7 @@ GET  /painel/modelos               cadastro de modelos (remover: chefe)
 GET  /painel/feriados              cadastro de feriados (remover: chefe)
 GET  /painel/usuarios              gestão de usuários (chefe)
 GET  /painel/conta                 minha conta; POST /painel/conta/senha troca a senha
+GET  /painel/admin                 administração (chefe): panorama de todos os cadastros e ficha da instância
 ```
 
 Exemplo:
