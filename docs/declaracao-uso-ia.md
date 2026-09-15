@@ -31,7 +31,10 @@ Nada foi entregue sem execução e conferência:
 - Limite de 30% da quota litis conferido contra o art. 38 do Código de Ética da OAB.
 - Regras de contagem conferidas contra os arts. 219, 220 e 224 do CPC; segredo de justiça contra o art. 189.
 
-### Prompts, na ordem em que foram feitos
+# PROMPTS 
+
+## João Victor Uchôa
+`joaovictorgcu` — [jvgcu@cesar.school](mailto:jvgcu@cesar.school)
 
 1. to estudando o praxis e queria entender melhor como a arquitetura dele ta organizada. me explica a função de cada camada, dominio, aplicação, infraestrutura e apresentação, usando exemplos do proprio projeto. tambem queria saber o que pode dar errado quando uma regra de negocio acaba ficando na camada errada.
 
