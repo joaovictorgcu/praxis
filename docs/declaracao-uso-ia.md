@@ -73,3 +73,41 @@ A utilização da IA serviu, portanto, como uma ferramenta de apoio e consulta d
 ## Pedro Ferraz
 
 `Pedro Ferraz` — [pvf@cesar.school](mailto:pvf@cesar.school)
+
+Declaração de Uso de Inteligência Artificial — Praxis, Pedro Valença Ferraz
+
+Durante o desenvolvimento do projeto Praxis, utilizei ferramentas de Inteligência Artificial como apoio ao longo do desenvolvimento das funcionalidades pelas quais fiquei responsável: Agenda de Audiências com Detecção de Conflitos, Cadastro de Clientes e Cadastro de Partes Contrárias.
+
+A IA foi utilizada principalmente para tirar dúvidas, discutir ideias, validar a estrutura das funcionalidades e regras de negócio, além de auxiliar na compreensão dos requisitos do projeto e na organização da implementação. Alguns dos prompts utilizados foram:
+
+"Estou responsável por desenvolver uma agenda de audiências com detecção de conflitos, cadastro de clientes e cadastro de partes contrárias no Praxis. Você acha que essas funcionalidades fazem sentido para o sistema?"
+
+"Como posso estruturar uma funcionalidade de agenda de audiências com detecção de conflitos para que ela seja considerada completa?"
+
+"Quais regras de negócio posso considerar para uma agenda de audiências com detecção de conflitos?"
+
+"Como posso identificar conflitos entre duas audiências? Quero considerar data, horário e sala."
+
+"Cadastro de clientes e cadastro de partes contrárias podem ser considerados funcionalidades completas? O que preciso implementar além do cadastro?"
+
+"Estou fazendo TDD e BDD no projeto. Pode me explicar como transformar as regras de negócio das minhas funcionalidades em cenários BDD?"
+
+"Como posso escrever cenários Given, When e Then para o conflito de horário de uma audiência?"
+
+A IA também foi utilizada para analisar os requisitos da atividade e verificar se as funcionalidades estavam completas do ponto de vista do usuário. Durante esse processo, utilizei a IA para estruturar as operações de cadastro, consulta, alteração e desativação, além de identificar regras como a obrigatoriedade de dados, validação de informações e a necessidade de impedir conflitos entre audiências.
+
+Durante a implementação, também utilizei a IA para tirar dúvidas relacionadas à organização do código e aos conceitos de TDD, BDD e Cucumber, principalmente para entender como os testes poderiam ser relacionados às regras de negócio. Alguns exemplos de prompts foram:
+
+"Como posso aplicar TDD na funcionalidade de agenda de audiências?"
+
+"Quero criar primeiro os testes para a detecção de conflitos e depois implementar a regra. Como posso organizar isso?"
+
+"Como transformar essa regra de negócio em um cenário de teste BDD com Cucumber?"
+
+"Analise essa regra de conflito de audiência e me diga quais casos de teste eu deveria considerar."
+
+"Uma audiência que já foi cancelada deve continuar sendo considerada para detectar conflito?"
+
+Também utilizei a IA para auxiliar na documentação das funcionalidades, principalmente no preenchimento dos campos de título, descrição, entidades envolvidas, regras de negócio, consultas ao banco de dados e classificação da complexidade. A IA também foi utilizada para revisar a documentação e verificar se as regras estavam coerentes com o funcionamento proposto para o sistema.
+
+A utilização da IA serviu, portanto, como uma ferramenta de apoio e consulta durante o desenvolvimento, principalmente para esclarecer dúvidas, discutir soluções, estruturar regras de negócio, compreender TDD e BDD e auxiliar na documentação das funcionalidades. A implementação das funcionalidades, as adaptações necessárias ao projeto, as decisões tomadas durante o desenvolvimento e os testes foram realizados por mim.
