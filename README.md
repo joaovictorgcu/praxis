@@ -189,7 +189,7 @@ SPRING_PROFILES_ACTIVE=prod PRAXIS_DB_URL=jdbc:postgresql://localhost:5432/praxi
 - **Senha provisória**: usuário cadastrado pelo chefe entra e só consegue abrir *Minha conta* até trocar a senha; ao trocar, a flag cai.
 - **Tela de processos** (`/painel/processos`): cadastrar processo escolhendo o responsável entre os usuários, ficha com linha do tempo (Iterator), prazos, peças e anexos; registrar andamento e abrir prazo pela tela — antes só via API.
 - **Resumo do dia** no painel: prazos vencidos, críticos, sob sua responsabilidade, peças aguardando revisão e rascunhos a retrabalhar.
-- **Administração** (`/painel/admin`, chefe): uma tela só com o panorama do escritório — usuários, processos, prazos (inclusive os já cumpridos, que a agenda do dia esconde), peças, anexos, clientes, partes contrárias, audiências, contratos de honorário, modelos, feriados e os avisos emitidos —, mais a ficha da instância (perfil ativo, banco, Flyway, dados de exemplo, Java, tempo no ar) e atalhos para as telas de cadastro. **Só lê**: criar e remover continua em cada cadastro, onde a regra vive; e a senha codificada não sai do banco para a tela. Advogado que pedir a URL na mão recebe `403` (`@SomenteChefe`).
+- **Administração** (`/painel/admin`, chefe): o escritório inteiro em uma tela, detalhada em [7. Administração](#7-administração-o-escritório-inteiro-em-uma-tela).
 
 #### Acesso ao painel (advogados e chefes)
 
@@ -205,6 +205,30 @@ A aplicação sobe com três usuários (desligue com `praxis.usuarios-iniciais=f
 No login basta o nome do usuário (`admin`, `ana.souza`): sem `@`, o domínio `praxis.dominio-email` é completado. Entre como Bruno para ler a peça sigilosa; como Ana, o Proxy recusa. Entre como Carla (ou admin) para aprovar a peça que Ana enviou para revisão.
 
 Funcionalidades de apoio já no repositório: cadastro de processo, registro de andamento com linha do tempo cronológica, e cálculo de honorários (fixo, por hora, quota litis com limite ético de 30%).
+
+### 7. Administração: o escritório inteiro em uma tela
+
+`/painel/admin`, reservada ao chefe. Antes dela, saber o que o sistema guardava exigia passar por seis telas — e três cadastros (cliente, parte contrária e audiência) **não tinham tela nenhuma**, só a API REST. A tela resolve isso com uma consulta só.
+
+**O que ela mostra**
+
+- **Contadores** de doze cadastros no topo, cada um ancorado na sua tabela. Os que exigem ação mudam de cor: prazo vencido fica vermelho, peça aguardando revisão e usuário com senha provisória ficam âmbar.
+- **O que exige atenção**: prazos vencidos em aberto, peças na fila de revisão, usuários que ainda não trocaram a senha provisória, processos em segredo de justiça e o total de andamentos registrados.
+- **Tabelas completas**: usuários, processos, prazos, peças geradas, anexos, clientes, partes contrárias, audiências, contratos de honorário, modelos, feriados e os avisos emitidos pelo notificador de painel.
+- **Ficha da instância** em execução: perfil ativo, URL do banco, `ddl-auto`, Flyway ligado ou não, dados de exemplo, domínio de e-mail, versão do Java e tempo no ar. É diagnóstico — responde "qual banco esta instância está usando?" sem abrir o terminal.
+- **Atalhos** para as telas onde se cadastra e se remove.
+
+**Três decisões que valem a defesa**
+
+- **A tela só lê.** Criar e remover continua em cada cadastro, que é onde a regra vive: remover usuário não pode deixar o escritório sem chefe, remover feriado muda a contagem de prazo de todo mundo. Duplicar esses formulários aqui duplicaria a regra — ou, pior, deixaria uma cópia sem ela.
+- **Consulta própria, em vez de reaproveitar as do dia a dia.** As listagens existentes servem à tela do dia e por isso escondem o que já saiu de cena: a agenda só devolve prazo em aberto (`cumprido = false`) e cliente, parte contrária e audiência filtram os ativos. Mudar esses métodos para trazer tudo estragaria as telas que dependem deles. Foram criadas operações novas — `PrazosUseCases.ListarTodosOsPrazos`, `listarTodosOsClientes()`, `listarTodasAsPartesContrarias()`, `listarTodasAsAudiencias()` — e as antigas ficaram como estavam.
+- **`ConsultarPanorama` não fala com repositório.** O `PanoramaAppService` compõe os casos de uso de listagem que já existem; nenhuma consulta nova desce à persistência por fora das portas. Assim a tela não vira um segundo caminho até o banco, com regra de leitura própria.
+
+**O que ela não deixa vazar**
+
+- `@SomenteChefe` na classe: advogado que montar a URL na mão recebe `403` do `SessaoInterceptor`. Esconder o link no menu é conforto, não proteção — e o teste cobre os dois.
+- A senha codificada não entra no panorama, então não chega ao HTML (`AdminHttpTest` falha se chegar).
+- A URL do banco é mostrada sem a parte de parâmetros, que em alguns drivers carrega credencial. Usuário e senha do banco nunca aparecem.
 
 ## Arquitetura limpa
 
@@ -387,6 +411,9 @@ cumprido) e violação de unicidade no banco são `409` — nunca `500`.
 - O freio de força bruta do login é em memória, por instância — suficiente para instância única.
 - `AgendaDeAudiencias` (domínio) não é usado pelo serviço de audiências, que consulta o repositório diretamente; a classe ficou como modelo de referência e as regras vigentes são as da JPQL.
 - Papel é binário (advogado/chefe); não há vínculo entre usuário e processo além da OAB, então qualquer advogado logado vê a agenda inteira do escritório.
+- Cliente, parte contrária e audiência continuam sem tela de cadastro: a administração (`/painel/admin`) mostra os três, inclusive os desativados, mas criar, editar e desativar segue só pela API REST.
+- A administração carrega tudo de uma vez, sem paginação nem filtro: cabe no volume de um escritório, não em base grande. Paginar afeta só `PanoramaAppService` e o template.
+- Os avisos listados na administração são a fila em memória do `NotificadorPainel` (200 últimos, por instância): somem no restart e não são histórico.
 - O foro dos feriados é único e vem de propriedade (`praxis.foro.*`), não de cada processo: o `Processo` guarda a comarca, mas não a UF. Feriado por processo exigiria derivar a UF do código do tribunal no número CNJ.
 - O cadastro de feriados é mantido em memória pelo adaptador (`FeriadoRepositorioJpa`), porque o calendário pergunta dia a dia ao percorrer um prazo. A escrita descarta o cache — suficiente para instância única, não para escala horizontal.
 - O modelo de documento define corpo e pedidos, não a ordem das seções: o esqueleto é regra do domínio. Modelo que precise de estrutura própria exigiria nova subclasse de `GeradorDocumento`.

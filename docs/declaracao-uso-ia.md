@@ -159,6 +159,24 @@ Nada foi entregue sem execução e conferência:
 
 61. analisa a declaração de uso de IA do praxis e me explica a diferença entre usar IA pra estudar, usar como apoio no desenvolvimento e deixar a IA fazer diretamente uma parte do trabalho. tambem mostra como deixar essa declaração clara.
 
+### Tela de administração (`/painel/admin`) — IA no desenvolvimento, não só no estudo
+
+Os prompts acima são de estudo. Este item é diferente e fica registrado à parte: a **tela de administração foi construída com a IA escrevendo o código**, em sessão do Claude Code (Opus 5) sobre o repositório, a partir do meu pedido — *"quero uma tela de admin onde eu possa administrar tudo e saber todos os dados"*.
+
+O que a IA produziu nessa sessão:
+
+- `AdministracaoUseCases.ConsultarPanorama` (porta de entrada) e `PanoramaAppService`, que compõe os casos de uso de listagem já existentes em vez de descer ao repositório.
+- `PrazoRepositorio.listar()`, `PrazosUseCases.ListarTodosOsPrazos`, `listarTodosOsClientes()`, `listarTodasAsPartesContrarias()` e `listarTodasAsAudiencias()` — consultas novas, para não alterar as que as telas do dia a dia já usavam.
+- `AdminWebController` (com `@SomenteChefe`), o template `admin.html` e o link no menu.
+- `AdminHttpTest`, com quatro testes: `403` para advogado, panorama renderizado para o chefe, senha codificada ausente do HTML e prazo já cumprido presente no panorama.
+- As seções correspondentes deste `README.md`.
+
+Decisões que discuti com a IA antes de aceitar o código: manter a tela **somente de leitura** (criar e remover continua em cada cadastro, onde a regra vive); **não alterar** as listagens existentes, que filtram prazo cumprido e cadastro desativado de propósito; e manter o `ConsultarPanorama` fora do repositório, para a tela não virar um segundo caminho até o banco.
+
+Verificação antes do commit: `./mvnw -o test` — **164 testes, 0 falhas** (incluindo os 4 novos e os 53 cenários BDD) — e conferência na aplicação em execução, entrando como chefe (tela carrega) e como advogada (`403`, e o link nem aparece no menu).
+
+Limites que ficaram registrados no README: a tela não pagina, e cliente, parte contrária e audiência continuam sem tela de cadastro — a administração mostra os três, mas criar e editar segue só pela API REST.
+
 ## Caio Sena
 
 `Caiosenas2101` — [css4@cesar.school](mailto:css4@cesar.school)
