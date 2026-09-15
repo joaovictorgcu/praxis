@@ -373,7 +373,8 @@ cumprido) e violação de unicidade no banco são `409` — nunca `500`.
 - [`docs/mapa-historia-usuario.md`](docs/mapa-historia-usuario.md) — mapa da história do usuário
 - [`docs/praxis.cml`](docs/praxis.cml) — modelo dos subdomínios em Context Mapper (CML)
 - [`docs/prototipos/`](docs/prototipos/) — protótipos de alta fidelidade (capturas da interface real)
-- [`docs/uso-de-ia.md`](docs/uso-de-ia.md) — declaração de uso de IA e registro das interações
+- [`docs/declaracao-uso-ia.md`](docs/declaracao-uso-ia.md) — declaração de uso de IA por participante do grupo
+- [`docs/Atividade-Requisitos-Praxis.pdf`](docs/Atividade-Requisitos-Praxis.pdf) — enunciado da atividade
 
 ## Limites desta entrega
 
