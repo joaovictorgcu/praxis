@@ -16,7 +16,8 @@ import java.util.List;
 /** Caso de uso de leitura: agenda de prazos ordenada por vencimento. */
 @Service
 public class ConsultarAgendaService implements PrazosUseCases.ConsultarAgenda,
-        PrazosUseCases.ConsultarPrazosDoProcesso {
+        PrazosUseCases.ConsultarPrazosDoProcesso,
+        PrazosUseCases.ListarTodosOsPrazos {
 
     private final PrazoRepositorio prazos;
     private final MotorDePrazos motor;
@@ -41,6 +42,15 @@ public class ConsultarAgendaService implements PrazosUseCases.ConsultarAgenda,
     @Transactional(readOnly = true)
     public List<ItemAgenda> executar(String numeroProcesso) {
         return prazos.porProcesso(NumeroCnj.de(numeroProcesso)).stream()
+                .sorted(Comparator.comparing(Prazo::getVencimento))
+                .map(this::item)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ItemAgenda> executar() {
+        return prazos.listar().stream()
                 .sorted(Comparator.comparing(Prazo::getVencimento))
                 .map(this::item)
                 .toList();

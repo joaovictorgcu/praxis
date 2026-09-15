@@ -20,4 +20,7 @@ public interface PrazoRepositorio {
 
     /** Agenda: prazos em aberto com vencimento ate a data informada. */
     List<Prazo> agendaAte(LocalDate limite);
+
+    /** Tudo que ja foi aberto, cumprido ou nao - usado so pelo panorama do chefe. */
+    List<Prazo> listar();
 }

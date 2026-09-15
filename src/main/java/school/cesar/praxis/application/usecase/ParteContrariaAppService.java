@@ -96,6 +96,15 @@ public class ParteContrariaAppService implements ParteContrariaUseCase {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ParteContrariaResponse> listarTodasAsPartesContrarias() {
+        return parteContrariaRepository.findAll()
+            .stream()
+            .map(this::converterParaResponse)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ParteContrariaResponse> listarPorTipo(TipoPessoa tipo) {
         return parteContrariaRepository.findByTipoPessoaAndAtivaTrue(tipo)
             .stream()

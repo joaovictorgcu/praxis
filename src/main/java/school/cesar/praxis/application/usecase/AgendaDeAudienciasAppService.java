@@ -83,6 +83,15 @@ public class AgendaDeAudienciasAppService implements AgendaDeAudienciasUseCase {
 
     @Override
     @Transactional(readOnly = true)
+    public List<AudienciaResponse> listarTodasAsAudiencias() {
+        return audienciaRepository.findAll()
+            .stream()
+            .map(this::converterParaResponse)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<AudienciaResponse> listarAudienciasPorSala(String sala) {
         return audienciaRepository.findBySalaAndAtivaTrueOrderByDataHoraInicio(sala)
             .stream()

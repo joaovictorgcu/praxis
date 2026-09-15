@@ -109,6 +109,15 @@ public class ClienteAppService implements ClienteUseCase {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ClienteResponse> listarTodosOsClientes() {
+        return clienteRepository.findAll()
+            .stream()
+            .map(this::converterParaResponse)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ClienteResponse> listarPorTipo(TipoPessoa tipo) {
         return clienteRepository.findByTipoPessoaAndAtivoTrue(tipo)
             .stream()

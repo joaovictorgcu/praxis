@@ -55,6 +55,15 @@ public interface PrazosUseCases {
         List<ItemAgenda> executar(LocalDate ate);
     }
 
+    /**
+     * Agenda inteira, inclusive o que ja foi cumprido. A tela do dia mostra so
+     * o que ainda exige acao; o panorama do chefe precisa do historico completo.
+     */
+    interface ListarTodosOsPrazos {
+
+        List<ConsultarAgenda.ItemAgenda> executar();
+    }
+
     /** Todos os prazos (abertos e cumpridos) de um processo, para a tela do processo. */
     interface ConsultarPrazosDoProcesso {
 

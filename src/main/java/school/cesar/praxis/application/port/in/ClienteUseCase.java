@@ -31,6 +31,9 @@ public interface ClienteUseCase {
      */
     List<ClienteResponse> listarClientes();
 
+    /** Inclui os desativados: a tela de administracao mostra o cadastro inteiro. */
+    List<ClienteResponse> listarTodosOsClientes();
+
     /**
      * Listar clientes por tipo (Física ou Jurídica)
      */

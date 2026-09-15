@@ -44,6 +44,9 @@ public interface AgendaDeAudienciasUseCase {
      */
     List<AudienciaResponse> listarAudiencias();
 
+    /** Inclui as canceladas: a tela de administracao mostra a agenda inteira. */
+    List<AudienciaResponse> listarTodasAsAudiencias();
+
     /**
      * Caso de uso: Listar audiências por sala
      * 

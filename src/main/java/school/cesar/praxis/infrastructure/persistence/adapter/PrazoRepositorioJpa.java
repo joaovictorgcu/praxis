@@ -47,4 +47,9 @@ public class PrazoRepositorioJpa implements PrazoRepositorio {
     public List<Prazo> agendaAte(LocalDate limite) {
         return jpa.agendaAte(limite).stream().map(PersistenciaMapper::paraDominio).toList();
     }
+
+    @Override
+    public List<Prazo> listar() {
+        return jpa.findAll().stream().map(PersistenciaMapper::paraDominio).toList();
+    }
 }

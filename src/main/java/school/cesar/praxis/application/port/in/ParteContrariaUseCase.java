@@ -31,6 +31,9 @@ public interface ParteContrariaUseCase {
      */
     List<ParteContrariaResponse> listarPartesContrarias();
 
+    /** Inclui as desativadas: a tela de administracao mostra o cadastro inteiro. */
+    List<ParteContrariaResponse> listarTodasAsPartesContrarias();
+
     /**
      * Listar partes contrárias por tipo (Física ou Jurídica)
      */
