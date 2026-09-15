@@ -26,16 +26,12 @@ Prompts principais, em ordem: ler o enunciado e implementar a minha parte (motor
 
 Nada foi entregue sem execução e conferência:
 
-- `./mvnw test` — **29 testes**, sendo **12 cenários BDD / 80 steps** do Cucumber, todos verdes.
+- `./mvnw test` — **164 testes**, sendo **53 cenários BDD / 481 steps** do Cucumber, todos verdes.
 - Contagem de prazo conferida manualmente contra o calendário de setembro/2026: intimação em 04/09 (sexta), feriado em 07/09 (segunda), prazo de 5 dias úteis, termo inicial 08/09 e vencimento em 14/09.
 - Limite de 30% da quota litis conferido contra o art. 38 do Código de Ética da OAB.
 - Regras de contagem conferidas contra os arts. 219, 220 e 224 do CPC; segredo de justiça contra o art. 189.
 
-# Declaração de uso de IA
-
-## João Victor Uchôa
-
-`joaovictorgcu` — [jvgcu@cesar.school](mailto:jvgcu@cesar.school)
+### Prompts, na ordem em que foram feitos
 
 1. to estudando o praxis e queria entender melhor como a arquitetura dele ta organizada. me explica a função de cada camada, dominio, aplicação, infraestrutura e apresentação, usando exemplos do proprio projeto. tambem queria saber o que pode dar errado quando uma regra de negocio acaba ficando na camada errada.
 
@@ -157,25 +153,44 @@ Nada foi entregue sem execução e conferência:
 
 60. escolhe uma regra de negocio e vai me guiando pelo caminho requisito → dominio → caso de uso → tela ou API → teste. faz uma etapa por vez e espera minha resposta.
 
-61. analisa a declaração de uso de IA do praxis e me explica a diferença entre usar IA pra estudar, usar como apoio no desenvolvimento e deixar a IA fazer diretamente uma parte do trabalho. tambem mostra como deixar essa declaração clara.
+61. quero criar uma tela de admin no praxis onde eu possa administrar tudo e saber todos os dados. analisa a arquitetura atual do projeto e me diz qual seria a melhor forma de fazer isso sem quebrar as regras que já existem.
 
-### Tela de administração (`/painel/admin`) — IA no desenvolvimento, não só no estudo
+62. quero uma tela de admin somente de leitura no praxis. me mostra como organizar isso respeitando a arquitetura atual, sem colocar regra de negocio no controller e sem acessar os repositories diretamente pela tela.
 
-Os prompts acima são de estudo. Este item é diferente e fica registrado à parte: a **tela de administração foi construída com a IA escrevendo o código**, em sessão do Claude Code (Opus 5) sobre o repositório, a partir do meu pedido — *"quero uma tela de admin onde eu possa administrar tudo e saber todos os dados"*.
+63. olhando os casos de uso que o praxis já tem, como eu poderia montar um `ConsultarPanorama` para juntar os dados necessários para a tela de admin? quero entender onde essa responsabilidade deveria ficar.
 
-O que a IA produziu nessa sessão:
+64. preciso mostrar todos os prazos no admin, inclusive os que já foram cumpridos. analisa as listagens atuais de prazo e me diz como criar uma consulta específica sem alterar o comportamento das telas que já existem.
 
-- `AdministracaoUseCases.ConsultarPanorama` (porta de entrada) e `PanoramaAppService`, que compõe os casos de uso de listagem já existentes em vez de descer ao repositório.
-- `PrazoRepositorio.listar()`, `PrazosUseCases.ListarTodosOsPrazos`, `listarTodosOsClientes()`, `listarTodasAsPartesContrarias()` e `listarTodasAsAudiencias()` — consultas novas, para não alterar as que as telas do dia a dia já usavam.
-- `AdminWebController` (com `@SomenteChefe`), o template `admin.html` e o link no menu.
-- `AdminHttpTest`, com quatro testes: `403` para advogado, panorama renderizado para o chefe, senha codificada ausente do HTML e prazo já cumprido presente no panorama.
-- As seções correspondentes deste `README.md`.
+65. quero mostrar todos os clientes, partes contrárias e audiências na tela de admin. me explica quais consultas novas eu precisaria criar e por que seria melhor não mudar as consultas usadas pelas outras telas.
 
-Decisões que discuti com a IA antes de aceitar o código: manter a tela **somente de leitura** (criar e remover continua em cada cadastro, onde a regra vive); **não alterar** as listagens existentes, que filtram prazo cumprido e cadastro desativado de propósito; e manter o `ConsultarPanorama` fora do repositório, para a tela não virar um segundo caminho até o banco.
+66. analisa como proteger a rota `/painel/admin` para que somente o chefe consiga acessar. quero entender como usar a autorização existente no projeto e o que deve acontecer quando um advogado tentar entrar diretamente pela URL.
 
-Verificação antes do commit: `./mvnw -o test` — **164 testes, 0 falhas** (incluindo os 4 novos e os 53 cenários BDD) — e conferência na aplicação em execução, entrando como chefe (tela carrega) e como advogada (`403`, e o link nem aparece no menu).
+67. quero adicionar um link para a tela de admin no menu do praxis. me mostra como fazer isso de forma que o link apareça somente para quem tem permissão, sem usar isso como única forma de proteção.
 
-Limites que ficaram registrados no README: a tela não pagina, e cliente, parte contrária e audiência continuam sem tela de cadastro — a administração mostra os três, mas criar e editar segue só pela API REST.
+68. preciso criar testes HTTP para a tela de administração. me sugere os testes mais importantes para garantir autorização, renderização da tela e proteção de informações sensíveis, usando os padrões de teste que já existem no projeto.
+
+69. no `AdminHttpTest`, quero verificar que a senha codificada nunca aparece no html da tela. me explica como testar isso e quais dados seriam perigosos de expor no panorama administrativo.
+
+70. quero verificar no teste do admin que um prazo já cumprido aparece no panorama, mesmo que as listagens normais escondam esse tipo de prazo. como eu deveria implementar esse teste e qual regra ele está protegendo?
+
+71. quero implementar a tela de admin sem transformar o `ConsultarPanorama` em um acesso direto aos repositories. analisa a arquitetura do praxis e me mostra o caminho correto entre controller, caso de uso, application service e repositories.
+
+72. antes de eu aceitar a implementação da tela de admin, revisa a solução pensando em arquitetura, segurança e impacto nas funcionalidades existentes. aponta o que pode quebrar e o que precisa ser testado.
+
+73. implemente a tela `/painel/admin` no praxis seguindo a arquitetura existente. use os casos de uso já disponíveis quando fizer sentido, crie apenas as consultas que realmente forem necessárias e mantenha a tela somente de leitura.
+
+74. agora que a tela de admin foi implementada, analisa o código gerado e explica cada classe criada ou alterada, a responsabilidade de cada uma e por que essa organização faz sentido dentro da arquitetura do projeto.
+
+75. cria uma bateria de testes para a tela de administração e explica o que cada teste protege. quero garantir pelo menos acesso negado para advogado, acesso permitido para chefe, ausência de senha codificada no html e presença de prazo cumprido.
+
+76. revisa a implementação da tela de admin e verifica se existe algum segundo caminho até o banco, alguma duplicação de regra ou alguma alteração indevida nas consultas usadas pelas telas normais.
+
+77. analisa as limitações da tela de admin depois da implementação. ela não tem paginação e algumas entidades não possuem tela própria de cadastro. me explica como registrar essas limitações sem tratar isso como bug.
+
+78. revisei a implementação e os testes passaram. me ajuda a interpretar o resultado de `./mvnw -o test` e montar uma lista do que ainda preciso validar manualmente na aplicação antes de considerar a funcionalidade pronta.
+
+79. quero fazer uma revisão final da tela de admin como se você fosse um professor avaliando o projeto. analisa arquitetura, segurança, testes, decisões tomadas e possíveis problemas da solução e me faça perguntas para eu justificar cada escolha.
+
 
 ## Caio Sena
 
