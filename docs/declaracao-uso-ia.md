@@ -31,9 +31,133 @@ Nada foi entregue sem execução e conferência:
 - Limite de 30% da quota litis conferido contra o art. 38 do Código de Ética da OAB.
 - Regras de contagem conferidas contra os arts. 219, 220 e 224 do CPC; segredo de justiça contra o art. 189.
 
-- João Victor G. C. Uchoa
+# Declaração de uso de IA
 
----
+## João Victor Uchôa
+
+`joaovictorgcu` — [jvgcu@cesar.school](mailto:jvgcu@cesar.school)
+
+1. to estudando o praxis e queria entender melhor como a arquitetura dele ta organizada. me explica a função de cada camada, dominio, aplicação, infraestrutura e apresentação, usando exemplos do proprio projeto. tambem queria saber o que pode dar errado quando uma regra de negocio acaba ficando na camada errada.
+
+2. pegando o caso de abrir um prazo no praxis, me mostra o caminho de uma requisição até chegar no banco. quero entender o que acontece no controller, na aplicação, no dominio e na persistencia e quem cuida de cada parte.
+
+3. em um dos commits o jpa saiu do dominio do praxis. me explica pq isso foi feito e qual problema existia em deixar @Entity e outras coisas de persistencia dentro do dominio. tambem quero entender o que muda nos testes com essa separação.
+
+4. me explica as portas de entrada e de saida usadas no praxis de um jeito simples, usando as interfaces do projeto. quero entender quem depende de quem e pq um caso de uso não deve falar direto com o banco. depois faz 5 perguntas pra eu ver se entendi mesmo.
+
+5. olha NumeroCnj e Advogado no praxis e me explica pq eles existem como classes proprias em vez de usar String em tudo. depois me passa 5 exemplos pra eu tentar decidir quais fariam sentido como value object.
+
+6. quero revisar os padrões que realmente aparecem no praxis: Strategy, Observer, Template Method, Proxy, Decorator e Iterator. me explica onde cada um aparece, qual problema resolveu e o que poderia ser feito no lugar. tambem fala o que eu perderia usando a solução mais simples.
+
+7. me explica como o praxis calcula um prazo. considera data da intimação, começo da contagem, dias uteis, dias corridos, fim de semana, feriado, recesso, vencimento e prorrogação. depois me passa alguns exemplos pra eu tentar calcular sozinho.
+
+8. no motor de prazos tem mais de uma forma de contar os dias. me explica pq isso foi separado em estrategias diferentes. depois me passa 5 situações e deixa eu escolher qual seria usada.
+
+9. no praxis o vencimento é calculado quando o prazo é criado e depois não muda mais. pq fizeram assim? o que poderia acontecer se recalculasse todo dia? depois cria uns exemplos com feriado sendo adicionado ou removido pra eu dizer o que deveria acontecer.
+
+10. me explica como a PoliticaDeAlerta chega em ATENCAO, URGENTE, CRITICO, VENCE_HOJE e VENCIDO. depois cria 10 exercicios pra eu descobrir qual alerta deveria aparecer em cada caso.
+
+11. me explica a idempotencia no motor de alertas do praxis. quero entender pq rodar a mesma varredura duas vezes não pode gerar o mesmo aviso de novo e como o sistema evita isso. depois me passa 5 situações pra eu analisar.
+
+12. o MotorDePrazos publica coisas como PrazoEmRisco e PrazoVencido. me explica pq fizeram dessa forma e pq o motor não precisa saber quem vai tratar esses eventos depois.
+
+13. o praxis faz uma varredura diaria dos prazos, mas tambem da pra executar manualmente. me explica como isso foi organizado e pq os dois caminhos usam a mesma regra em vez de duplicar a implementação.
+
+14. analisa MotorDePrazosTest, PrazoFatalNotificacaoTest e os cenarios BDD do motor. quero saber qual regra de negocio cada teste ta protegendo e o que poderia quebrar se ele não existisse.
+
+15. faz uma simulação de defesa sobre o motor de prazos. vai fazendo uma pergunta por vez e espera eu responder. começa mais simples e depois vai complicando.
+
+16. me explica como funciona a geração de documentos no praxis, começando pelo modelo e pelos campos e chegando no DocumentoGerado, armazenamento e leitura.
+
+17. me explica pq GeradorDocumento foi organizado desse jeito e o que muda entre PeticaoInicial, Contestacao e Procuracao. quero entender o que fica igual e o que muda.
+
+18. compara as responsabilidades de GeradorDocumento, PeticaoInicial, Contestacao e Procuracao. depois me passa algumas situações e eu tento dizer qual classe deveria cuidar de cada uma.
+
+19. nos modelos do praxis tem coisas como {{campo}}. me explica como isso funciona, desde descobrir os campos até substituir eles na hora de gerar o documento. tambem quero ver o que acontece quando algum campo não é preenchido.
+
+20. os campos dos modelos começaram a gerar os campos de preenchimento automaticamente na tela. me explica como backend, html e javascript trabalham juntos nisso e pq é melhor do que deixar varios campos fixos.
+
+21. no praxis, mudar ou excluir um modelo não pode mudar um documento que ja foi gerado. me explica pq isso é importante e depois cria 4 situações pra eu dizer o que deveria acontecer.
+
+22. faz uma simulação de prova sobre a parte de documentos do praxis. pergunta uma coisa por vez e espera minha resposta. pode passar por modelos, campos, geração, persistencia, sigilo e organização das classes.
+
+23. me explica o DocumentoProxy do praxis de um jeito simples. quero entender qual é o documento real, o que o proxy faz, onde ele verifica o acesso e pq não seria legal repetir essa regra em varios controllers.
+
+24. no praxis, um documento sigiloso pode retornar 403 quando a OAB não tem acesso. me explica a diferença entre autenticação, autorização, identificação da OAB e segredo de justiça usando o projeto como exemplo.
+
+25. imagina que alguem crie um endpoint novo e esqueça de verificar o segredo de justiça. me explica como o DocumentoProxy ajuda nisso. depois me mostra outras formas de proteger e me deixa comparar qual seria melhor.
+
+26. faz uma simulação de entrevista sobre a parte de segurança dos documentos do praxis. pergunta uma coisa por vez e espera eu responder.
+
+27. me explica como funciona o login do praxis sem resumir tudo em spring security. quero entender o papel da sessão, usuario, senha, papel, OAB, cookie e logout.
+
+28. as senhas do praxis usam PBKDF2-HMAC-SHA256. me explica pq não pode guardar a senha direto no banco e me explica tambem hash, salt, força bruta e como a senha é conferida.
+
+29. no praxis existem os papeis ADVOGADO e CHEFE. me explica a diferença entre autenticar e autorizar usando exemplos do projeto, principalmente @SomenteChefe e o 403.
+
+30. me explica pq o praxis tem proteção contra CSRF nos POSTs do painel. primeiro explica o ataque de um jeito simples e depois relaciona isso com sessão e cookie.
+
+31. pq o praxis usa a sessão HTTP pra saber qual usuario está logado em vez de confiar na OAB enviada pela interface? quero entender o que poderia dar errado se confiasse direto no que vem do cliente.
+
+32. no praxis, cinco tentativas erradas fazem o email ficar bloqueado por um minuto. me explica qual problema isso tenta evitar, o que resolve e quais problemas ainda podem existir. depois pede pra eu pensar numa melhoria.
+
+33. o praxis permite usar um login curto como admin e completar o dominio automaticamente. me explica como isso funciona e pq essa escolha pode ser boa.
+
+34. faz uma banca sobre segurança no praxis. pergunta uma coisa por vez sobre senha, sessão, cookie, CSRF, autorização, brute force e senha provisoria. depois de cada resposta fala só o que eu acertei e o que faltou.
+
+35. me explica o fluxo da tela de processos do praxis, começando pela lista e busca e passando por cadastro, ficha, andamento, prazo, documento e anexo. quero entender qual caso de uso entra em cada parte.
+
+36. no praxis, Processo implementa Iterable<Andamento> pra trabalhar com a linha do tempo. me explica pq fizeram isso e compara com simplesmente expor a lista ou ordenar tudo no controller.
+
+37. me explica pq o painel usa POST-Redirect-GET e qual problema isso evita. depois me passa alguns exemplos de formulario e me pede pra prever o que vai acontecer.
+
+38. me passa uma lista de responsabilidades da tela de processos e pede pra eu dizer o que deveria ficar no controller, caso de uso, dominio, infraestrutura ou tela.
+
+39. faz uma simulação de apresentação da tela de processos pra um professor. pergunta mais sobre as decisões tecnicas e de arquitetura do que sobre o funcionamento basico.
+
+40. me explica pq o praxis tem classes de persistencia diferentes das classes do dominio e como uma vira a outra.
+
+41. mostra o caminho de um objeto do dominio até o banco e depois o caminho contrario. usa Processo como exemplo pra ficar mais facil.
+
+42. me explica pra que serve o Flyway no praxis, pq existem migrations, qual a diferença pra ddl-auto e pq o projeto usa PostgreSQL.
+
+43. me explica a preocupação com bytea, varchar grande e large objects no PostgreSQL e qual problema estavam tentando evitar.
+
+44. faz 8 perguntas sobre persistencia no praxis, misturando JPA, mapeamento, repository, PostgreSQL, Flyway, transação, H2 e PostgreSQL. não mostra as respostas antes de eu tentar.
+
+45. me explica pq o praxis tem consultas especificas pro painel administrativo em vez de usar exatamente as mesmas do dia a dia.
+
+46. foram criadas operações como listarTodosOsClientes e listarTodasAsAudiencias. pq criaram outras consultas em vez de simplesmente mudar as que ja existiam?
+
+47. me explica como funciona o /painel/admin e pq ConsultarPanorama não deveria acessar os repositories diretamente.
+
+48. me explica como menu, controller, autorização, sessão e 403 ajudam a proteger o painel. e pq só esconder o link não resolve.
+
+49. me explica pq a senha codificada não aparece no html e pq a url do banco precisa ser tratada antes de aparecer na tela.
+
+50. analisa o AdminHttpTest e me explica o que cada teste está protegendo. depois faz uma pergunta de banca sobre essa parte.
+
+51. me explica a diferença entre teste unitario, teste de integração, teste HTTP e BDD usando os testes do proprio praxis.
+
+52. no praxis os cenarios BDD usam casos de uso reais. quais as vantagens e desvantagens de fazer desse jeito?
+
+53. pega o teste do alerta escalonado e me explica qual regra de negocio ele protege e como esse teste verifica ela.
+
+54. me explica pq os testes devem proteger o comportamento do sistema e não ficar presos aos detalhes do codigo. usa exemplos do praxis.
+
+55. relaciona as principais regras do motor de prazos com os testes que existem pra proteger cada uma.
+
+56. faz 10 perguntas sobre os testes do praxis, uma por vez. pergunta coisas tipo: o que quebraria se esse teste fosse removido? qual regra ele protege? é unitario ou integração? o que ele realmente garante?
+
+57. faz uma simulação de banca sobre testes. começa facil e vai aumentando a dificuldade conforme eu respondo.
+
+58. me explica como visão de dominio, mapa de historia, CML, arquitetura e implementação se relacionam dentro do praxis.
+
+59. escolhe as duas funcionalidades mais complexas do praxis e mostra como elas aparecem nos requisitos, dominio, casos de uso, tela e testes.
+
+60. escolhe uma regra de negocio e vai me guiando pelo caminho requisito → dominio → caso de uso → tela ou API → teste. faz uma etapa por vez e espera minha resposta.
+
+61. analisa a declaração de uso de IA do praxis e me explica a diferença entre usar IA pra estudar, usar como apoio no desenvolvimento e deixar a IA fazer diretamente uma parte do trabalho. tambem mostra como deixar essa declaração clara.
 
 ## Caio Sena
 
