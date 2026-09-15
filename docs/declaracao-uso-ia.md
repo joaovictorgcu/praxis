@@ -175,6 +175,50 @@ Cada participante deve preencher individualmente a sua respectiva seção, infor
 
 `Caiosenas2101` — [css4@cesar.school](mailto:css4@cesar.school)
 
+Durante o desenvolvimento do projeto Praxis, utilizei ferramentas de Inteligência Artificial como apoio na análise do projeto e no desenvolvimento das funcionalidades pelas quais fiquei responsável, principalmente o Módulo de Honorários e o Controle de Sigilo e Permissões de Documentos.
+
+A IA foi utilizada inicialmente para compreender melhor a arquitetura já existente no Praxis e identificar como novas funcionalidades poderiam ser incorporadas sem fugir da organização adotada pelo projeto. Também utilizei a ferramenta para discutir decisões de implementação, entender melhor algumas classes e padrões já existentes e revisar possíveis impactos das alterações no restante do sistema.
+
+Alguns dos prompts utilizados nesse processo foram:
+
+"Analise a arquitetura atual do Praxis e me explique como domínio, aplicação, infraestrutura e apresentação estão organizados. Quero implementar novas funcionalidades sem fugir do padrão que já existe no projeto."
+
+"Quero implementar um módulo de honorários no Praxis com contratos e cálculo de honorários fixos, por hora e por quota litis. Analise o que já existe no projeto e me ajude a entender o que ainda precisa ser implementado."
+
+"O projeto já possui classes para calcular diferentes modalidades de honorários. Como posso aproveitar essa estrutura para criar o contrato de honorários sem duplicar regras que já existem?"
+
+"Analise a implementação do módulo de honorários e verifique se as responsabilidades estão nas camadas corretas. Quero evitar colocar regra de negócio na camada de aplicação ou no controller."
+
+"Por que o cálculo das diferentes modalidades de honorários faz sentido como Strategy? Explique como HonorarioFixo, HonorarioPorHora e HonorarioQuotaLitis se relacionam com esse padrão."
+
+"No contrato de honorários, quero que o valor seja calculado no momento da contratação e permaneça armazenado mesmo que alguma informação utilizada no cálculo seja alterada depois. Essa regra faz sentido? Como ela pode ser protegida por testes?"
+
+Durante a implementação, também utilizei a IA para revisar regras de negócio e pensar nos testes necessários para garantir o comportamento esperado. Alguns exemplos foram:
+
+"Quais testes são importantes para garantir que as três modalidades de honorários estejam calculando corretamente e que as regras de negócio sejam respeitadas?"
+
+"Analise os testes do módulo de honorários e veja se eles realmente protegem as regras de negócio, principalmente o limite da quota litis e o valor do contrato depois de criado."
+
+Na funcionalidade relacionada ao controle de acesso aos documentos, utilizei a IA primeiro para analisar o mecanismo de sigilo que já existia no projeto e identificar o que poderia ser acrescentado sem duplicar a proteção implementada anteriormente.
+
+"Analise como o Praxis atualmente controla o acesso a documentos sigilosos e me explique o papel do DocumentoProxy e das OABs autorizadas."
+
+"O projeto já impede o acesso de uma OAB não autorizada a um documento sigiloso. Quero permitir que as OABs autorizadas sejam gerenciadas depois da criação do documento. Qual seria uma forma de implementar isso aproveitando a arquitetura existente?"
+
+"Quero permitir habilitar e revogar o acesso de uma OAB a um documento sigiloso. Em qual camada essa regra deve ficar e como evitar colocar essa responsabilidade diretamente no controller?"
+
+"Um documento sigiloso não deve ficar sem nenhuma OAB autorizada. Como posso garantir que a última OAB não seja removida e como testar essa regra?"
+
+"Revise a implementação do gerenciamento de permissões de documentos e verifique se ela interfere no mecanismo de sigilo que já existia no Praxis."
+
+Além da implementação dessas funcionalidades, utilizei a IA para revisar a integração entre domínio, casos de uso, persistência e endpoints REST, além de esclarecer conceitos relacionados à arquitetura utilizada pelo projeto, como Strategy, Proxy, portas de entrada e saída, casos de uso, persistência JPA e separação de responsabilidades entre as camadas.
+
+Também recorri à IA durante a revisão final para analisar possíveis duplicações de regras, verificar a organização das classes, discutir a cobertura dos testes e identificar pontos que poderiam afetar funcionalidades já existentes.
+
+A utilização da Inteligência Artificial serviu como ferramenta de apoio durante diferentes etapas do desenvolvimento, principalmente na compreensão da arquitetura existente, discussão de alternativas de implementação, análise de regras de negócio, identificação de possíveis problemas e revisão dos testes e do código desenvolvido. As decisões sobre o escopo das funcionalidades, a integração das alterações ao projeto, a validação do comportamento esperado e a revisão final das entregas foram acompanhadas e avaliadas por mim durante o desenvolvimento.
+
+- Caio Santos
+
 ---
 
 ## Gustavo Laporte
