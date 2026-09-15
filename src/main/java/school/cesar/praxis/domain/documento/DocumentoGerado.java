@@ -4,7 +4,10 @@ import school.cesar.praxis.domain.compartilhado.ConteudoRestrito;
 import school.cesar.praxis.domain.processo.NumeroCnj;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -24,7 +27,10 @@ public class DocumentoGerado implements ConteudoRestrito {
     private final LocalDate geradoEm;
     private final String geradoPorOab;
     private final boolean segredoJustica;
-    private final Set<String> oabsHabilitadas;
+    private final Set<String> oabsHabilitadas = new LinkedHashSet<>();
+
+    private StatusDocumento status;
+    private final List<RegistroAprovacao> historico = new ArrayList<>();
 
     public DocumentoGerado(Long id,
                            NumeroCnj numeroProcesso,
@@ -47,9 +53,10 @@ public class DocumentoGerado implements ConteudoRestrito {
         this.geradoEm = geradoEm;
         this.geradoPorOab = geradoPorOab;
         this.segredoJustica = segredoJustica;
-        this.oabsHabilitadas = oabsHabilitadas == null
-                ? Set.of()
-                : Set.copyOf(new LinkedHashSet<>(oabsHabilitadas));
+        if (oabsHabilitadas != null) {
+            this.oabsHabilitadas.addAll(oabsHabilitadas);
+        }
+        this.status = new Rascunho();
     }
 
     /** Art. 189 do CPC: em segredo de justica, so quem esta habilitado nos autos le. */
@@ -65,35 +72,85 @@ public class DocumentoGerado implements ConteudoRestrito {
         return tipo.name().toLowerCase() + "-" + numeroProcesso.valor().replace('.', '-') + ".txt";
     }
 
-    public Long getId() {
-        return id;
+    public void enviarParaRevisao() {
+        transicionar(status.enviarParaRevisao(this), null, null);
     }
 
-    public NumeroCnj getNumeroProcesso() {
-        return numeroProcesso;
+    public void aprovar(String oabAprovador, String comentario) {
+        transicionar(status.aprovar(this, oabAprovador, comentario), oabAprovador, comentario);
     }
 
-    public TipoDocumento getTipo() {
-        return tipo;
+    public void rejeitar(String oabAprovador, String motivo) {
+        transicionar(status.rejeitar(this, oabAprovador, motivo), oabAprovador, motivo);
     }
 
-    public String getConteudo() {
-        return conteudo;
+    public void protocolar() {
+        transicionar(status.protocolar(this), null, null);
     }
 
-    public LocalDate getGeradoEm() {
-        return geradoEm;
+    private void transicionar(StatusDocumento novoStatus, String responsavelOab, String comentario) {
+        String deEstado = status.nome();
+        this.status = novoStatus;
+        historico.add(new RegistroAprovacao(deEstado, status.nome(), responsavelOab, comentario, LocalDateTime.now()));
     }
 
-    public String getGeradoPorOab() {
-        return geradoPorOab;
+    /**
+     * Desfaz a ultima decisao (aprovacao ou rejeicao), voltando a EM_REVISAO. Le a
+     * decisao do proprio historico, entao funciona sobre o agregado recem-carregado
+     * do banco - nao depende de nada guardado em memoria entre requisicoes.
+     */
+    public void desfazerUltimaDecisao() {
+        String atual = status.nome();
+        if (!"APROVADO".equals(atual) && !"REJEITADO".equals(atual)) {
+            throw new IllegalStateException("nao ha decisao para desfazer em um documento " + atual);
+        }
+        RegistroAprovacao ultima = historico.isEmpty() ? null : historico.get(historico.size() - 1);
+        String oab = ultima == null ? null : ultima.getResponsavelOab();
+        transicionar(new EmRevisao(), oab, "desfeito: decisao revertida");
     }
 
-    public boolean isSegredoJustica() {
-        return segredoJustica;
+    public void restaurarStatus(StatusDocumento statusAnterior, String responsavelOab, String comentario) {
+        transicionar(statusAnterior, responsavelOab, comentario);
     }
 
-    public Set<String> getOabsHabilitadas() {
-        return oabsHabilitadas;
+    public void restaurarStatusPersistido(StatusDocumento status) {
+        this.status = status;
+    }
+
+    public void restaurarHistoricoPersistido(List<RegistroAprovacao> historicoPersistido) {
+        this.historico.clear();
+        this.historico.addAll(historicoPersistido);
+    }
+
+    public StatusDocumento getStatus() {
+        return status;
+    }
+
+    public List<RegistroAprovacao> getHistorico() {
+        return List.copyOf(historico);
+    }
+
+    public Long getId() { return id; }
+    public NumeroCnj getNumeroProcesso() { return numeroProcesso; }
+    public TipoDocumento getTipo() { return tipo; }
+    public String getConteudo() { return conteudo; }
+    public LocalDate getGeradoEm() { return geradoEm; }
+    public String getGeradoPorOab() { return geradoPorOab; }
+    public boolean isSegredoJustica() { return segredoJustica; }
+    public Set<String> getOabsHabilitadas() { return Set.copyOf(oabsHabilitadas); }
+
+    public void habilitarOab(String oab) {
+        if (oab == null || oab.isBlank()) {
+            throw new IllegalArgumentException("OAB e obrigatoria");
+        }
+        oabsHabilitadas.add(oab);
+    }
+
+    public void revogarOab(String oab) {
+        if (segredoJustica && oabsHabilitadas.size() == 1 && oabsHabilitadas.contains(oab)) {
+            throw new IllegalArgumentException(
+                    "documento em segredo de justica exige ao menos uma OAB habilitada");
+        }
+        oabsHabilitadas.remove(oab);
     }
 }

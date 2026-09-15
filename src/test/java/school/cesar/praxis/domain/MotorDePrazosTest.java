@@ -127,7 +127,8 @@ class MotorDePrazosTest {
     @DisplayName("motor recusa regime sem estrategia registrada")
     void regimeSemEstrategia() {
         MotorDePrazos motor = new MotorDePrazos(List.of(diasUteis), PoliticaDeAlerta.padrao());
-        assertThrows(IllegalStateException.class,
+        // Regime vem da requisicao: e erro do chamador (400), nao do servidor.
+        assertThrows(IllegalArgumentException.class,
                 () -> motor.estrategiaPara(RegimeContagem.DIAS_CORRIDOS));
     }
 

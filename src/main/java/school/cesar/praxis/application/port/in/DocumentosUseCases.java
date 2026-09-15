@@ -44,13 +44,51 @@ public interface DocumentosUseCases {
 
     interface ListarDocumentos {
 
+        /** {@code status} e o nome do estado do fluxo de aprovacao (RASCUNHO, EM_REVISAO...). */
         record ItemDocumento(Long id,
                              String numeroProcesso,
                              TipoDocumento tipo,
                              String geradoEm,
-                             boolean segredoJustica) {
+                             String geradoPorOab,
+                             boolean segredoJustica,
+                             String status) {
         }
 
         List<ItemDocumento> executar(String numeroProcesso);
+    }
+
+        interface EnviarDocumentoParaRevisao {
+        record Comando(Long documentoId) {}
+        DocumentoGerado executar(Comando comando);
+    }
+
+    interface AprovarDocumento {
+        record Comando(Long documentoId, String oabAprovador, String comentario) {}
+        DocumentoGerado executar(Comando comando);
+    }
+
+    interface RejeitarDocumento {
+        record Comando(Long documentoId, String oabAprovador, String motivo) {}
+        DocumentoGerado executar(Comando comando);
+    }
+
+    interface DesfazerDecisaoDocumento {
+        record Comando(Long documentoId) {}
+        DocumentoGerado executar(Comando comando);
+    }
+
+    interface ProtocolarDocumento {
+        record Comando(Long documentoId) {}
+        DocumentoGerado executar(Comando comando);
+    }
+
+    interface HabilitarOab {
+        record Comando(Long documentoId, String oab) {}
+        DocumentoGerado executar(Comando comando);
+    }
+
+    interface RevogarOab {
+        record Comando(Long documentoId, String oab) {}
+        DocumentoGerado executar(Comando comando);
     }
 }

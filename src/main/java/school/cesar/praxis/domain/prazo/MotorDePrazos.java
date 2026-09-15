@@ -45,7 +45,7 @@ public class MotorDePrazos {
     public ContagemPrazoStrategy estrategiaPara(RegimeContagem regime) {
         ContagemPrazoStrategy estrategia = estrategias.get(regime);
         if (estrategia == null) {
-            throw new IllegalStateException("sem estrategia de contagem para o regime " + regime);
+            throw new IllegalArgumentException("sem estrategia de contagem para o regime " + regime);
         }
         return estrategia;
     }
@@ -63,8 +63,11 @@ public class MotorDePrazos {
         boolean vencido = prazo.venceu(hoje);
         int restantes = vencido ? 0 : prazo.diasRestantes(hoje, contagem);
 
+        // A politica decide nos dois casos: prazo nao fatal fora da regua tambem
+        // nao avisa perda. Vencido tem marco proprio, entao o aviso sai mesmo que
+        // "vence hoje" ja tenha sido emitido no dia do vencimento.
         Optional<NivelAlerta> nivel = vencido
-                ? Optional.of(NivelAlerta.VENCE_HOJE)
+                ? politica.nivelVencido(prazo.isFatal())
                 : politica.nivelPara(restantes, prazo.isFatal());
         if (nivel.isEmpty()) {
             return Optional.empty();

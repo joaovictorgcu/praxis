@@ -1,8 +1,7 @@
 package school.cesar.praxis.infrastructure.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.stereotype.Component;
 import school.cesar.praxis.application.port.out.FeriadoRepositorio;
 import school.cesar.praxis.domain.feriado.Abrangencia;
@@ -18,13 +17,13 @@ import java.time.MonthDay;
  *
  * <p>Sem feriado nenhum o motor de prazos calcularia vencimento errado, entao
  * isto nao e dado de demonstracao: roda tambem em teste. Por isso escuta
- * {@link ContextRefreshedEvent}, que dispara no {@code @SpringBootTest} -
+ * {@code ContextRefreshedEvent}, que dispara no {@code @SpringBootTest} -
  * diferente de {@code CommandLineRunner}, que so roda pela aplicacao.
  */
 @Component
 @ConditionalOnProperty(name = "praxis.feriados-iniciais", havingValue = "true",
         matchIfMissing = true)
-public class FeriadosIniciais {
+public class FeriadosIniciais implements SmartInitializingSingleton {
 
     private final FeriadoRepositorio feriados;
 
@@ -32,7 +31,16 @@ public class FeriadosIniciais {
         this.feriados = feriados;
     }
 
-    @EventListener(ContextRefreshedEvent.class)
+    /**
+     * Roda depois de todos os singletons existirem e ANTES de o servidor web abrir a
+     * porta (ContextRefreshedEvent dispara depois do servidor subir: um login no
+     * primeiro segundo encontraria a tabela vazia). Roda tambem no @SpringBootTest.
+     */
+    @Override
+    public void afterSingletonsInstantiated() {
+        carregar();
+    }
+
     public void carregar() {
         if (!feriados.vigentes().isEmpty()) {
             return;

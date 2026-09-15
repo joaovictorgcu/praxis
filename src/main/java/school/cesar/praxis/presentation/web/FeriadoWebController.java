@@ -3,16 +3,23 @@ package school.cesar.praxis.presentation.web;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import school.cesar.praxis.application.port.in.FeriadosUseCases;
 import school.cesar.praxis.domain.feriado.Abrangencia;
 import school.cesar.praxis.domain.feriado.Jurisdicao;
+import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.NoSuchElementException;
 
 /**
  * Camada de apresentacao web do cadastro de feriados. Controller proprio para
  * nao inflar o painel de prazos. Nao contem regra - so traduz formulario em
  * caso de uso.
+ *
+ * <p>Remover feriado muda a contagem de prazo de todo o escritorio, entao e
+ * acao do chefe.
  */
 @Controller
 @RequestMapping("/painel/feriados")
@@ -50,7 +57,7 @@ public class FeriadoWebController {
                             @RequestParam(required = false) Boolean repeteTodoAno,
                             @RequestParam Abrangencia.Nivel nivel,
                             @RequestParam(required = false) String abrangencia,
-                            Model model) {
+                            RedirectAttributes flash) {
         try {
             cadastrar.executar(new FeriadosUseCases.CadastrarFeriado.Comando(
                     descricao,
@@ -58,15 +65,22 @@ public class FeriadoWebController {
                     Boolean.TRUE.equals(repeteTodoAno),
                     nivel,
                     abrangencia));
-        } catch (IllegalArgumentException invalido) {
-            model.addAttribute("erro", invalido.getMessage());
+            flash.addFlashAttribute("mensagem", "Feriado \"" + descricao + "\" cadastrado.");
+        } catch (IllegalArgumentException | DateTimeParseException invalido) {
+            flash.addFlashAttribute("erro", invalido.getMessage());
         }
-        return montarTela(model);
+        return "redirect:/painel/feriados";
     }
 
+    @SomenteChefe
     @PostMapping("/{id}/remover")
-    public String remover(@PathVariable Long id) {
-        remover.executar(id);
+    public String remover(@PathVariable Long id, RedirectAttributes flash) {
+        try {
+            remover.executar(id);
+            flash.addFlashAttribute("mensagem", "Feriado removido do calendario.");
+        } catch (IllegalArgumentException | NoSuchElementException falha) {
+            flash.addFlashAttribute("erro", falha.getMessage());
+        }
         return "redirect:/painel/feriados";
     }
 

@@ -117,15 +117,16 @@ public class ParteContrariaAppService implements ParteContrariaUseCase {
         ParteContraria parteContraria = parteContrariaRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Parte contrária não encontrada com ID: " + id));
 
+        // Edicao parcial: campo ausente na requisicao mantem o valor atual.
         parteContraria.atualizar(
             request.getNome(),
-            request.getEmail(),
-            request.getTelefone(),
-            request.getEndereco(),
-            request.getCidade(),
-            request.getEstado(),
-            request.getCep(),
-            request.getObservacoes()
+            request.getEmail() != null ? request.getEmail() : parteContraria.getEmail(),
+            request.getTelefone() != null ? request.getTelefone() : parteContraria.getTelefone(),
+            request.getEndereco() != null ? request.getEndereco() : parteContraria.getEndereco(),
+            request.getCidade() != null ? request.getCidade() : parteContraria.getCidade(),
+            request.getEstado() != null ? request.getEstado() : parteContraria.getEstado(),
+            request.getCep() != null ? request.getCep() : parteContraria.getCep(),
+            request.getObservacoes() != null ? request.getObservacoes() : parteContraria.getObservacoes()
         );
 
         ParteContraria parteAtualizada = parteContrariaRepository.save(parteContraria);

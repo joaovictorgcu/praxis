@@ -1,26 +1,37 @@
 package school.cesar.praxis.infrastructure.persistence.mapper;
 
 import school.cesar.praxis.domain.documento.DocumentoGerado;
+import school.cesar.praxis.domain.documento.RegistroAprovacao;
+import school.cesar.praxis.domain.documento.StatusDocumento;
 import school.cesar.praxis.domain.feriado.Abrangencia;
 import school.cesar.praxis.domain.feriado.DataUnica;
 import school.cesar.praxis.domain.feriado.Feriado;
 import school.cesar.praxis.domain.feriado.RecorrenciaAnualFixa;
 import school.cesar.praxis.domain.feriado.RegraRecorrencia;
 import school.cesar.praxis.domain.anexo.ArquivoAnexo;
+import school.cesar.praxis.domain.honorario.BaseCalculo;
+import school.cesar.praxis.domain.honorario.ContratoHonorario;
 import school.cesar.praxis.domain.modelo.CodigoModelo;
 import school.cesar.praxis.domain.modelo.ModeloDocumento;
 import school.cesar.praxis.domain.modelo.TextoModelo;
 import school.cesar.praxis.domain.prazo.NivelAlerta;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
+import school.cesar.praxis.domain.usuario.Usuario;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ArquivoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.ContratoHonorarioEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.PrazoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ProcessoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.UsuarioEntity;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -145,6 +156,8 @@ public final class PersistenciaMapper {
         entidade.setGeradoPorOab(documento.getGeradoPorOab());
         entidade.setSegredoJustica(documento.isSegredoJustica());
         entidade.setOabsHabilitadas(String.join(",", documento.getOabsHabilitadas()));
+        entidade.setStatus(documento.getStatus().nome());
+        entidade.setHistorico(serializarHistorico(documento.getHistorico()));
         return entidade;
     }
 
@@ -157,7 +170,7 @@ public final class PersistenciaMapper {
                     .forEach(oabs::add);
         }
 
-        return new DocumentoGerado(
+        DocumentoGerado documento = new DocumentoGerado(
                 entidade.getId(),
                 NumeroCnj.de(entidade.getNumeroProcesso()),
                 entidade.getTipo(),
@@ -166,6 +179,53 @@ public final class PersistenciaMapper {
                 entidade.getGeradoPorOab(),
                 entidade.isSegredoJustica(),
                 oabs);
+        documento.restaurarStatusPersistido(StatusDocumento.porNome(entidade.getStatus()));
+        documento.restaurarHistoricoPersistido(desserializarHistorico(entidade.getHistorico()));
+        return documento;
+    }
+
+    /**
+     * Historico em coluna texto: campos separados por '|' e registros por ';'.
+     * Cada campo e percent-encoded, entao um comentario "faltou procuracao; refazer"
+     * nao quebra a leitura de todo o documento.
+     */
+    private static String serializarHistorico(List<RegistroAprovacao> historico) {
+        return historico.stream()
+                .map(r -> String.join("|",
+                        codificar(r.getDeEstado()),
+                        codificar(r.getParaEstado()),
+                        codificar(r.getResponsavelOab()),
+                        codificar(r.getComentario()),
+                        codificar(r.getQuando().toString())))
+                .collect(Collectors.joining(";"));
+    }
+
+    private static List<RegistroAprovacao> desserializarHistorico(String valor) {
+        List<RegistroAprovacao> historico = new ArrayList<>();
+        if (valor == null || valor.isBlank()) {
+            return historico;
+        }
+        for (String entrada : valor.split(";")) {
+            String[] partes = entrada.split("\\|", -1);
+            if (partes.length < 5) {
+                continue; // registro truncado por versao anterior: nao derruba a leitura
+            }
+            historico.add(new RegistroAprovacao(
+                    decodificar(partes[0]),
+                    decodificar(partes[1]),
+                    decodificar(partes[2]),
+                    decodificar(partes[3]),
+                    LocalDateTime.parse(decodificar(partes[4]))));
+        }
+        return historico;
+    }
+
+    private static String codificar(String valor) {
+        return valor == null ? "" : URLEncoder.encode(valor, StandardCharsets.UTF_8);
+    }
+
+    private static String decodificar(String valor) {
+        return valor == null || valor.isEmpty() ? null : URLDecoder.decode(valor, StandardCharsets.UTF_8);
     }
 
     // --- Feriado ---
@@ -237,6 +297,37 @@ public final class PersistenciaMapper {
         return oabs;
     }
 
+    public static ContratoHonorarioEntity paraEntidade(ContratoHonorario contrato) {
+        BaseCalculo base = contrato.getBaseCalculo();
+        ContratoHonorarioEntity entidade = new ContratoHonorarioEntity();
+        entidade.setId(contrato.getId());
+        entidade.setNumeroProcesso(contrato.getNumeroProcesso().valor());
+        entidade.setModalidade(contrato.getModalidade());
+        entidade.setCelebradoEm(contrato.getCelebradoEm());
+        entidade.setValorFixo(base.valorFixo());
+        entidade.setValorHora(base.valorHora());
+        entidade.setHorasTrabalhadas(base.horasTrabalhadas());
+        entidade.setValorCausa(base.valorCausa());
+        entidade.setPercentualExito(base.percentualExito());
+        entidade.setValorContratado(contrato.getValorContratado());
+        return entidade;
+    }
+
+    public static ContratoHonorario paraDominio(ContratoHonorarioEntity entidade) {
+        return new ContratoHonorario(
+                entidade.getId(),
+                NumeroCnj.de(entidade.getNumeroProcesso()),
+                entidade.getModalidade(),
+                new BaseCalculo(
+                        entidade.getValorFixo(),
+                        entidade.getValorHora(),
+                        entidade.getHorasTrabalhadas(),
+                        entidade.getValorCausa(),
+                        entidade.getPercentualExito()),
+                entidade.getCelebradoEm(),
+                entidade.getValorContratado());
+    }
+
     // --- Modelo de documento ---
 
     public static ModeloEntity paraEntidade(ModeloDocumento modelo) {
@@ -246,7 +337,6 @@ public final class PersistenciaMapper {
         entidade.setNome(modelo.getNome());
         entidade.setTipo(modelo.getTipo());
         entidade.setTitulo(modelo.getTitulo());
-        // Persiste o texto cru; a analise dos marcadores refaz-se na leitura.
         entidade.setCorpo(modelo.getCorpo().texto());
         entidade.setPedidos(modelo.getPedidos().texto());
         entidade.setEnderecaAoJuizo(modelo.isEnderecaAoJuizo());
@@ -263,5 +353,30 @@ public final class PersistenciaMapper {
                 new TextoModelo(entidade.getCorpo()),
                 new TextoModelo(entidade.getPedidos()),
                 entidade.isEnderecaAoJuizo());
+    }
+
+    // --- Usuario ---
+
+    public static UsuarioEntity paraEntidade(Usuario usuario) {
+        UsuarioEntity entidade = new UsuarioEntity();
+        entidade.setId(usuario.getId());
+        entidade.setNome(usuario.getNome());
+        entidade.setEmail(usuario.getEmail());
+        entidade.setOab(usuario.getOab());
+        entidade.setPapel(usuario.getPapel());
+        entidade.setSenhaCodificada(usuario.getSenhaCodificada());
+        entidade.setSenhaProvisoria(usuario.isSenhaProvisoria());
+        return entidade;
+    }
+
+    public static Usuario paraDominio(UsuarioEntity entidade) {
+        return new Usuario(
+                entidade.getId(),
+                entidade.getNome(),
+                entidade.getEmail(),
+                entidade.getOab(),
+                entidade.getPapel(),
+                entidade.getSenhaCodificada(),
+                entidade.isSenhaProvisoria());
     }
 }

@@ -41,4 +41,9 @@ public sealed interface EventoProcesso {
                           Advogado destinatario,
                           String nomeArquivo) implements EventoProcesso {
     }
+
+    record ProcessoDistribuido(String numeroProcesso,
+                            Advogado destinatario,
+                            String areaDireito) implements EventoProcesso {
+    }
 }

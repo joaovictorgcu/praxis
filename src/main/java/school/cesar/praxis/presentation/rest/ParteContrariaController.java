@@ -16,7 +16,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/partes-contrarias")
-@CrossOrigin(origins = "*")
 public class ParteContrariaController {
 
     private final ParteContrariaUseCase parteContrariaUseCase;

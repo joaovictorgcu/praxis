@@ -29,9 +29,13 @@ public class ClienteAppService implements ClienteUseCase {
     @Override
     public ClienteResponse criarCliente(CriarClienteRequest request) {
         // Validar se já não existe outro cliente com o mesmo CPF/CNPJ
-        if (clienteRepository.findByCpfOuCnpjAndAtivoTrue(request.getCpfOuCnpj()).isPresent()) {
-            throw new IllegalArgumentException("Já existe um cliente ativo com este CPF/CNPJ");
-        }
+        // A coluna e unica no banco para ativos e inativos; checar so ativos deixaria
+        // o insert estourar a constraint (500) apos um soft delete.
+        clienteRepository.findByCpfOuCnpj(request.getCpfOuCnpj()).ifPresent(existente -> {
+            throw new IllegalArgumentException(existente.isAtivo()
+                ? "Já existe um cliente ativo com este CPF/CNPJ"
+                : "Já existe um cliente inativo com este CPF/CNPJ (ID " + existente.getId() + "); reative-o");
+        });
 
         Cliente novoCliente = new Cliente(
             request.getNome(),
@@ -135,18 +139,19 @@ public class ClienteAppService implements ClienteUseCase {
         Cliente cliente = clienteRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado com ID: " + id));
 
+        // Edicao parcial: campo ausente na requisicao mantem o valor atual.
         cliente.atualizar(
             request.getNome(),
-            request.getEmail(),
-            request.getTelefone(),
-            request.getCelular(),
-            request.getEndereco(),
-            request.getCidade(),
-            request.getEstado(),
-            request.getCep(),
-            request.getProfissao(),
-            request.getEmpresaTrabalho(),
-            request.getObservacoes()
+            ou(request.getEmail(), cliente.getEmail()),
+            ou(request.getTelefone(), cliente.getTelefone()),
+            ou(request.getCelular(), cliente.getCelular()),
+            ou(request.getEndereco(), cliente.getEndereco()),
+            ou(request.getCidade(), cliente.getCidade()),
+            ou(request.getEstado(), cliente.getEstado()),
+            ou(request.getCep(), cliente.getCep()),
+            ou(request.getProfissao(), cliente.getProfissao()),
+            ou(request.getEmpresaTrabalho(), cliente.getEmpresaTrabalho()),
+            ou(request.getObservacoes(), cliente.getObservacoes())
         );
 
         Cliente clienteAtualizado = clienteRepository.save(cliente);
@@ -175,7 +180,11 @@ public class ClienteAppService implements ClienteUseCase {
         clienteRepository.save(cliente);
     }
 
-    // Método auxiliar
+    // Métodos auxiliares
+
+    private static String ou(String novo, String atual) {
+        return novo != null ? novo : atual;
+    }
 
     private ClienteResponse converterParaResponse(Cliente cliente) {
         return new ClienteResponse(

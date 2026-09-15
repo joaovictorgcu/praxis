@@ -20,13 +20,34 @@ public class DocumentoRestController {
     private final DocumentosUseCases.GerarDocumento gerarDocumento;
     private final DocumentosUseCases.BaixarDocumento baixarDocumento;
     private final DocumentosUseCases.ListarDocumentos listarDocumentos;
+    private final DocumentosUseCases.EnviarDocumentoParaRevisao enviarParaRevisao;
+    private final DocumentosUseCases.AprovarDocumento aprovarDocumento;
+    private final DocumentosUseCases.RejeitarDocumento rejeitarDocumento;
+    private final DocumentosUseCases.DesfazerDecisaoDocumento desfazerDecisao;
+    private final DocumentosUseCases.ProtocolarDocumento protocolarDocumento;
+    private final DocumentosUseCases.HabilitarOab habilitarOab;
+    private final DocumentosUseCases.RevogarOab revogarOab;
 
     public DocumentoRestController(DocumentosUseCases.GerarDocumento gerarDocumento,
                                    DocumentosUseCases.BaixarDocumento baixarDocumento,
-                                   DocumentosUseCases.ListarDocumentos listarDocumentos) {
+                                   DocumentosUseCases.ListarDocumentos listarDocumentos,
+                                   DocumentosUseCases.EnviarDocumentoParaRevisao enviarParaRevisao,
+                                   DocumentosUseCases.AprovarDocumento aprovarDocumento,
+                                   DocumentosUseCases.RejeitarDocumento rejeitarDocumento,
+                                   DocumentosUseCases.DesfazerDecisaoDocumento desfazerDecisao,
+                                   DocumentosUseCases.ProtocolarDocumento protocolarDocumento,
+                                   DocumentosUseCases.HabilitarOab habilitarOab,
+                                   DocumentosUseCases.RevogarOab revogarOab) {
         this.gerarDocumento = gerarDocumento;
         this.baixarDocumento = baixarDocumento;
         this.listarDocumentos = listarDocumentos;
+        this.enviarParaRevisao = enviarParaRevisao;
+        this.aprovarDocumento = aprovarDocumento;
+        this.rejeitarDocumento = rejeitarDocumento;
+        this.desfazerDecisao = desfazerDecisao;
+        this.protocolarDocumento = protocolarDocumento;
+        this.habilitarOab = habilitarOab;
+        this.revogarOab = revogarOab;
     }
 
     /** {@code codigoModelo} e opcional: sem ele, vale a peca compilada do tipo. */
@@ -36,6 +57,8 @@ public class DocumentoRestController {
                                 String oabSolicitante,
                                 String codigoModelo) {
     }
+
+    public record DecisaoDocumento(String oab, String texto) {}
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> gerar(@RequestBody NovoDocumento corpo) {
@@ -50,6 +73,64 @@ public class DocumentoRestController {
                 "arquivo", documento.nomeArquivo(),
                 "segredoJustica", documento.isSegredoJustica(),
                 "caracteres", documento.getConteudo().length()));
+    }
+
+
+    @PostMapping("/{id}/enviar-revisao")
+    public ResponseEntity<Map<String, Object>> enviarParaRevisao(@PathVariable Long id) {
+        DocumentoGerado documento = enviarParaRevisao.executar(
+                new DocumentosUseCases.EnviarDocumentoParaRevisao.Comando(id));
+        return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
+    }
+
+    @PostMapping("/{id}/aprovar")
+    public ResponseEntity<Map<String, Object>> aprovar(@PathVariable Long id, @RequestBody DecisaoDocumento corpo) {
+        DocumentoGerado documento = aprovarDocumento.executar(
+                new DocumentosUseCases.AprovarDocumento.Comando(id, corpo.oab(), corpo.texto()));
+        return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
+    }
+
+    @PostMapping("/{id}/rejeitar")
+    public ResponseEntity<Map<String, Object>> rejeitar(@PathVariable Long id, @RequestBody DecisaoDocumento corpo) {
+        DocumentoGerado documento = rejeitarDocumento.executar(
+                new DocumentosUseCases.RejeitarDocumento.Comando(id, corpo.oab(), corpo.texto()));
+        return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
+    }
+
+    @PostMapping("/{id}/desfazer")
+    public ResponseEntity<Map<String, Object>> desfazer(@PathVariable Long id) {
+        DocumentoGerado documento = desfazerDecisao.executar(
+                new DocumentosUseCases.DesfazerDecisaoDocumento.Comando(id));
+        return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
+    }
+
+    @PostMapping("/{id}/protocolar")
+    public ResponseEntity<Map<String, Object>> protocolar(@PathVariable Long id) {
+        DocumentoGerado documento = protocolarDocumento.executar(
+                new DocumentosUseCases.ProtocolarDocumento.Comando(id));
+        return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
+    }
+
+    public record OabDoCorpo(String oab) {}
+
+    @PostMapping("/{id}/oabs")
+    public ResponseEntity<Map<String, Object>> habilitarOab(@PathVariable Long id, @RequestBody OabDoCorpo corpo) {
+        DocumentoGerado documento = habilitarOab.executar(
+                new DocumentosUseCases.HabilitarOab.Comando(id, corpo.oab()));
+        return ResponseEntity.ok(Map.of(
+                "id", documento.getId(),
+                "segredoJustica", documento.isSegredoJustica(),
+                "oabsHabilitadas", documento.getOabsHabilitadas()));
+    }
+
+    @DeleteMapping("/{id}/oabs/{oab}")
+    public ResponseEntity<Map<String, Object>> revogarOab(@PathVariable Long id, @PathVariable String oab) {
+        DocumentoGerado documento = revogarOab.executar(
+                new DocumentosUseCases.RevogarOab.Comando(id, oab));
+        return ResponseEntity.ok(Map.of(
+                "id", documento.getId(),
+                "segredoJustica", documento.isSegredoJustica(),
+                "oabsHabilitadas", documento.getOabsHabilitadas()));
     }
 
     @GetMapping

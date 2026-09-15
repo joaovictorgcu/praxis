@@ -1,6 +1,7 @@
 package school.cesar.praxis.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+
 import school.cesar.praxis.domain.documento.TipoDocumento;
 
 import java.time.LocalDate;
@@ -11,6 +12,9 @@ import java.time.LocalDate;
         @Index(name = "idx_documento_processo", columnList = "numero_processo")
 })
 public class DocumentoEntity {
+
+    /** Acima de 10 485 760 o dialeto PostgreSQL vira text; abaixo, varchar(n). */
+    static final int TEXTO_LONGO = 1_000_000;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,8 +27,11 @@ public class DocumentoEntity {
     @Column(nullable = false, length = 30)
     private TipoDocumento tipo;
 
-    @Lob
-    @Column(nullable = false)
+    /**
+     * Texto longo como VARCHAR largo (text no PostgreSQL, character varying no
+     * H2), e nao LOB: o CLOB do PostgreSQL e um large object (oid) fora da tabela.
+     */
+    @Column(nullable = false, length = TEXTO_LONGO)
     private String conteudo;
 
     @Column(name = "gerado_em", nullable = false)
@@ -39,6 +46,12 @@ public class DocumentoEntity {
     /** OABs habilitadas nos autos, separadas por virgula (consultadas pelo Proxy). */
     @Column(name = "oabs_habilitadas", length = 500)
     private String oabsHabilitadas;
+
+    @Column(nullable = false, length = 20)
+    private String status = "RASCUNHO";
+
+    @Column(name = "historico", length = TEXTO_LONGO)
+    private String historico;
 
     public Long getId() {
         return id;
@@ -102,5 +115,21 @@ public class DocumentoEntity {
 
     public void setOabsHabilitadas(String oabsHabilitadas) {
         this.oabsHabilitadas = oabsHabilitadas;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getHistorico() {
+        return historico;
+    }
+
+    public void setHistorico(String historico) {
+        this.historico = historico;
     }
 }

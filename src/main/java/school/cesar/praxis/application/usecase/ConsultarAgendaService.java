@@ -7,6 +7,7 @@ import school.cesar.praxis.application.port.out.PrazoRepositorio;
 import school.cesar.praxis.domain.compartilhado.Relogio;
 import school.cesar.praxis.domain.prazo.MotorDePrazos;
 import school.cesar.praxis.domain.prazo.Prazo;
+import school.cesar.praxis.domain.processo.NumeroCnj;
 
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -14,7 +15,8 @@ import java.util.List;
 
 /** Caso de uso de leitura: agenda de prazos ordenada por vencimento. */
 @Service
-public class ConsultarAgendaService implements PrazosUseCases.ConsultarAgenda {
+public class ConsultarAgendaService implements PrazosUseCases.ConsultarAgenda,
+        PrazosUseCases.ConsultarPrazosDoProcesso {
 
     private final PrazoRepositorio prazos;
     private final MotorDePrazos motor;
@@ -29,18 +31,32 @@ public class ConsultarAgendaService implements PrazosUseCases.ConsultarAgenda {
     @Override
     @Transactional(readOnly = true)
     public List<ItemAgenda> executar(LocalDate ate) {
-        LocalDate hoje = relogio.hoje();
         return prazos.agendaAte(ate).stream()
                 .sorted(Comparator.comparing(Prazo::getVencimento))
-                .map(prazo -> new ItemAgenda(
-                        prazo.getId(),
-                        prazo.getNumeroProcesso().valor(),
-                        prazo.getDescricao(),
-                        prazo.getVencimento(),
-                        prazo.diasRestantes(hoje, motor.estrategiaPara(prazo.getRegime())),
-                        prazo.isFatal(),
-                        prazo.venceu(hoje),
-                        prazo.getResponsavel().nome()))
+                .map(this::item)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ItemAgenda> executar(String numeroProcesso) {
+        return prazos.porProcesso(NumeroCnj.de(numeroProcesso)).stream()
+                .sorted(Comparator.comparing(Prazo::getVencimento))
+                .map(this::item)
+                .toList();
+    }
+
+    private ItemAgenda item(Prazo prazo) {
+        LocalDate hoje = relogio.hoje();
+        return new ItemAgenda(
+                prazo.getId(),
+                prazo.getNumeroProcesso().valor(),
+                prazo.getDescricao(),
+                prazo.getVencimento(),
+                prazo.diasRestantes(hoje, motor.estrategiaPara(prazo.getRegime())),
+                prazo.isFatal(),
+                prazo.estaEmAberto() && prazo.venceu(hoje),
+                prazo.getResponsavel().nome(),
+                prazo.isCumprido());
     }
 }
