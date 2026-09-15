@@ -22,6 +22,8 @@
     <a th:href="@{/painel/feriados}" th:classappend="${ativo == 'feriados'} ? 'ativo'">Feriados</a>
     <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/usuarios}"
        th:classappend="${ativo == 'usuarios'} ? 'ativo'">Usuarios</a>
+    <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/admin}"
+       th:classappend="${ativo == 'admin'} ? 'ativo'">Administracao</a>
   </nav>
   <div class="sessao" th:if="${usuario != null}">
     <a class="quem" th:href="@{/painel/conta}" title="Minha conta">
