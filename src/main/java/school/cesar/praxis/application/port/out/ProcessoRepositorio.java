@@ -14,4 +14,6 @@ public interface ProcessoRepositorio {
     Optional<Processo> porNumero(NumeroCnj numero);
 
     List<Processo> listar();
+
+    int contarPorResponsavelOab(String oab);
 }

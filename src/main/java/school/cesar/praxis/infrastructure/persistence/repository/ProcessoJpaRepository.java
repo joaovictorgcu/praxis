@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface ProcessoJpaRepository extends JpaRepository<ProcessoEntity, Long> {
 
     Optional<ProcessoEntity> findByNumeroCnj(String numeroCnj);
+
+    int countByResponsavelOab(String responsavelOab);
 }

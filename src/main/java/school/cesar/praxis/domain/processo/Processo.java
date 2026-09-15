@@ -26,6 +26,7 @@ public class Processo implements Iterable<Andamento> {
     private final String comarca;
     private final boolean segredoJustica;
     private final Advogado responsavel;
+    private final Vara vara;
     private final List<Andamento> andamentos = new ArrayList<>();
     private final List<ObservadorProcesso> observadores = new ArrayList<>();
 
@@ -34,7 +35,8 @@ public class Processo implements Iterable<Andamento> {
                     String cliente,
                     String comarca,
                     boolean segredoJustica,
-                    Advogado responsavel) {
+                    Advogado responsavel,
+                    Vara vara) {
         if (numero == null) {
             throw new IllegalArgumentException("número CNJ é obrigatório");
         }
@@ -53,6 +55,16 @@ public class Processo implements Iterable<Andamento> {
         this.comarca = comarca;
         this.segredoJustica = segredoJustica;
         this.responsavel = responsavel;
+        this.vara = vara;
+    }
+
+    public Processo(Long id,
+                    NumeroCnj numero,
+                    String cliente,
+                    String comarca,
+                    boolean segredoJustica,
+                    Advogado responsavel) {
+        this(id, numero, cliente, comarca, segredoJustica, responsavel, null);
     }
 
     public Processo(NumeroCnj numero,
@@ -60,7 +72,7 @@ public class Processo implements Iterable<Andamento> {
                     String comarca,
                     boolean segredoJustica,
                     Advogado responsavel) {
-        this(null, numero, cliente, comarca, segredoJustica, responsavel);
+        this(null, numero, cliente, comarca, segredoJustica, responsavel, null);
     }
 
     // --- Observer ---
@@ -133,6 +145,10 @@ public class Processo implements Iterable<Andamento> {
 
     public Advogado getResponsavel() {
         return responsavel;
+    }
+
+    public Vara getVara() {
+        return vara;
     }
 
     public int quantidadeAndamentos() {

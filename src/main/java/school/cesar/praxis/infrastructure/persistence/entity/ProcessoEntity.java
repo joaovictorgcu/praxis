@@ -35,6 +35,15 @@ public class ProcessoEntity {
     @Column(name = "responsavel_oab", nullable = false, length = 20)
     private String responsavelOab;
 
+    @Column(name = "vara_tribunal", length = 120)
+    private String varaTribunal;
+
+    @Column(name = "vara_comarca", length = 120)
+    private String varaComarca;
+
+    @Column(name = "vara_numero", length = 60)
+    private String varaNumero;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "processo_id")
     private List<AndamentoEntity> andamentos = new ArrayList<>();
@@ -101,6 +110,30 @@ public class ProcessoEntity {
 
     public void setResponsavelOab(String responsavelOab) {
         this.responsavelOab = responsavelOab;
+    }
+
+    public String getVaraTribunal() {
+        return varaTribunal;
+    }
+
+    public void setVaraTribunal(String varaTribunal) {
+        this.varaTribunal = varaTribunal;
+    }
+
+    public String getVaraComarca() {
+        return varaComarca;
+    }
+
+    public void setVaraComarca(String varaComarca) {
+        this.varaComarca = varaComarca;
+    }
+
+    public String getVaraNumero() {
+        return varaNumero;
+    }
+
+    public void setVaraNumero(String varaNumero) {
+        this.varaNumero = varaNumero;
     }
 
     public List<AndamentoEntity> getAndamentos() {

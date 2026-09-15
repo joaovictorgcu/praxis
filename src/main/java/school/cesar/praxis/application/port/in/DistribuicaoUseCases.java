@@ -1,24 +1,12 @@
 package school.cesar.praxis.application.port.in;
 
-import school.cesar.praxis.domain.processo.Advogado;
-
-import java.util.List;
+import school.cesar.praxis.domain.advogado.Advogado;
 
 public interface DistribuicaoUseCases {
 
     interface DistribuirProcesso {
 
-        record Candidato(String nome,
-                         String email,
-                         String oab,
-                         String especialidade,
-                         int processosAtivos,
-                         boolean disponivel) {
-        }
-
-        record Comando(String numeroProcesso,
-                       String areaDireito,
-                       List<Candidato> candidatos) {
+        record Comando(String numeroProcesso, String areaDireito, Long equipeId) {
         }
 
         Advogado executar(Comando comando);

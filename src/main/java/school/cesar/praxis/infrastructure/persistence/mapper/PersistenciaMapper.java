@@ -21,6 +21,7 @@ import school.cesar.praxis.domain.prazo.NivelAlerta;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
 import school.cesar.praxis.domain.usuario.Usuario;
+import school.cesar.praxis.infrastructure.persistence.entity.AdvogadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.AudienciaEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ArquivoEntity;
@@ -68,6 +69,11 @@ public final class PersistenciaMapper {
         entidade.setResponsavelNome(processo.getResponsavel().nome());
         entidade.setResponsavelEmail(processo.getResponsavel().email());
         entidade.setResponsavelOab(processo.getResponsavel().oab());
+        if (processo.getVara() != null) {
+            entidade.setVaraTribunal(processo.getVara().tribunal());
+            entidade.setVaraComarca(processo.getVara().comarca());
+            entidade.setVaraNumero(processo.getVara().numero());
+        }
 
         List<AndamentoEntity> andamentos = new ArrayList<>();
         for (Andamento andamento : processo) {
@@ -83,6 +89,10 @@ public final class PersistenciaMapper {
     }
 
     public static Processo paraDominio(ProcessoEntity entidade) {
+        Vara vara = entidade.getVaraTribunal() == null && entidade.getVaraNumero() == null
+                ? null
+                : new Vara(entidade.getVaraTribunal(), entidade.getVaraComarca(), entidade.getVaraNumero());
+
         Processo processo = new Processo(
                 entidade.getId(),
                 NumeroCnj.de(entidade.getNumeroCnj()),
@@ -91,7 +101,8 @@ public final class PersistenciaMapper {
                 entidade.isSegredoJustica(),
                 new Advogado(entidade.getResponsavelNome(),
                         entidade.getResponsavelEmail(),
-                        entidade.getResponsavelOab()));
+                        entidade.getResponsavelOab()),
+                vara);
 
         for (AndamentoEntity item : entidade.getAndamentos()) {
             processo.restaurarAndamento(new Andamento(
@@ -499,5 +510,34 @@ public final class PersistenciaMapper {
                 entidade.getPapel(),
                 entidade.getSenhaCodificada(),
                 entidade.isSenhaProvisoria());
+    }
+
+    // --- Advogado ---
+
+    public static AdvogadoEntity paraEntidade(school.cesar.praxis.domain.advogado.Advogado advogado) {
+        AdvogadoEntity entidade = new AdvogadoEntity();
+        entidade.setId(advogado.getId());
+        entidade.setNome(advogado.getNome());
+        entidade.setEmail(advogado.getEmail());
+        entidade.setOab(advogado.getOab());
+        entidade.setTelefone(advogado.getTelefone());
+        entidade.setEspecialidade(advogado.getEspecialidade());
+        entidade.setStatus(advogado.getStatus());
+        entidade.setDisponivel(advogado.isDisponivel());
+        entidade.setDataAdmissao(advogado.getDataAdmissao());
+        return entidade;
+    }
+
+    public static school.cesar.praxis.domain.advogado.Advogado paraDominio(AdvogadoEntity entidade) {
+        return new school.cesar.praxis.domain.advogado.Advogado(
+                entidade.getId(),
+                entidade.getNome(),
+                entidade.getEmail(),
+                entidade.getOab(),
+                entidade.getTelefone(),
+                entidade.getEspecialidade(),
+                entidade.getStatus(),
+                entidade.isDisponivel(),
+                entidade.getDataAdmissao());
     }
 }

@@ -1,0 +1,500 @@
+.pagina-advogados .cabecalho-pagina {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.pagina-advogados .cabecalho-pagina h2 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--tinta-clara);
+}
+
+.pagina-advogados .cabecalho-pagina p {
+    margin: 0;
+    color: var(--cinza);
+    font-size: 13.5px;
+}
+
+.pagina-advogados .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 33, 61, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 100;
+}
+
+.pagina-advogados .modal-advogado {
+    background: var(--branco);
+    width: 720px;
+    max-width: 100%;
+    max-height: 88vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(20, 33, 61, 0.3);
+}
+
+.pagina-advogados .modal-advogado .apoio {
+    padding: 0 28px;
+}
+
+.pagina-advogados .modal-advogado__topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 28px 4px;
+}
+
+.pagina-advogados .modal-advogado__topo h2 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--tinta-clara);
+}
+
+.pagina-advogados .btn-fechar {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--cinza);
+    cursor: pointer;
+    padding: 2px 6px;
+}
+
+.pagina-advogados .btn-fechar:hover {
+    color: var(--tinta);
+}
+
+.pagina-advogados .alerta {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 20px 28px 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    line-height: 1.4;
+}
+
+.pagina-advogados .alerta.falha {
+    background: #fdeceb;
+    color: var(--vermelho);
+    border: 1px solid #f4c6c1;
+}
+
+.pagina-advogados .alerta__icone {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.pagina-advogados form {
+    padding: 26px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.pagina-advogados .secao-campos h3 {
+    margin: 0 0 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--cinza);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagina-advogados .secao-campos h3::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--borda);
+}
+
+.pagina-advogados .grade-campos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.pagina-advogados .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.pagina-advogados .campo.largo {
+    grid-column: span 3;
+}
+
+.pagina-advogados .campo label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--tinta);
+}
+
+.pagina-advogados .campo .opcional {
+    font-weight: 400;
+    color: var(--cinza);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.pagina-advogados .campo input {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--borda);
+    font-size: 14px;
+    background: #fbfbfa;
+    transition: border-color .15s ease, background .15s ease;
+}
+
+.pagina-advogados .campo input:focus {
+    outline: none;
+    border-color: var(--tinta-clara);
+    background: var(--branco);
+}
+
+.pagina-advogados .campo input:disabled {
+    background: #eef0f3;
+    color: var(--cinza);
+    cursor: not-allowed;
+}
+
+.pagina-advogados .campo small {
+    color: var(--cinza);
+    font-size: 11.5px;
+}
+
+.pagina-advogados .rodape-formulario {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 4px;
+    border-top: 1px solid var(--borda);
+    padding-top: 18px;
+}
+
+.pagina-advogados .rodape-formulario .dica {
+    margin-right: auto;
+    color: var(--cinza);
+    font-size: 12.5px;
+}
+
+.pagina-advogados button.btn-primario {
+    padding: 11px 26px;
+    border-radius: 8px;
+    background: var(--tinta);
+    color: var(--branco);
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: background .15s ease, transform .1s ease;
+}
+
+.pagina-advogados button.btn-primario:hover {
+    background: var(--tinta-clara);
+}
+
+.pagina-advogados button.btn-primario:active {
+    transform: translateY(1px);
+}
+
+.pagina-advogados button.btn-secundario {
+    padding: 11px 20px;
+    border-radius: 8px;
+    background: var(--branco);
+    color: var(--tinta);
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid var(--borda);
+    cursor: pointer;
+}
+
+.pagina-advogados button.btn-secundario:hover {
+    background: var(--papel);
+}
+
+@media (max-width: 720px) {
+    .pagina-advogados .grade-campos {
+        grid-template-columns: 1fr;
+    }
+
+    .pagina-advogados .campo.largo {
+        grid-column: span 1;
+    }
+}
+
+.pagina-advogados .cartao-lista {
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 22px 26px 22px;
+}
+
+.pagina-advogados .cartao-lista table tbody tr:last-child td {
+    border-bottom: 1px solid var(--borda);
+}
+
+.pagina-advogados .cartao-lista__topo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.pagina-advogados .cartao-lista__topo h2 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--tinta-clara);
+}
+
+.pagina-advogados .cartao-lista__topo .contagem {
+    font-size: 12.5px;
+    color: var(--cinza);
+}
+
+.pagina-advogados .cartao-lista table td code {
+    background: #eef0f3;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+}
+
+.pagina-advogados .cartao-lista table td.col-acoes {
+    width: 1%;
+    text-align: right;
+}
+
+.pagina-advogados .menu-acoes {
+    position: relative;
+    display: inline-block;
+}
+
+.pagina-advogados .btn-ellipsis {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--cinza);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.pagina-advogados .btn-ellipsis:hover {
+    background: var(--papel);
+    color: var(--tinta);
+}
+
+.pagina-advogados .menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(20, 33, 61, 0.15);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+    overflow: hidden;
+}
+
+.pagina-advogados .menu-dropdown button {
+    border: none;
+    background: var(--branco);
+    text-align: left;
+    padding: 9px 14px;
+    font-size: 13.5px;
+    color: var(--tinta);
+    cursor: pointer;
+}
+
+.pagina-advogados .menu-dropdown button:hover {
+    background: var(--papel);
+}
+
+.pagina-advogados .paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--borda);
+}
+
+.pagina-advogados .paginacao__info {
+    font-size: 12.5px;
+    color: var(--cinza);
+}
+
+.pagina-advogados .paginacao__controles {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pagina-advogados .paginacao__reticencias {
+    color: var(--cinza);
+    padding: 0 2px;
+    font-size: 13px;
+}
+
+.pagina-advogados .btn-pagina {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 1px solid var(--borda);
+    background: var(--branco);
+    color: var(--tinta);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.pagina-advogados .btn-pagina:hover:not(:disabled) {
+    background: var(--papel);
+}
+
+.pagina-advogados .btn-pagina:disabled {
+    color: var(--cinza);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.pagina-advogados .btn-pagina--ativa {
+    background: var(--tinta);
+    border-color: var(--tinta);
+    color: var(--branco);
+}
+
+.pagina-advogados .btn-pagina--ativa:hover {
+    background: var(--tinta);
+}
+
+.praxis-alertas {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: min(560px, 92vw);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.praxis-alerta {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    line-height: 1.4;
+    box-shadow: 0 10px 25px rgba(20, 33, 61, 0.18);
+    pointer-events: auto;
+}
+
+.praxis-alerta__icone {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.praxis-alerta__texto {
+    flex: 1;
+}
+
+.praxis-alerta__fechar {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    color: inherit;
+    opacity: 0.7;
+}
+
+.praxis-alerta__fechar:hover {
+    opacity: 1;
+}
+
+.praxis-alerta--success {
+    background: #e8f5ec;
+    color: var(--verde);
+    border: 1px solid #bfe4cc;
+}
+
+.praxis-alerta--danger {
+    background: #fdeceb;
+    color: var(--vermelho);
+    border: 1px solid #f4c6c1;
+}
+
+.praxis-alerta--warning {
+    background: #fef6e7;
+    color: #92600e;
+    border: 1px solid #f6dfa8;
+}
+
+.pagina-advogados .cartao-lista__topo {
+    align-items: center;
+}
+
+.pagina-advogados .cartao-lista__busca {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pagina-advogados .cartao-lista__busca input[type="search"] {
+    width: 280px;
+    padding: 7px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--borda);
+    font-size: 13.5px;
+    background: #fbfbfa;
+}
+
+.pagina-advogados .cartao-lista__busca input[type="search"]:focus {
+    outline: none;
+    border-color: var(--tinta-clara);
+    background: var(--branco);
+}
+
+.pagina-advogados th.th-ordenavel {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.pagina-advogados th.th-ordenavel:hover {
+    color: var(--tinta);
+}
+
+.pagina-advogados th.th-ordenavel .seta {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 10px;
+    color: var(--tinta-clara);
+}

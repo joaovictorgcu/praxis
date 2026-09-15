@@ -36,4 +36,9 @@ public class ProcessoRepositorioJpa implements ProcessoRepositorio {
     public List<Processo> listar() {
         return jpa.findAll().stream().map(PersistenciaMapper::paraDominio).toList();
     }
+
+    @Override
+    public int contarPorResponsavelOab(String oab) {
+        return jpa.countByResponsavelOab(oab);
+    }
 }

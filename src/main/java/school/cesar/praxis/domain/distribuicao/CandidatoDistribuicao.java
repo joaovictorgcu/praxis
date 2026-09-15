@@ -1,10 +1,7 @@
 package school.cesar.praxis.domain.distribuicao;
 
-import school.cesar.praxis.domain.processo.Advogado;
+import school.cesar.praxis.domain.advogado.Advogado;
 
-/** Advogado candidato a receber um processo novo, com dados usados pelas regras. */
-public record CandidatoDistribuicao(Advogado advogado,
-                                    String especialidade,
-                                    int processosAtivos,
-                                    boolean disponivel) {
+/** Advogado candidato a receber um processo novo, com os processos ativos calculados na hora. */
+public record CandidatoDistribuicao(Advogado advogado, int processosAtivos) {
 }

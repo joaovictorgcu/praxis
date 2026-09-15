@@ -9,6 +9,7 @@ import school.cesar.praxis.domain.processo.Advogado;
 import school.cesar.praxis.domain.processo.Andamento;
 import school.cesar.praxis.domain.processo.NumeroCnj;
 import school.cesar.praxis.domain.processo.Processo;
+import school.cesar.praxis.domain.processo.Vara;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,12 +38,18 @@ public class ProcessoAppService implements ProcessosUseCases.CadastrarProcesso,
     @Override
     @Transactional
     public Processo executar(ProcessosUseCases.CadastrarProcesso.Comando comando) {
+        Vara vara = comando.varaTribunal() == null && comando.varaNumero() == null
+                ? null
+                : new Vara(comando.varaTribunal(), comando.comarca(), comando.varaNumero());
+
         Processo processo = new Processo(
+                null,
                 NumeroCnj.de(comando.numeroCnj()),
                 comando.cliente(),
                 comando.comarca(),
                 comando.segredoJustica(),
-                new Advogado(comando.responsavelNome(), comando.responsavelEmail(), comando.responsavelOab()));
+                new Advogado(comando.responsavelNome(), comando.responsavelEmail(), comando.responsavelOab()),
+                vara);
         return processos.salvar(processo);
     }
 

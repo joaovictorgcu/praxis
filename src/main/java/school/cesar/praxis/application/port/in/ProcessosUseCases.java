@@ -18,7 +18,19 @@ public interface ProcessosUseCases {
                        boolean segredoJustica,
                        String responsavelNome,
                        String responsavelEmail,
-                       String responsavelOab) {
+                       String responsavelOab,
+                       String varaTribunal,
+                       String varaNumero) {
+
+            public Comando(String numeroCnj,
+                           String cliente,
+                           String comarca,
+                           boolean segredoJustica,
+                           String responsavelNome,
+                           String responsavelEmail,
+                           String responsavelOab) {
+                this(numeroCnj, cliente, comarca, segredoJustica, responsavelNome, responsavelEmail, responsavelOab, null, null);
+            }
         }
 
         Processo executar(Comando comando);

@@ -58,6 +58,10 @@
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
         <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
       </symbol>
+      <symbol id="i-advogados" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v18M7 21h10M3 8h18M6 8l-3 6h6zM18 8l-3 6h6z"/>
+      </symbol>
       <symbol id="i-admin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
@@ -125,6 +129,11 @@
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-feriados"/></svg>
         <span>Feriados</span>
       </a>
+      <a th:href="@{/painel/advogados}" th:classappend="${ativo == 'advogados'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'advogados'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-advogados"/></svg>
+        <span>Advogados</span>
+      </a>
       <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/usuarios}"
          th:classappend="${ativo == 'usuarios'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'usuarios'} ? 'page' : null">
@@ -157,9 +166,10 @@
                      : (${ativo == 'anexos'} ? 'Anexos'
                      : (${ativo == 'modelos'} ? 'Modelos'
                      : (${ativo == 'feriados'} ? 'Feriados'
+                     : (${ativo == 'advogados'} ? 'Advogados'
                      : (${ativo == 'usuarios'} ? 'Usuários'
                      : (${ativo == 'admin'} ? 'Administração'
-                     : 'Minha Conta')))))))">Agenda de Prazos</span>
+                     : 'Minha Conta'))))))))">Agenda de Prazos</span>
     </p>
 
     <div class="sessao" th:if="${usuario != null}">

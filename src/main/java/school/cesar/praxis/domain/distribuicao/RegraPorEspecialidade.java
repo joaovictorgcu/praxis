@@ -1,6 +1,6 @@
 package school.cesar.praxis.domain.distribuicao;
 
-import school.cesar.praxis.domain.processo.Advogado;
+import school.cesar.praxis.domain.advogado.Advogado;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,8 +11,8 @@ public class RegraPorEspecialidade extends RegraDistribuicao {
     @Override
     protected Optional<Advogado> tentar(String areaDireito, List<CandidatoDistribuicao> candidatos) {
         List<CandidatoDistribuicao> especialistas = candidatos.stream()
-                .filter(CandidatoDistribuicao::disponivel)
-                .filter(c -> c.especialidade().equalsIgnoreCase(areaDireito))
+                .filter(c -> c.advogado().isDisponivel())
+                .filter(c -> areaDireito.equalsIgnoreCase(c.advogado().getEspecialidade()))
                 .toList();
         return comMenosProcessos(especialistas);
     }

@@ -1,6 +1,6 @@
 package school.cesar.praxis.domain.distribuicao;
 
-import school.cesar.praxis.domain.processo.Advogado;
+import school.cesar.praxis.domain.advogado.Advogado;
 
 import java.util.List;
 import java.util.Optional;

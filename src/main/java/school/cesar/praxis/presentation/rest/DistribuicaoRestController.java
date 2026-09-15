@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import school.cesar.praxis.application.port.in.DistribuicaoUseCases;
-import school.cesar.praxis.domain.processo.Advogado;
+import school.cesar.praxis.domain.advogado.Advogado;
 
 import java.util.Map;
 
@@ -21,12 +21,14 @@ public class DistribuicaoRestController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> distribuir(
+    public ResponseEntity<Map<String, Object>> distribuir(
             @RequestBody DistribuicaoUseCases.DistribuirProcesso.Comando comando) {
         Advogado escolhido = distribuirProcesso.executar(comando);
         return ResponseEntity.ok(Map.of(
-                "nome", escolhido.nome(),
-                "email", escolhido.email(),
-                "oab", escolhido.oab()));
+                "id", escolhido.getId(),
+                "nome", escolhido.getNome(),
+                "email", escolhido.getEmail(),
+                "oab", escolhido.getOab(),
+                "especialidade", escolhido.getEspecialidade() == null ? "" : escolhido.getEspecialidade()));
     }
 }

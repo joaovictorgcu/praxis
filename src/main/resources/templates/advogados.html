@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" ng-app="advogadosApp">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>praxis - advogados</title>
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <link rel="stylesheet" th:href="@{/css/advogados.css}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+  <script th:src="@{/js/advogados.js}"></script>
+</head>
+<body class="pagina-advogados" ng-controller="AdvogadosController as vm">
+<header th:replace="~{fragmentos :: cabecalho('advogados')}"></header>
+
+<main>
+  <div class="cabecalho-pagina">
+    <div>
+      <h2>Advogados</h2>
+      <p>Cadastro do corpo jurídico do escritório.</p>
+    </div>
+    <button type="button" class="btn-primario" ng-click="vm.abrirModal()">+ Adicionar advogado</button>
+  </div>
+
+  <div class="praxis-alertas">
+    <praxis-alerta ng-repeat="alerta in vm.alertas track by alerta.id"
+                   tipo="{{ alerta.tipo }}"
+                   mensagem="{{ alerta.mensagem }}"
+                   ao-fechar="vm.removerAlerta(alerta.id)">
+    </praxis-alerta>
+  </div>
+
+  <section class="cartao-lista">
+    <div class="cartao-lista__topo">
+      <h2>Advogados cadastrados</h2>
+      <div class="cartao-lista__busca">
+        <input type="search" ng-model="vm.termoBusca" ng-change="vm.aoDigitarBusca()"
+               placeholder="Buscar por nome, OAB ou especialidade">
+        <span class="contagem">{{ vm.advogados.length }} no total</span>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+      <tr>
+        <th class="th-ordenavel" ng-click="vm.ordenarPor('nome')">
+          Nome <span class="seta" ng-if="vm.ordenacao.campo === 'nome'">{{ vm.ordenacao.direcao === 1 ? '▲' : '▼' }}</span>
+        </th>
+        <th class="th-ordenavel" ng-click="vm.ordenarPor('oab')">
+          OAB <span class="seta" ng-if="vm.ordenacao.campo === 'oab'">{{ vm.ordenacao.direcao === 1 ? '▲' : '▼' }}</span>
+        </th>
+        <th class="th-ordenavel" ng-click="vm.ordenarPor('telefone')">
+          Telefone <span class="seta" ng-if="vm.ordenacao.campo === 'telefone'">{{ vm.ordenacao.direcao === 1 ? '▲' : '▼' }}</span>
+        </th>
+        <th class="th-ordenavel" ng-click="vm.ordenarPor('especialidade')">
+          Especialidade <span class="seta" ng-if="vm.ordenacao.campo === 'especialidade'">{{ vm.ordenacao.direcao === 1 ? '▲' : '▼' }}</span>
+        </th>
+        <th class="th-ordenavel" ng-click="vm.ordenarPor('status')">
+          Status <span class="seta" ng-if="vm.ordenacao.campo === 'status'">{{ vm.ordenacao.direcao === 1 ? '▲' : '▼' }}</span>
+        </th>
+        <th class="th-ordenavel" ng-click="vm.ordenarPor('dataAdmissao')">
+          Admissão <span class="seta" ng-if="vm.ordenacao.campo === 'dataAdmissao'">{{ vm.ordenacao.direcao === 1 ? '▲' : '▼' }}</span>
+        </th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr ng-repeat="advogado in vm.advogadosPaginados track by advogado.id">
+        <td ng-bind="advogado.nome"></td>
+        <td><code ng-bind="advogado.oab"></code></td>
+        <td ng-bind="advogado.telefone || '-'"></td>
+        <td ng-bind="advogado.especialidade || '-'"></td>
+        <td>
+          <span class="etiqueta verde" ng-if="advogado.status === 'ATIVO'">Ativo</span>
+          <span class="etiqueta vermelha" ng-if="advogado.status !== 'ATIVO'">Desativado</span>
+        </td>
+        <td ng-bind="advogado.dataAdmissao"></td>
+        <td class="col-acoes">
+          <div class="menu-acoes">
+            <button type="button" class="btn-ellipsis" ng-click="vm.alternarMenu(advogado.id, $event)"
+                    aria-label="Mais ações">&#8942;</button>
+            <div class="menu-dropdown" ng-if="vm.menuAberto === advogado.id" ng-click="$event.stopPropagation()">
+              <button type="button" ng-click="vm.editar(advogado)">Editar</button>
+              <button type="button" ng-click="vm.alternarStatus(advogado)">
+                {{ advogado.status === 'ATIVO' ? 'Desativar' : 'Ativar' }}
+              </button>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr ng-if="vm.advogados.length === 0">
+        <td colspan="7" class="vazio">
+          {{ vm.termoBusca.length >= 2 ? 'Nenhum advogado encontrado para esta busca.' : 'Nenhum advogado cadastrado.' }}
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="paginacao" ng-if="vm.advogados.length > 0">
+      <span class="paginacao__info">
+        Página {{ vm.paginaAtual }} de {{ vm.totalPaginas }}
+      </span>
+      <div class="paginacao__controles">
+        <button type="button" class="btn-pagina" ng-click="vm.paginaAnterior()" ng-disabled="vm.paginaAtual === 1">
+          &#8249; Anterior
+        </button>
+
+        <button type="button" class="btn-pagina" ng-if="vm.numerosDePagina()[0] > 1" ng-click="vm.irParaPagina(1)">1</button>
+        <span class="paginacao__reticencias" ng-if="vm.numerosDePagina()[0] > 2">&hellip;</span>
+
+        <button type="button" class="btn-pagina"
+                ng-repeat="numero in vm.numerosDePagina()"
+                ng-class="{ 'btn-pagina--ativa': numero === vm.paginaAtual }"
+                ng-click="vm.irParaPagina(numero)">
+          {{ numero }}
+        </button>
+
+        <span class="paginacao__reticencias" ng-if="vm.numerosDePagina()[vm.numerosDePagina().length - 1] < vm.totalPaginas - 1">&hellip;</span>
+        <button type="button" class="btn-pagina" ng-if="vm.numerosDePagina()[vm.numerosDePagina().length - 1] < vm.totalPaginas"
+                ng-click="vm.irParaPagina(vm.totalPaginas)">{{ vm.totalPaginas }}</button>
+
+        <button type="button" class="btn-pagina" ng-click="vm.proximaPagina()" ng-disabled="vm.paginaAtual === vm.totalPaginas">
+          Próxima &#8250;
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" ng-if="vm.modalAberto" ng-click="vm.fecharModal()">
+    <div class="modal-advogado" ng-click="$event.stopPropagation()">
+      <div class="modal-advogado__topo">
+        <h2>{{ vm.modoEdicao ? 'Editar advogado' : 'Novo advogado' }}</h2>
+        <button type="button" class="btn-fechar" ng-click="vm.fecharModal()" aria-label="Fechar">&times;</button>
+      </div>
+      <p class="apoio">Preencha os dados abaixo para {{ vm.modoEdicao ? 'atualizar o' : 'incluir um' }} advogado no quadro do escritório.</p>
+
+      <p class="alerta falha" ng-if="vm.erro">
+        <span class="alerta__icone">&#9888;</span>
+        <span ng-bind="vm.erro"></span>
+      </p>
+
+      <form ng-submit="vm.salvar()">
+        <div class="secao-campos">
+          <h3>Identificação</h3>
+          <div class="grade-campos">
+            <div class="campo largo">
+              <label for="nome">Nome completo</label>
+              <input type="text" id="nome" ng-model="vm.novo.nome" required placeholder="Ana Beatriz Souza">
+            </div>
+
+            <div class="campo">
+              <label for="email">E-mail</label>
+              <input type="email" id="email" ng-model="vm.novo.email" required placeholder="ana.souza@praxis.adv.br">
+            </div>
+
+            <div class="campo">
+              <label for="oab">OAB</label>
+              <input type="text" id="oab" ng-model="vm.novo.oab" required placeholder="PE12345" ng-disabled="vm.modoEdicao">
+            </div>
+
+            <div class="campo">
+              <label for="telefone">Telefone <span class="opcional">(opcional)</span></label>
+              <input type="text" id="telefone" ng-model="vm.novo.telefone" ng-change="vm.formatarTelefone()"
+                     placeholder="(81) 99999-0000" maxlength="15" inputmode="numeric">
+            </div>
+          </div>
+        </div>
+
+        <div class="secao-campos">
+          <h3>Atuação</h3>
+          <div class="grade-campos">
+            <div class="campo">
+              <label for="especialidade">Especialidade <span class="opcional">(opcional)</span></label>
+              <input type="text" id="especialidade" ng-model="vm.novo.especialidade" placeholder="Cível">
+            </div>
+          </div>
+        </div>
+
+        <div class="rodape-formulario">
+          <span class="dica" ng-if="!vm.modoEdicao">A OAB precisa ser única entre os advogados cadastrados.</span>
+          <span class="dica" ng-if="vm.modoEdicao">A OAB não pode ser alterada depois do cadastro.</span>
+          <button type="button" class="btn-secundario" ng-click="vm.fecharModal()">Cancelar</button>
+          <button type="submit" class="btn-primario" ng-disabled="vm.enviando">
+            {{ vm.modoEdicao ? 'Salvar alterações' : 'Cadastrar advogado' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+</body>
+</html>
