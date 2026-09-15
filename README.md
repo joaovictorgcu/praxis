@@ -24,6 +24,7 @@ Capturas da interface real, logado como chefe (`admin`) e como advogada (`ana.so
 | **Modelos** — corpo e pedidos com `{{campos}}`; os que serão pedidos aparecem enquanto digita ![modelos](docs/prototipos/modelos.png) | **Feriados** — data única ou anual; nacional, estadual ou da comarca; "corre prazo em…" ![feriados](docs/prototipos/feriados.png) |
 | **Anexos** — juntada com a OAB da sessão; download passa pelo Proxy ![anexos](docs/prototipos/anexos.png) | **Segredo de justiça** — advogada sem OAB habilitada é avisada; peça e anexo respondem 403 ![sigilo](docs/prototipos/processo-sigiloso-sem-oab.png) |
 | **Usuários** (chefe) — cadastro com senha provisória, papel, remoção protegida ![usuarios](docs/prototipos/usuarios.png) | **Minha conta** — troca de senha exigindo a atual ![conta](docs/prototipos/conta.png) |
+| **Administração** (chefe) — contadores, o que exige atenção, atalhos e ficha da instância ![admin](docs/prototipos/admin-panorama.png) | **Administração** — cadastros do escritório: usuários, processos, prazos (com os cumpridos), peças, anexos ![admin-cadastros](docs/prototipos/admin-cadastros.png) |
 
 ## Regras de negócio
 
@@ -217,6 +218,20 @@ Funcionalidades de apoio já no repositório: cadastro de processo, registro de 
 - **Tabelas completas**: usuários, processos, prazos, peças geradas, anexos, clientes, partes contrárias, audiências, contratos de honorário, modelos, feriados e os avisos emitidos pelo notificador de painel.
 - **Ficha da instância** em execução: perfil ativo, URL do banco, `ddl-auto`, Flyway ligado ou não, dados de exemplo, domínio de e-mail, versão do Java e tempo no ar. É diagnóstico — responde "qual banco esta instância está usando?" sem abrir o terminal.
 - **Atalhos** para as telas onde se cadastra e se remove.
+
+![Administração: contadores, o que exige atenção, atalhos e ficha da instância](docs/prototipos/admin-panorama.png)
+
+Depois do topo vêm as tabelas, uma seção por cadastro. Os prazos trazem os já cumpridos (etiqueta verde), que a agenda do dia esconde, e os vencidos em aberto aparecem com a linha em vermelho:
+
+![Administração: usuários, processos, prazos, peças e anexos](docs/prototipos/admin-cadastros.png)
+
+Os três cadastros que não têm tela própria — cliente, parte contrária e audiência — aparecem aqui com os desativados juntos, marcados pela etiqueta de situação:
+
+![Administração: clientes, partes contrárias, audiências e contratos de honorário](docs/prototipos/admin-relacionados.png)
+
+No fim, o que sustenta o resto: modelos de peça, o calendário forense que alimenta a contagem de prazos e a fila de avisos emitidos por esta instância.
+
+![Administração: modelos, feriados e avisos emitidos](docs/prototipos/admin-apoio.png)
 
 **Três decisões que valem a defesa**
 

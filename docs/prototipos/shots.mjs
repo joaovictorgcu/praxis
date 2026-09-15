@@ -36,6 +36,19 @@ async function foto(nome, alturaMax = 1400) {
   console.log('ok', nome, `${largura}x${altura}`);
 }
 
+/** Recorte entre o topo de dois elementos: para pagina longa demais para uma imagem so. */
+async function recorte(nome, seletorInicio, seletorFim) {
+  const total = await js('document.documentElement.scrollHeight');
+  await enviar('Emulation.setDeviceMetricsOverride', { width: largura, height: total, deviceScaleFactor: 1, mobile: false });
+  await new Promise(r => setTimeout(r, 300));
+  const topo = s => js(`document.querySelector('${s}').getBoundingClientRect().top + window.scrollY - 16`);
+  const y = seletorInicio ? Math.max(0, await topo(seletorInicio)) : 0;
+  const fim = seletorFim ? await topo(seletorFim) : await js('document.documentElement.scrollHeight');
+  const r = await enviar('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { x: 0, y: Math.round(y), width: largura, height: Math.round(fim - y), scale: 1 } });
+  writeFileSync(`${OUT}/${nome}.png`, Buffer.from(r.result.data, 'base64'));
+  console.log('ok', nome, `${largura}x${Math.round(fim - y)}`);
+}
+
 async function entrar(usuario, senha) {
   await ir('/login');
   await js(`document.querySelector('input[name=email]').value=${JSON.stringify(usuario)};document.querySelector('input[name=senha]').value=${JSON.stringify(senha)};true`);
@@ -69,6 +82,12 @@ await ir('/painel/feriados'); await foto('feriados', 1100);
 await ir('/painel/anexos'); await foto('anexos', 760);
 await ir('/painel/usuarios'); await foto('usuarios', 900);
 await ir('/painel/conta'); await foto('conta', 800);
+// Administracao: pagina longa, capturada em quatro recortes por secao
+await ir('/painel/admin');
+await recorte('admin-panorama', null, '#usuarios');
+await recorte('admin-cadastros', '#usuarios', '#clientes');
+await recorte('admin-relacionados', '#clientes', '#modelos');
+await recorte('admin-apoio', '#modelos', null);
 await sair();
 
 // 3. Advogada sem OAB habilitada tenta ler peca sigilosa
