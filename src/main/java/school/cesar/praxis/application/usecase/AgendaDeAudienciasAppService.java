@@ -7,6 +7,7 @@ import school.cesar.praxis.application.dto.CriarAudienciaRequest;
 import school.cesar.praxis.application.port.in.AgendaDeAudienciasUseCase;
 import school.cesar.praxis.domain.agenda.Audiencia;
 import school.cesar.praxis.domain.agenda.ConflitoDEAudienciaException;
+import school.cesar.praxis.domain.agenda.HorarioInvalidoException;
 import school.cesar.praxis.infrastructure.persistence.AudienciaRepository;
 
 import java.time.LocalDateTime;
@@ -103,20 +104,23 @@ public class AgendaDeAudienciasAppService implements AgendaDeAudienciasUseCase {
         Audiencia audiencia = audienciaRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Audiência não encontrada com ID: " + id));
 
+        // Edição parcial: campo ausente na requisição mantém o valor atual.
+        // O número do processo não muda em edição.
+        String nomeParteAutora = request.getNomeParteAutora() != null
+            ? request.getNomeParteAutora() : audiencia.getNomeParteAutora();
+        LocalDateTime dataHoraInicio = request.getDataHoraInicio() != null
+            ? request.getDataHoraInicio() : audiencia.getDataHoraInicio();
+        LocalDateTime dataHoraFim = request.getDataHoraFim() != null
+            ? request.getDataHoraFim() : audiencia.getDataHoraFim();
+        String sala = request.getSala() != null ? request.getSala() : audiencia.getSala();
+        String observacoes = request.getObservacoes() != null
+            ? request.getObservacoes() : audiencia.getObservacoes();
+
         // Verificar se há conflitos (excluindo a própria audiência)
-        Audiencia audienciaTemporaria = new Audiencia(
-            request.getNumeroProcesso(),
-            request.getNomeParteAutora(),
-            request.getDataHoraInicio(),
-            request.getDataHoraFim(),
-            request.getSala()
-        );
-        audienciaTemporaria.atribuirId(id);
-        
         List<Audiencia> conflitos = audienciaRepository.encontrarConflitosDeHorario(
-            request.getSala(),
-            request.getDataHoraInicio(),
-            request.getDataHoraFim(),
+            sala,
+            dataHoraInicio,
+            dataHoraFim,
             id // Exclui a própria audiência
         );
 
@@ -130,11 +134,11 @@ public class AgendaDeAudienciasAppService implements AgendaDeAudienciasUseCase {
 
         // Atualizar a audiência
         audiencia.atualizar(
-            request.getNomeParteAutora(),
-            request.getDataHoraInicio(),
-            request.getDataHoraFim(),
-            request.getSala(),
-            request.getObservacoes()
+            nomeParteAutora,
+            dataHoraInicio,
+            dataHoraFim,
+            sala,
+            observacoes
         );
 
         Audiencia audienciaAtualizada = audienciaRepository.save(audiencia);
@@ -166,6 +170,15 @@ public class AgendaDeAudienciasAppService implements AgendaDeAudienciasUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<AudienciaResponse> detectarConflitos(CriarAudienciaRequest request) {
+        // Com parametro nulo a JPQL compara com NULL e devolve lista vazia: a tela
+        // diria "horario livre" para uma consulta invalida.
+        if (request.getSala() == null || request.getSala().isBlank()
+            || request.getDataHoraInicio() == null || request.getDataHoraFim() == null) {
+            throw new IllegalArgumentException("Sala, início e fim são obrigatórios para detectar conflitos");
+        }
+        if (!request.getDataHoraFim().isAfter(request.getDataHoraInicio())) {
+            throw new HorarioInvalidoException("O fim da audiência deve ser posterior ao início");
+        }
         List<Audiencia> conflitos = audienciaRepository.encontrarConflitosDeHorario(
             request.getSala(),
             request.getDataHoraInicio(),

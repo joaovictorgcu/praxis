@@ -4,73 +4,107 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>praxis - agenda de prazos</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
 </head>
 <body>
-<header>
-  <h1>praxis</h1>
-  <nav>
-    <a th:href="@{/painel}" class="ativo">Agenda de prazos</a>
-    <a th:href="@{/painel/documentos}">Documentos</a>
-    <a th:href="@{/painel/anexos}">Anexos</a>
-    <a th:href="@{/painel/modelos}">Modelos</a>
-    <a th:href="@{/painel/feriados}">Feriados</a>
-  </nav>
-</header>
+<header th:replace="~{fragmentos :: cabecalho('painel')}"></header>
 
 <main>
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <section class="resumo" aria-label="Resumo do dia">
+    <div th:classappend="${vencidos > 0} ? 'alerta' : 'ok'">
+      <span class="numero" th:text="${vencidos}">0</span>
+      <span class="rotulo">prazos vencidos em aberto</span>
+    </div>
+    <div th:classappend="${criticos > 0} ? 'atencao' : 'ok'">
+      <span class="numero" th:text="${criticos}">0</span>
+      <span class="rotulo">vencem em ate 3 dias</span>
+    </div>
+    <div>
+      <span class="numero" th:text="${meus}">0</span>
+      <span class="rotulo">prazos sob sua responsabilidade</span>
+    </div>
+    <a th:href="@{/painel/documentos}" th:classappend="${usuario.chefe() and emRevisao > 0} ? 'atencao'">
+      <span class="numero" th:text="${emRevisao}">0</span>
+      <span class="rotulo" th:text="${usuario.chefe()} ? 'pecas aguardando sua revisao' : 'pecas em revisao'">pecas em revisao</span>
+    </a>
+    <a th:href="@{/painel/documentos}">
+      <span class="numero" th:text="${rascunhos}">0</span>
+      <span class="rotulo">rascunhos e rejeitadas a retrabalhar</span>
+    </a>
+  </section>
+
   <section class="cartao">
     <div class="cartao-cabecalho">
       <h2>Agenda de prazos</h2>
-      <form th:action="@{/painel/varredura}" method="post" class="linha">
+      <form th:action="@{/painel/varredura}" method="post" class="linha" style="margin:0">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
         <label for="hoje">Simular data</label>
         <input type="date" id="hoje" name="hoje">
         <button type="submit">Rodar varredura</button>
       </form>
     </div>
-    <p class="apoio">
-      Hoje: <strong th:text="${hoje}">2026-09-08</strong> &middot;
-      exibindo prazos em aberto com vencimento ate <strong th:text="${limite}">2026-10-08</strong>.
-    </p>
+    <div class="cartao-cabecalho">
+      <p class="apoio" style="margin:0">
+        Hoje: <strong th:text="${#temporals.format(hoje, 'dd/MM/yyyy')}">08/09/2026</strong> &middot;
+        prazos em aberto com vencimento ate <strong th:text="${#temporals.format(limite, 'dd/MM/yyyy')}">08/10/2026</strong>.
+      </p>
+      <form th:action="@{/painel}" method="get" class="linha" style="margin:0">
+        <label for="ate">Ate</label>
+        <input type="date" id="ate" name="ate" th:value="${limite}">
+        <button type="submit" class="secundario pequeno">Filtrar</button>
+      </form>
+    </div>
 
-    <table>
-      <thead>
-      <tr>
-        <th>Processo</th>
-        <th>Prazo</th>
-        <th>Vencimento</th>
-        <th>Dias restantes</th>
-        <th>Fatal</th>
-        <th>Responsavel</th>
-        <th></th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="item : ${itens}"
-          th:classappend="${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : '')">
-        <td th:text="${item.numeroProcesso()}">-</td>
-        <td th:text="${item.descricao()}">-</td>
-        <td th:text="${item.vencimento()}">-</td>
-        <td>
-          <span th:if="${item.vencido()}" class="etiqueta vermelha">vencido</span>
-          <span th:unless="${item.vencido()}" th:text="${item.diasRestantes()}">0</span>
-        </td>
-        <td>
-          <span th:if="${item.fatal()}" class="etiqueta vermelha">fatal</span>
-          <span th:unless="${item.fatal()}" class="etiqueta cinza">comum</span>
-        </td>
-        <td th:text="${item.responsavel()}">-</td>
-        <td>
-          <form th:action="@{'/painel/prazos/' + ${item.prazoId()} + '/cumprir'}" method="post">
-            <button type="submit" class="secundario">Cumprir</button>
-          </form>
-        </td>
-      </tr>
-      <tr th:if="${#lists.isEmpty(itens)}">
-        <td colspan="7" class="vazio">Nenhum prazo em aberto no periodo.</td>
-      </tr>
-      </tbody>
-    </table>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Processo</th>
+          <th>Prazo</th>
+          <th>Vencimento</th>
+          <th>Dias restantes</th>
+          <th>Fatal</th>
+          <th>Responsavel</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${itens}"
+            th:classappend="${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : '')">
+          <td><a th:href="@{'/painel/processos/' + ${item.numeroProcesso()}}" th:text="${item.numeroProcesso()}">-</a></td>
+          <td th:text="${item.descricao()}">-</td>
+          <td th:text="${#temporals.format(item.vencimento(), 'dd/MM/yyyy')}">-</td>
+          <td>
+            <span th:if="${item.vencido()}" class="etiqueta vermelha">vencido</span>
+            <span th:unless="${item.vencido()}" th:text="${item.diasRestantes()}">0</span>
+          </td>
+          <td>
+            <span th:if="${item.fatal()}" class="etiqueta vermelha">fatal</span>
+            <span th:unless="${item.fatal()}" class="etiqueta cinza">comum</span>
+          </td>
+          <td>
+            <span th:text="${item.responsavel()}">-</span>
+            <span th:if="${usuario != null and item.responsavel() == usuario.oab()}"
+                  class="etiqueta azul">voce</span>
+          </td>
+          <td class="acoes">
+            <form th:action="@{'/painel/prazos/' + ${item.prazoId()} + '/cumprir'}" method="post"
+                  th:attr="data-confirmar='Registrar o prazo \'' + ${item.descricao()} + '\' como cumprido?'">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button type="submit" class="secundario pequeno">Cumprir</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(itens)}">
+          <td colspan="7" class="vazio">Nenhum prazo em aberto no periodo.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <section class="cartao">

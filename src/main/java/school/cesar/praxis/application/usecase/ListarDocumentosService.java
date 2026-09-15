@@ -32,7 +32,9 @@ public class ListarDocumentosService implements DocumentosUseCases.ListarDocumen
                         documento.getNumeroProcesso().valor(),
                         documento.getTipo(),
                         String.valueOf(documento.getGeradoEm()),
-                        documento.isSegredoJustica()))
+                        documento.getGeradoPorOab(),
+                        documento.isSegredoJustica(),
+                        documento.getStatus().nome()))
                 .toList();
     }
 }

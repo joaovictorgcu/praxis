@@ -26,9 +26,24 @@ public class PoliticaDeAlerta {
         return new PoliticaDeAlerta(true);
     }
 
+    /**
+     * Prazo em aberto depois do vencimento. Marco proprio ({@link NivelAlerta#VENCIDO}):
+     * se fosse o mesmo de "vence hoje", o aviso de perda nunca sairia para um prazo
+     * que ja tinha sido alertado no dia do vencimento.
+     */
+    public Optional<NivelAlerta> nivelVencido(boolean fatal) {
+        if (!fatal && !alertarNaoFatais) {
+            return Optional.empty();
+        }
+        return Optional.of(NivelAlerta.VENCIDO);
+    }
+
     public Optional<NivelAlerta> nivelPara(int diasRestantes, boolean fatal) {
         if (!fatal && !alertarNaoFatais) {
             return Optional.empty();
+        }
+        if (diasRestantes < 0) {
+            return Optional.of(NivelAlerta.VENCIDO);
         }
         if (diasRestantes <= NivelAlerta.VENCE_HOJE.diasRestantes()) {
             return Optional.of(NivelAlerta.VENCE_HOJE);

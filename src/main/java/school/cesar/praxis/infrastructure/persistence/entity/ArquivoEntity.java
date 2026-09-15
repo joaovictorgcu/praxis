@@ -1,6 +1,9 @@
 package school.cesar.praxis.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import school.cesar.praxis.domain.anexo.TipoArquivo;
 
 import java.time.LocalDate;
@@ -25,10 +28,14 @@ public class ArquivoEntity {
     @Column(nullable = false, length = 20)
     private TipoArquivo tipo;
 
-    /** Conteudo em BLOB: a escolha foi guardar o binario no banco. */
-    @Lob
+    /**
+     * Binario no banco. VARBINARY (bytea no PostgreSQL, binary varying no H2),
+     * e nao LOB: o LOB do PostgreSQL e um "large object" (oid) fora da tabela,
+     * que nao entra em backup/transacao como coluna comum.
+     */
+    @JdbcTypeCode(SqlTypes.VARBINARY)
     @Basic(fetch = FetchType.LAZY)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 16_000_000)
     private byte[] conteudo;
 
     @Column(length = 300)

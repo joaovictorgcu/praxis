@@ -1,5 +1,6 @@
 package school.cesar.praxis.bdd;
 
+import io.cucumber.java.Before;
 import io.cucumber.java.pt.Dado;
 import io.cucumber.java.pt.Quando;
 import io.cucumber.java.pt.Então;
@@ -9,6 +10,7 @@ import school.cesar.praxis.application.dto.AudienciaResponse;
 import school.cesar.praxis.application.dto.CriarAudienciaRequest;
 import school.cesar.praxis.application.port.in.AgendaDeAudienciasUseCase;
 import school.cesar.praxis.domain.agenda.ConflitoDEAudienciaException;
+import school.cesar.praxis.infrastructure.persistence.AudienciaRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,6 +27,8 @@ public class AudienciaSteps {
 
     @Autowired
     private AgendaDeAudienciasUseCase agendaUseCase;
+    @Autowired
+    private AudienciaRepository audiencias;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
@@ -33,14 +37,28 @@ public class AudienciaSteps {
     private Exception ultimaExcecao;
     private List<AudienciaResponse> audienciasAtuais;
     private Long ultimoIdAudiencia;
+    private AudienciaResponse primeiraAudiencia;
 
     // Dado (Setup)
 
-    @Dado("que o sistema está limpo")
-    public void sistemaDespejoDados() {
-        // Limpar dados não é necessário pois cada teste começa com um banco vazio
+    /**
+     * O contexto Spring e um so para toda a suite, entao a audiencia de um
+     * cenario sobrevive para o seguinte e gera conflito de horario falso.
+     * Cada cenario comeca com a agenda vazia.
+     */
+    @Before
+    public void limparAgenda() {
+        audiencias.deleteAll();
         ultimaAudienciaResponse = null;
         ultimaExcecao = null;
+        audienciasAtuais = null;
+        ultimoIdAudiencia = null;
+        primeiraAudiencia = null;
+    }
+
+    @Dado("que o sistema está limpo")
+    public void sistemaDespejoDados() {
+        limparAgenda();
     }
 
     @Dado("que existe uma audiência cadastrada:")
@@ -65,6 +83,10 @@ public class AudienciaSteps {
             CriarAudienciaRequest request = converterMapParaRequest(dados);
             try {
                 ultimaAudienciaResponse = agendaUseCase.criarAudiencia(request);
+                ultimoIdAudiencia = ultimaAudienciaResponse.getId();
+                if (primeiraAudiencia == null) {
+                    primeiraAudiencia = ultimaAudienciaResponse;
+                }
             } catch (Exception e) {
                 fail("Falha ao criar audiências de setup: " + e.getMessage());
             }
@@ -153,13 +175,14 @@ public class AudienciaSteps {
     public void tentoEditarPrimeiraAudienciaParaSegundoHorario(DataTable dataTable) {
         Map<String, String> dados = dataTable.asMap();
         CriarAudienciaRequest request = converterMapParaRequest(dados);
-        // Usar o número do processo da primeira audiência
-        request.setNumeroProcesso(ultimaAudienciaResponse.getNumeroProcesso());
-        request.setNomeParteAutora(ultimaAudienciaResponse.getNomeParteAutora());
-        request.setSala(ultimaAudienciaResponse.getSala());
+        // Edita a PRIMEIRA audiência (mantendo processo, parte e sala dela) para o horário da segunda
+        AudienciaResponse alvo = primeiraAudiencia != null ? primeiraAudiencia : ultimaAudienciaResponse;
+        request.setNumeroProcesso(alvo.getNumeroProcesso());
+        request.setNomeParteAutora(alvo.getNomeParteAutora());
+        request.setSala(alvo.getSala());
         
         try {
-            ultimaAudienciaResponse = agendaUseCase.editarAudiencia(ultimoIdAudiencia, request);
+            ultimaAudienciaResponse = agendaUseCase.editarAudiencia(alvo.getId(), request);
             ultimaExcecao = null;
         } catch (ConflitoDEAudienciaException e) {
             ultimaExcecao = e;

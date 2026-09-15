@@ -1,6 +1,8 @@
 package school.cesar.praxis.infrastructure.persistence.adapter;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import school.cesar.praxis.application.port.out.FeriadoRepositorio;
 import school.cesar.praxis.domain.feriado.Feriado;
 import school.cesar.praxis.infrastructure.persistence.mapper.PersistenciaMapper;
@@ -42,7 +44,7 @@ public class FeriadoRepositorioJpa implements FeriadoRepositorio {
     public Feriado salvar(Feriado feriado) {
         Feriado salvo = PersistenciaMapper.paraDominio(
                 jpa.save(PersistenciaMapper.paraEntidade(feriado)));
-        cache = null;
+        invalidarAposCommit();
         return salvo;
     }
 
@@ -54,6 +56,24 @@ public class FeriadoRepositorioJpa implements FeriadoRepositorio {
     @Override
     public void remover(Long id) {
         jpa.deleteById(id);
+        invalidarAposCommit();
+    }
+
+    /**
+     * Invalidar dentro da transacao abre janela: outra thread recarrega o cache
+     * antes do commit, sem a linha nova, e fica com calendario velho ate a proxima
+     * escrita. Por isso a invalidacao e agendada para depois do commit (e feita
+     * tambem agora, para leitura na mesma transacao).
+     */
+    private void invalidarAposCommit() {
         cache = null;
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cache = null;
+                }
+            });
+        }
     }
 }

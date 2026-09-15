@@ -3,8 +3,11 @@ package school.cesar.praxis.infrastructure.config;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
+import school.cesar.praxis.domain.documento.DocumentoGerado;
+import school.cesar.praxis.domain.documento.TipoDocumento;
 import school.cesar.praxis.application.port.out.ProcessoRepositorio;
 import school.cesar.praxis.domain.compartilhado.Relogio;
 import school.cesar.praxis.domain.prazo.RegimeContagem;
@@ -12,6 +15,7 @@ import school.cesar.praxis.domain.processo.NumeroCnj;
 import school.cesar.praxis.domain.processo.TipoAndamento;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 /**
  * Carga inicial para demonstracao: dois processos, andamentos e tres prazos em
@@ -27,17 +31,23 @@ public class DadosDeExemplo implements CommandLineRunner {
     private final ProcessosUseCases.CadastrarProcesso cadastrar;
     private final ProcessosUseCases.RegistrarAndamento registrar;
     private final PrazosUseCases.AbrirPrazo abrirPrazo;
+    private final DocumentosUseCases.GerarDocumento gerarDocumento;
+    private final DocumentosUseCases.EnviarDocumentoParaRevisao enviarParaRevisao;
     private final ProcessoRepositorio processos;
     private final Relogio relogio;
 
     public DadosDeExemplo(ProcessosUseCases.CadastrarProcesso cadastrar,
                           ProcessosUseCases.RegistrarAndamento registrar,
                           PrazosUseCases.AbrirPrazo abrirPrazo,
+                          DocumentosUseCases.GerarDocumento gerarDocumento,
+                          DocumentosUseCases.EnviarDocumentoParaRevisao enviarParaRevisao,
                           ProcessoRepositorio processos,
                           Relogio relogio) {
         this.cadastrar = cadastrar;
         this.registrar = registrar;
         this.abrirPrazo = abrirPrazo;
+        this.gerarDocumento = gerarDocumento;
+        this.enviarParaRevisao = enviarParaRevisao;
         this.processos = processos;
         this.relogio = relogio;
     }
@@ -71,5 +81,13 @@ public class DadosDeExemplo implements CommandLineRunner {
                 PROCESSO_PUBLICO, "Manifestacao sobre laudo", hoje.minusDays(1), 10, false, RegimeContagem.DIAS_UTEIS));
         abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
                 PROCESSO_SIGILOSO, "Embargos de declaracao", hoje.minusDays(9), 5, true, RegimeContagem.DIAS_UTEIS));
+
+        // Uma peca ja em revisao, para o chefe encontrar trabalho ao entrar.
+        DocumentoGerado contestacao = gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
+                PROCESSO_PUBLICO, TipoDocumento.CONTESTACAO,
+                Map.of("preliminares", "Ilegitimidade passiva: a re nao figura no contrato de locacao.",
+                        "merito", "A re nega o inadimplemento alegado; os alugueis foram pagos (art. 336 do CPC)."),
+                "PE12345"));
+        enviarParaRevisao.executar(new DocumentosUseCases.EnviarDocumentoParaRevisao.Comando(contestacao.getId()));
     }
 }

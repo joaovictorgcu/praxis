@@ -4,26 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>praxis - anexos</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
 </head>
 <body>
-<header>
-  <h1>praxis</h1>
-  <nav>
-    <a th:href="@{/painel}">Agenda de prazos</a>
-    <a th:href="@{/painel/documentos}">Documentos</a>
-    <a th:href="@{/painel/anexos}" class="ativo">Anexos</a>
-    <a th:href="@{/painel/modelos}">Modelos</a>
-    <a th:href="@{/painel/feriados}">Feriados</a>
-  </nav>
-</header>
+<header th:replace="~{fragmentos :: cabecalho('anexos')}"></header>
 
 <main>
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
   <section class="cartao">
     <h2>Juntar arquivo aos autos</h2>
     <p class="apoio">
       O anexo herda o <strong>segredo de justica</strong> do processo no momento da juntada, e a
       leitura passa pelo mesmo Proxy das pecas geradas: OAB nao habilitada recebe 403.
+      A juntada fica registrada com a sua OAB (<strong th:text="${usuario.oab()}">OAB</strong>).
     </p>
     <p class="apoio">
       Tipos aceitos:
@@ -35,73 +31,76 @@
       Limite de <strong th:text="${limiteMb} + ' MB'">10 MB</strong> por arquivo.
     </p>
 
-    <p th:if="${erro}" class="etiqueta vermelha" th:text="${erro}">erro</p>
-    <p th:if="${anexado}" class="apoio">
-      Arquivo <strong th:text="${anexado}">arquivo</strong> juntado aos autos.
-    </p>
-
     <form th:action="@{/painel/anexos}" method="post" enctype="multipart/form-data"
           class="formulario">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
       <label>Processo (CNJ)
         <input type="text" name="numeroProcesso" th:value="${processoFiltro}"
                placeholder="0001234-56.2026.8.17.0001" required>
       </label>
-      <label>OAB do solicitante
-        <input type="text" name="oab" placeholder="PE12345">
-      </label>
       <label>Arquivo
-        <input type="file" name="arquivo" required>
+        <input type="file" name="arquivo" required accept=".pdf,.jpg,.jpeg,.png,.txt">
       </label>
-      <label class="largo">Descricao (opcional)
+      <label>Descricao (opcional)
         <input type="text" name="descricao" placeholder="Procuracao assinada pelo cliente">
       </label>
-      <button type="submit">Juntar aos autos</button>
+      <div>
+        <button type="submit">Juntar aos autos</button>
+      </div>
     </form>
   </section>
 
   <section class="cartao">
-    <h2>Arquivos juntados</h2>
-    <table>
-      <thead>
-      <tr>
-        <th>#</th>
-        <th>Processo</th>
-        <th>Arquivo</th>
-        <th>Tipo</th>
-        <th>Tamanho</th>
-        <th>Juntado em</th>
-        <th>Segredo de justica</th>
-        <th></th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="anexo : ${anexos}">
-        <td th:text="${anexo.id()}">1</td>
-        <td th:text="${anexo.numeroProcesso()}">-</td>
-        <td>
-          <span th:text="${anexo.nome()}">-</span>
-          <br th:if="${anexo.descricao()}">
-          <span th:if="${anexo.descricao()}" class="apoio" th:text="${anexo.descricao()}">-</span>
-        </td>
-        <td th:text="${anexo.rotuloTipo()}">-</td>
-        <td th:text="${#numbers.formatDecimal(anexo.tamanhoBytes() / 1024.0, 1, 1)} + ' KB'">-</td>
-        <td th:text="${anexo.anexadoEm()}">-</td>
-        <td>
-          <span th:if="${anexo.segredoJustica()}" class="etiqueta vermelha">sim</span>
-          <span th:unless="${anexo.segredoJustica()}" class="etiqueta cinza">nao</span>
-        </td>
-        <td>
-          <form th:action="@{'/api/anexos/' + ${anexo.id()}}" method="get" class="linha">
-            <input type="text" name="oab" placeholder="OAB" required>
-            <button type="submit" class="secundario">Baixar</button>
-          </form>
-        </td>
-      </tr>
-      <tr th:if="${#lists.isEmpty(anexos)}">
-        <td colspan="8" class="vazio">Nenhum arquivo juntado ainda.</td>
-      </tr>
-      </tbody>
-    </table>
+    <div class="cartao-cabecalho">
+      <h2>Arquivos juntados</h2>
+      <form th:action="@{/painel/anexos}" method="get" class="linha">
+        <input type="text" name="processo" th:value="${processoFiltro}" placeholder="Filtrar por CNJ">
+        <button type="submit" class="secundario">Filtrar</button>
+      </form>
+    </div>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>#</th>
+          <th>Processo</th>
+          <th>Arquivo</th>
+          <th>Tipo</th>
+          <th>Tamanho</th>
+          <th>Juntado em</th>
+          <th>Por</th>
+          <th>Sigilo</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="anexo : ${anexos}">
+          <td th:text="${anexo.id()}">1</td>
+          <td th:text="${anexo.numeroProcesso()}">-</td>
+          <td>
+            <span th:text="${anexo.nome()}">-</span>
+            <br th:if="${anexo.descricao()}">
+            <span th:if="${anexo.descricao()}" class="apoio" th:text="${anexo.descricao()}">-</span>
+          </td>
+          <td th:text="${anexo.rotuloTipo()}">-</td>
+          <td th:text="${#numbers.formatDecimal(anexo.tamanhoBytes() / 1024.0, 1, 1)} + ' KB'">-</td>
+          <td th:text="${anexo.anexadoEm()}">-</td>
+          <td th:text="${anexo.anexadoPorOab()} ?: '-'">-</td>
+          <td>
+            <span th:if="${anexo.segredoJustica()}" class="etiqueta vermelha">segredo</span>
+            <span th:unless="${anexo.segredoJustica()}" class="etiqueta cinza">publico</span>
+          </td>
+          <td class="acoes">
+            <a class="botao secundario pequeno"
+               th:href="@{'/api/anexos/' + ${anexo.id()} + '?oab=' + ${usuario.oab()}}">Baixar</a>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(anexos)}">
+          <td colspan="9" class="vazio">Nenhum arquivo juntado ainda.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 </main>
 </body>

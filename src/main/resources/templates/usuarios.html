@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>praxis - usuarios</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
+</head>
+<body>
+<header th:replace="~{fragmentos :: cabecalho('usuarios')}"></header>
+
+<main>
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <section class="cartao">
+    <h2>Cadastrar usuario</h2>
+    <p class="apoio">
+      <strong>Advogado</strong> conduz os autos: cadastra processo, registra andamento, abre prazo,
+      gera peca e envia para revisao. <strong>Chefe</strong> faz tudo isso e ainda aprova ou rejeita peca,
+      habilita OAB em autos sigilosos e administra feriados, modelos e usuarios.
+      A senha informada aqui e provisoria: peca ao usuario para troca-la em <em>Minha conta</em>.
+    </p>
+    <form th:action="@{/painel/usuarios}" method="post" class="formulario" autocomplete="off">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <label>Nome
+        <input type="text" name="nome" required placeholder="Ana Beatriz Souza">
+      </label>
+      <label>E-mail
+        <input type="email" name="email" required placeholder="ana.souza@praxis.adv.br">
+      </label>
+      <label>OAB
+        <input type="text" name="oab" required placeholder="PE12345">
+      </label>
+      <label>Papel
+        <select name="papel">
+          <option th:each="p : ${papeis}" th:value="${p}" th:text="${p.rotulo()}">Papel</option>
+        </select>
+      </label>
+      <label>Senha provisoria (minimo 6)
+        <input type="password" name="senha" required minlength="6" autocomplete="new-password">
+      </label>
+      <div>
+        <button type="submit">Cadastrar</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <h2>Usuarios do escritorio</h2>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Nome</th>
+          <th>E-mail</th>
+          <th>OAB</th>
+          <th>Papel</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="u : ${usuarios}">
+          <td>
+            <span th:text="${u.nome}">-</span>
+            <span th:if="${u.id == usuario.id()}" class="etiqueta azul">voce</span>
+            <span th:if="${u.senhaProvisoria}" class="etiqueta ambar" title="Ainda nao trocou a senha provisoria">senha provisoria</span>
+          </td>
+          <td th:text="${u.email}">-</td>
+          <td th:text="${u.oab}">-</td>
+          <td>
+            <span class="papel" th:classappend="${u.chefe} ? 'chefe'" th:text="${u.papel.rotulo()}">Papel</span>
+          </td>
+          <td class="acoes">
+            <form th:if="${u.id != usuario.id()}"
+                  th:action="@{'/painel/usuarios/' + ${u.id} + '/remover'}" method="post"
+                  th:attr="data-confirmar='Remover ' + ${u.nome} + ' do escritorio?'">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button type="submit" class="perigo pequeno">Remover</button>
+            </form>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>
