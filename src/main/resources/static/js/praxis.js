@@ -10,12 +10,29 @@
             evento.preventDefault();
             return;
         }
-        // Evita duplo envio (dois cliques = duas acoes).
+        // Evita duplo envio (dois cliques = duas acoes) e diz que esta em curso.
         var botao = form.querySelector('button[type="submit"]');
         if (botao) {
+            var rotulo = botao.textContent;
+            botao.setAttribute('aria-busy', 'true');
+            botao.dataset.rotulo = rotulo;
+            botao.textContent = 'Enviando...';
             botao.disabled = true;
-            setTimeout(function () { botao.disabled = false; }, 4000);
+            setTimeout(function () { restaurar(botao); }, 8000);
         }
+    });
+
+    function restaurar(botao) {
+        if (!botao || !botao.dataset.rotulo) { return; }
+        botao.textContent = botao.dataset.rotulo;
+        botao.removeAttribute('aria-busy');
+        botao.disabled = false;
+        delete botao.dataset.rotulo;
+    }
+
+    // Voltar pelo historico traz a pagina do cache com o botao ainda travado.
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('button[aria-busy="true"]').forEach(restaurar);
     });
 
     // Mensagem de sucesso some sozinha; a de erro fica.

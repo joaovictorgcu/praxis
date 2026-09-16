@@ -1,4 +1,6 @@
 :root {
+    color-scheme: light dark;
+
     --tinta: #14213d;
     --tinta-clara: #3a5a8c;
     --papel: #f4f5f7;
@@ -10,11 +12,77 @@
     --azul: #245aa6;
     --cinza: #6b7280;
     --foco: #6f95d1;
+
+    /* Tons derivados: ficam em token para o tema escuro trocar todos de uma vez. */
+    --realce: #f8f9fb;          /* linha da tabela sob o cursor, botao secundario */
+    --caixa: #f3f4f6;           /* previa da peca, campo somente leitura */
+    --marca: #eef0f3;           /* code, etiqueta neutra */
+    --sucesso-fundo: #e8f5ee;
+    --sucesso-borda: #b8e0c8;
+    --erro-fundo: #fdeceb;
+    --erro-borda: #f2c1bd;
+    --atencao-fundo: #fff6e5;
+    --ambar-fundo: #fff3d6;
+    --azul-fundo: #e6eefb;
+    --menu-texto: #cdd8ea;
+    --sombra: rgba(20, 33, 61, .18);
+    --botao-fundo: #14213d;
+    --botao-texto: #ffffff;
+    --botao-hover: #1c2d52;
+}
+
+/*
+  Tema escuro do sistema operacional. So os tokens mudam: nenhuma regra abaixo
+  precisa saber que existe um segundo tema.
+*/
+@media (prefers-color-scheme: dark) {
+    :root {
+        --tinta: #e8ecf5;       /* agora e a cor do texto sobre fundo escuro */
+        --tinta-clara: #9fb8de;
+        --papel: #12161f;
+        --branco: #1a1f2b;      /* superficie dos cartoes */
+        --borda: #2e3646;
+        --vermelho: #ff8a80;
+        --verde: #6ddc9f;
+        --ambar: #e7b75c;
+        --azul: #8fb4ec;
+        --cinza: #9aa3b2;
+        --foco: #8fb4ec;
+
+        --realce: #222938;
+        --caixa: #161b26;
+        --marca: #242c3a;
+        --sucesso-fundo: #10321f;
+        --sucesso-borda: #1f5c3a;
+        --erro-fundo: #3a1a18;
+        --erro-borda: #6d2f2a;
+        --atencao-fundo: #3a2c12;
+        --ambar-fundo: #3a2c12;
+        --azul-fundo: #1b2840;
+        --menu-texto: #b9c6de;
+        --sombra: rgba(0, 0, 0, .5);
+        --botao-fundo: #3f6fc4;
+        --botao-texto: #ffffff;
+        --botao-hover: #5480d2;
+    }
 }
 
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
+
+/* Alvo de ancora nao pode ficar sob o cabecalho fixo (WCAG 2.4.11). */
+[id] { scroll-margin-top: 84px; }
+
+/* Movimento e uma preferencia do sistema, nao do site (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+    }
+}
 
 body {
     margin: 0;
@@ -36,7 +104,31 @@ header {
     align-items: center;
     flex-wrap: wrap;
     gap: 12px 32px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
 }
+
+/*
+  Atalho de teclado: fica fora da tela ate receber foco. Na administracao, que
+  tem doze secoes, evita tabular o menu inteiro a cada pagina.
+*/
+.pular {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    padding: 8px 14px;
+    background: var(--branco);
+    color: var(--tinta);
+    border-radius: 6px;
+    font-size: 13px;
+    transform: translateY(-160%);
+    transition: transform .15s ease-out;
+}
+
+.pular:focus { transform: translateY(0); }
+
+main:focus { outline: none; }
 
 header h1 {
     margin: 0;
@@ -54,7 +146,7 @@ header nav {
 }
 
 header nav a {
-    color: #cdd8ea;
+    color: var(--menu-texto);
     text-decoration: none;
     padding: 4px 0 3px;
     border-bottom: 2px solid transparent;
@@ -78,7 +170,7 @@ header nav a.ativo {
 
 .sessao .quem { display: flex; flex-direction: column; line-height: 1.25; text-align: right; }
 .sessao .quem strong { font-weight: 600; }
-.sessao .quem span { color: #cdd8ea; font-size: 12px; }
+.sessao .quem span { color: var(--menu-texto); font-size: 12px; }
 
 .sessao form { margin: 0; }
 
@@ -139,7 +231,7 @@ main {
 }
 
 .apoio { color: var(--cinza); margin: 4px 0 14px; }
-.apoio code { background: #eef0f3; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+.apoio code { background: var(--marca); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
 
 /* ---------- mensagens ---------- */
 
@@ -151,12 +243,24 @@ main {
     font-size: 14px;
 }
 
-.mensagem.sucesso { background: #e8f5ee; border-color: #b8e0c8; color: var(--verde); }
-.mensagem.erro { background: #fdeceb; border-color: #f2c1bd; color: var(--vermelho); }
+.mensagem.sucesso { background: var(--sucesso-fundo); border-color: var(--sucesso-borda); color: var(--verde); }
+.mensagem.erro { background: var(--erro-fundo); border-color: var(--erro-borda); color: var(--vermelho); }
 
 /* ---------- tabelas ---------- */
 
-.tabela { width: 100%; overflow-x: auto; }
+/*
+  Tabela larga rola sozinha, sem empurrar a pagina para o lado. So em tela
+  estreita: um container com overflow vira o contexto de rolagem e anularia o
+  cabecalho grudento das telas grandes.
+*/
+.tabela { width: 100%; }
+
+@media (max-width: 860px) {
+    .tabela { overflow-x: auto; }
+    /* Em tela estreita o cabecalho do site ocupa varias linhas e a altura varia:
+       o cabecalho de coluna volta a rolar junto com a tabela. */
+    th { position: static; }
+}
 
 table { width: 100%; border-collapse: collapse; }
 
@@ -168,11 +272,28 @@ th, td {
     vertical-align: middle;
 }
 
-th { color: var(--cinza); font-weight: 600; text-transform: uppercase; font-size: 11.5px; white-space: nowrap; }
+/*
+  Cabecalho de coluna acompanha a rolagem: nas tabelas longas da administracao,
+  a linha 40 continua dizendo qual coluna e qual.
+*/
+th {
+    color: var(--cinza);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11.5px;
+    white-space: nowrap;
+    position: sticky;
+    top: 68px;
+    background: var(--branco);
+    z-index: 1;
+}
 
-tbody tr:hover td { background: #f8f9fb; }
-tr.critico td, tr.critico:hover td { background: #fff6e5; }
-tr.vencido td, tr.vencido:hover td { background: #fdeceb; }
+/* Valor numerico alinha pela direita e tabula: coluna de dias fica comparavel. */
+td.numero, th.numero { text-align: right; font-variant-numeric: tabular-nums; }
+
+tbody tr:hover td { background: var(--realce); }
+tr.critico td, tr.critico:hover td { background: var(--atencao-fundo); }
+tr.vencido td, tr.vencido:hover td { background: var(--erro-fundo); }
 
 td.acoes { white-space: nowrap; text-align: right; }
 td.acoes form { display: inline-block; margin-left: 4px; }
@@ -188,11 +309,11 @@ td.acoes form { display: inline-block; margin-left: 4px; }
     white-space: nowrap;
 }
 
-.etiqueta.vermelha { background: #fdeceb; color: var(--vermelho); }
-.etiqueta.cinza { background: #eef0f3; color: var(--cinza); }
-.etiqueta.verde { background: #e8f5ee; color: var(--verde); }
-.etiqueta.ambar { background: #fff3d6; color: var(--ambar); }
-.etiqueta.azul { background: #e6eefb; color: var(--azul); }
+.etiqueta.vermelha { background: var(--erro-fundo); color: var(--vermelho); }
+.etiqueta.cinza { background: var(--marca); color: var(--cinza); }
+.etiqueta.verde { background: var(--sucesso-fundo); color: var(--verde); }
+.etiqueta.ambar { background: var(--ambar-fundo); color: var(--ambar); }
+.etiqueta.azul { background: var(--azul-fundo); color: var(--azul); }
 
 .vazio { color: var(--cinza); font-style: italic; }
 
@@ -230,7 +351,7 @@ input, select, textarea {
     max-width: 100%;
 }
 
-input[readonly] { background: #f3f4f6; color: var(--cinza); }
+input[readonly] { background: var(--caixa); color: var(--cinza); }
 
 textarea { width: 100%; resize: vertical; }
 
@@ -244,10 +365,10 @@ label > textarea, label > input:not([type=checkbox]), label > select { width: 10
 button, .botao {
     display: inline-block;
     padding: 8px 16px;
-    border: 1px solid var(--tinta);
+    border: 1px solid var(--botao-fundo);
     border-radius: 5px;
-    background: var(--tinta);
-    color: var(--branco);
+    background: var(--botao-fundo);
+    color: var(--botao-texto);
     font: inherit;
     font-size: 14px;
     cursor: pointer;
@@ -255,7 +376,7 @@ button, .botao {
     line-height: 1.2;
 }
 
-button:hover, .botao:hover { background: #1c2d52; }
+button:hover, .botao:hover { background: var(--botao-hover); border-color: var(--botao-hover); }
 
 button.secundario, .botao.secundario {
     background: var(--branco);
@@ -263,10 +384,10 @@ button.secundario, .botao.secundario {
     border-color: var(--borda);
 }
 
-button.secundario:hover, .botao.secundario:hover { background: #f3f4f6; }
+button.secundario:hover, .botao.secundario:hover { background: var(--caixa); }
 
-button.perigo { background: var(--branco); color: var(--vermelho); border-color: #f2c1bd; }
-button.perigo:hover { background: #fdeceb; }
+button.perigo { background: var(--branco); color: var(--vermelho); border-color: var(--erro-borda); }
+button.perigo:hover { background: var(--erro-fundo); }
 
 button.pequeno, .botao.pequeno { padding: 4px 10px; font-size: 13px; }
 
@@ -275,7 +396,7 @@ button[disabled] { opacity: .5; cursor: not-allowed; }
 /* ---------- previa da peca ---------- */
 
 pre {
-    background: #f3f4f6;
+    background: var(--caixa);
     border: 1px solid var(--borda);
     border-radius: 6px;
     padding: 16px;
@@ -329,7 +450,7 @@ body.entrada {
     border: 1px solid var(--borda);
     border-radius: 10px;
     padding: 32px 32px 28px;
-    box-shadow: 0 18px 40px rgba(20, 33, 61, .18);
+    box-shadow: 0 18px 40px var(--sombra);
 }
 
 .cartao-login h1 { margin: 0 0 2px; font-size: 28px; letter-spacing: 1.5px; }
@@ -344,7 +465,7 @@ body.entrada {
     color: var(--cinza);
 }
 
-.cartao-login .dica code { background: #eef0f3; padding: 1px 5px; border-radius: 4px; }
+.cartao-login .dica code { background: var(--marca); padding: 1px 5px; border-radius: 4px; }
 
 /* ---------- pagina de erro ---------- */
 
@@ -355,7 +476,9 @@ body.entrada {
 /* ---------- responsivo ---------- */
 
 @media (max-width: 860px) {
-    header { padding: 12px 20px; }
+    /* Em tela estreita o menu quebra em tres linhas: fixo, comeria metade da
+       altura util, entao rola junto com a pagina. */
+    header { padding: 12px 20px; position: static; }
     form.formulario { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -393,12 +516,12 @@ body.entrada {
     text-decoration: none;
 }
 
-.resumo a:hover { background: #f8f9fb; }
+.resumo a:hover { background: var(--realce); }
 .resumo .numero { display: block; font-size: 28px; font-weight: 700; line-height: 1.1; }
 .resumo .rotulo { display: block; color: var(--cinza); font-size: 12.5px; margin-top: 4px; }
 .resumo .alerta { border-left-color: var(--vermelho); }
 .resumo .alerta .numero { color: var(--vermelho); }
-.resumo .atencao { border-left-color: #c98a1b; }
+.resumo .atencao { border-left-color: var(--ambar); }
 .resumo .atencao .numero { color: var(--ambar); }
 .resumo .ok { border-left-color: var(--verde); }
 
@@ -454,13 +577,84 @@ form.formulario legend { color: var(--tinta-clara); font-size: 13px; font-weight
 .campos-modelo .vazio-modelo { margin: 0; }
 
 textarea.modelo-texto { font-family: "Cascadia Mono", Consolas, monospace; font-size: 13px; line-height: 1.5; }
-.campos-detectados .chip { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 8px; border-radius: 10px; background: #e6eefb; color: var(--azul); font-size: 12px; font-family: "Cascadia Mono", Consolas, monospace; }
-.campos-detectados .chip.reservado { background: #eef0f3; color: var(--cinza); text-decoration: line-through; }
+.campos-detectados .chip { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 8px; border-radius: 10px; background: var(--azul-fundo); color: var(--azul); font-size: 12px; font-family: "Cascadia Mono", Consolas, monospace; }
+.campos-detectados .chip.reservado { background: var(--marca); color: var(--cinza); text-decoration: line-through; }
 
 .linha label.marcador { padding-bottom: 9px; }
 
 @media (max-width: 600px) { .grade-campos { grid-template-columns: 1fr; } }
-select.ignorado { color: var(--cinza); background: #f3f4f6; }
+select.ignorado { color: var(--cinza); background: var(--caixa); }
 
 /* Atributo hidden vence qualquer display do CSS (labels sao flex). */
 [hidden] { display: none !important; }
+
+/* ---------- alvo de toque (WCAG 2.5.8) ---------- */
+
+/*
+  Botao pequeno de tabela ainda precisa ser clicavel no celular: 24 px de altura
+  minima, sem engordar a linha, porque a area vem do padding vertical.
+*/
+button.pequeno, .botao.pequeno { min-height: 24px; padding: 5px 10px; }
+td.acoes button, td.acoes .botao { min-height: 28px; }
+input[type=checkbox], input[type=radio] { width: 18px; height: 18px; accent-color: var(--tinta-clara); }
+
+/* ---------- impressao ---------- */
+
+/*
+  Peca, ficha do processo e agenda sao levadas em papel para audiencia. Some o
+  que nao se imprime (menu, formularios, botoes) e o resto vai em preto no
+  branco, com o endereco de cada link visivel.
+*/
+@media print {
+    :root { color-scheme: light; }
+
+    header, .pular, .fluxo, form, td.acoes, button, .botao { display: none !important; }
+
+    /* Cartao que so existia para receber um formulario nao vai ao papel. */
+    .cartao:has(> form) { display: none !important; }
+
+    body { background: var(--branco); color: #000; font-size: 11pt; }
+
+    main { max-width: none; margin: 0; padding: 0; gap: 12px; }
+
+    .cartao {
+        border: none;
+        border-bottom: 1px solid #999;
+        border-radius: 0;
+        padding: 0 0 10px;
+        break-inside: avoid;
+    }
+
+    pre {
+        max-height: none;
+        overflow: visible;
+        border: 1px solid #999;
+        background: var(--branco);
+        font-size: 10pt;
+    }
+
+    thead { display: table-header-group; }   /* repete o cabecalho a cada pagina */
+    tr { break-inside: avoid; }
+    th { position: static; }
+
+    a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 9pt; color: #444; }
+}
+
+/*
+  Ajustes do tema escuro que nao cabem em token: ficam no fim da folha porque
+  sobrescrevem regras declaradas acima (cascata por ordem, sem !important).
+*/
+@media (prefers-color-scheme: dark) {
+    /* O texto do cabecalho e claro sobre a faixa escura: nao segue --branco,
+       que no tema escuro passou a ser a superficie dos cartoes. */
+    header { background: #0e1220; color: #e8ecf5; }
+    header nav a:hover, header nav a.ativo { color: #ffffff; }
+    header nav a.ativo { border-bottom-color: #ffffff; }
+    .sessao button { border-color: #3c4658; color: var(--tinta); }
+    .sessao button:hover { background: #222938; }
+    .papel { background: #2b3447; color: #dbe3f2; }
+    .papel.chefe { background: #6b4a10; color: #ffe9bb; }
+    .pular { background: #e8ecf5; color: #12161f; }
+    body.entrada { background: linear-gradient(160deg, #0e1220 0%, #1c2438 55%, var(--papel) 55.1%); }
+    th { background: var(--branco); }
+}

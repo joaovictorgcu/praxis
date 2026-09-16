@@ -11,7 +11,7 @@
 <body>
 <header th:replace="~{fragmentos :: cabecalho('conta')}"></header>
 
-<main>
+<main id="conteudo" tabindex="-1">
   <div th:replace="~{fragmentos :: mensagens}"></div>
 
   <p th:if="${usuario.senhaProvisoria()}" class="mensagem erro" role="alert">

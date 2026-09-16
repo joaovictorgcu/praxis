@@ -12,18 +12,28 @@
   quem esta logado, o papel e o botao de sair.
 -->
 <header th:fragment="cabecalho(ativo)">
+  <!-- Primeiro tabulavel da pagina: pula o menu inteiro (WCAG 2.4.1). -->
+  <a class="pular" href="#conteudo">Ir para o conteudo</a>
   <h1><a th:href="@{/painel}">praxis</a></h1>
   <nav aria-label="Secoes do painel">
-    <a th:href="@{/painel}" th:classappend="${ativo == 'painel'} ? 'ativo'">Agenda</a>
-    <a th:href="@{/painel/processos}" th:classappend="${ativo == 'processos'} ? 'ativo'">Processos</a>
-    <a th:href="@{/painel/documentos}" th:classappend="${ativo == 'documentos'} ? 'ativo'">Documentos</a>
-    <a th:href="@{/painel/anexos}" th:classappend="${ativo == 'anexos'} ? 'ativo'">Anexos</a>
-    <a th:href="@{/painel/modelos}" th:classappend="${ativo == 'modelos'} ? 'ativo'">Modelos</a>
-    <a th:href="@{/painel/feriados}" th:classappend="${ativo == 'feriados'} ? 'ativo'">Feriados</a>
+    <a th:href="@{/painel}" th:classappend="${ativo == 'painel'} ? 'ativo'"
+       th:attr="aria-current=${ativo == 'painel'} ? 'page' : null">Agenda</a>
+    <a th:href="@{/painel/processos}" th:classappend="${ativo == 'processos'} ? 'ativo'"
+       th:attr="aria-current=${ativo == 'processos'} ? 'page' : null">Processos</a>
+    <a th:href="@{/painel/documentos}" th:classappend="${ativo == 'documentos'} ? 'ativo'"
+       th:attr="aria-current=${ativo == 'documentos'} ? 'page' : null">Documentos</a>
+    <a th:href="@{/painel/anexos}" th:classappend="${ativo == 'anexos'} ? 'ativo'"
+       th:attr="aria-current=${ativo == 'anexos'} ? 'page' : null">Anexos</a>
+    <a th:href="@{/painel/modelos}" th:classappend="${ativo == 'modelos'} ? 'ativo'"
+       th:attr="aria-current=${ativo == 'modelos'} ? 'page' : null">Modelos</a>
+    <a th:href="@{/painel/feriados}" th:classappend="${ativo == 'feriados'} ? 'ativo'"
+       th:attr="aria-current=${ativo == 'feriados'} ? 'page' : null">Feriados</a>
     <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/usuarios}"
-       th:classappend="${ativo == 'usuarios'} ? 'ativo'">Usuarios</a>
+       th:classappend="${ativo == 'usuarios'} ? 'ativo'"
+       th:attr="aria-current=${ativo == 'usuarios'} ? 'page' : null">Usuarios</a>
     <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/admin}"
-       th:classappend="${ativo == 'admin'} ? 'ativo'">Administracao</a>
+       th:classappend="${ativo == 'admin'} ? 'ativo'"
+       th:attr="aria-current=${ativo == 'admin'} ? 'page' : null">Administracao</a>
   </nav>
   <div class="sessao" th:if="${usuario != null}">
     <a class="quem" th:href="@{/painel/conta}" title="Minha conta">
