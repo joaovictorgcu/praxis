@@ -531,8 +531,10 @@ Falha de domínio vira status HTTP correto (`TratadorDeErrosRest`): invariante v
 
 O repositório já traz o que a plataforma precisa: [`Dockerfile`](Dockerfile) (compila e entrega só o JRE com o jar) e [`render.yaml`](render.yaml), um blueprint que cria o banco e o serviço web juntos.
 
-1. Em <https://render.com>, entre com a conta do GitHub.
-2. **New → Blueprint**, escolha o repositório `praxis`, confirme em **Apply**.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/joaovictorgcu/praxis)
+
+1. Clique no botão acima (ou, no painel do Render, **New → Blueprint**) e entre com a conta do GitHub.
+2. Escolha o repositório `praxis` e confirme em **Apply**.
 3. O Render cria o PostgreSQL `praxis-db`, injeta host, porta, base, usuário e senha no serviço web, compila a imagem e publica em `https://<nome>.onrender.com`. O primeiro build leva de 5 a 8 minutos.
 
 No primeiro boot, o Flyway aplica `V1__esquema_inicial.sql` e a carga de exemplo monta o escritório. A instância publicada é uma **demonstração**: entra com `admin@admin` / `1405`, direto, sem troca de senha.
