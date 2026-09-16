@@ -1,52 +1,260 @@
 # praxis
 
 Sistema web de gestão para escritórios de advocacia — processos, prazos e honorários.
-Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR School), com **DDD**, **arquitetura limpa**, **padrões de projeto GoF**, persistência relacional com ORM e cenários **BDD automatizados com Cucumber**.
 
-## Objetivo
+Projeto acadêmico da disciplina de Requisitos e Fundamentos de Software (CESAR School), feito com **DDD**, **arquitetura limpa**, **padrões de projeto GoF**, persistência relacional com ORM e cenários **BDD automatizados com Cucumber**.
 
-Um escritório de advocacia perde causas por **prazo** e perde tempo por **retrabalho**. O praxis existe para duas coisas:
+![Agenda do dia: contadores, prazos por vencimento e os avisos emitidos pelo motor de prazos](docs/prototipos/painel-agenda.png)
 
-1. **Nenhum prazo processual passa em silêncio.** O advogado lança a intimação; o sistema calcula o vencimento pela regra do CPC (dias úteis, feriados do foro, recesso), congela essa data e avisa o responsável de forma escalonada — 5, 3, 1 e 0 dias antes, e de novo se o prazo for perdido — sem repetir o mesmo aviso.
-2. **Nenhuma peça sai do escritório sem estrutura nem revisão.** Petição, contestação e procuração nascem de template com esqueleto fixo (ou de modelo cadastrado pelo próprio escritório), ficam registradas nos autos, respeitam o segredo de justiça e só são protocoladas depois de passar pela revisão do chefe.
+---
 
-Em volta disso ficam os apoios que o dia a dia exige: cadastro de processos com linha do tempo, anexos, feriados, modelos, honorários, audiências, clientes e partes contrárias — e o controle de quem pode fazer o quê (advogado × chefe).
+## Por que este sistema existe
 
-## Telas
+Um escritório de advocacia perde causas por **prazo** e perde tempo por **retrabalho**.
 
-Capturas da interface real, logado como chefe (`admin`) e como advogada (`ana.souza`). Todas em [`docs/prototipos/`](docs/prototipos/).
+Prazo processual não perdoa: se a contestação vence numa terça e ninguém protocola, a causa está perdida — e não adianta alegar que o advogado estava viajando ou que ninguém avisou. Contar esse prazo à mão é mais difícil do que parece: só se contam **dias úteis**, o dia da intimação não conta, feriado da comarca conta como feriado, feriado da cidade vizinha não, e entre 20 de dezembro e 20 de janeiro o prazo simplesmente não corre.
 
-| | |
-|---|---|
-| **Login** — usuário curto ou e-mail; 5 erros bloqueiam o e-mail por 1 min ![login](docs/prototipos/login.png) | **Agenda** — resumo do dia, prazos por vencimento, avisos do motor ![agenda](docs/prototipos/painel-agenda.png) |
-| **Processos** — busca, cadastro com responsável escolhido entre os usuários ![processos](docs/prototipos/processos.png) | **Ficha do processo** — linha do tempo, prazos, peças, anexos; registrar andamento e abrir prazo ![ficha](docs/prototipos/processo-ficha.png) |
-| **Gerar peça** — escolhido um modelo, um campo por marcador `{{…}}` ![gerar](docs/prototipos/documentos-gerar.png) | **Revisão da peça** — chefe aprova/rejeita, habilita OAB, vê o histórico ![aprovacao](docs/prototipos/documento-aprovacao.png) |
-| **Modelos** — corpo e pedidos com `{{campos}}`; os que serão pedidos aparecem enquanto digita ![modelos](docs/prototipos/modelos.png) | **Feriados** — data única ou anual; nacional, estadual ou da comarca; "corre prazo em…" ![feriados](docs/prototipos/feriados.png) |
-| **Anexos** — juntada com a OAB da sessão; download passa pelo Proxy ![anexos](docs/prototipos/anexos.png) | **Segredo de justiça** — advogada sem OAB habilitada é avisada; peça e anexo respondem 403 ![sigilo](docs/prototipos/processo-sigiloso-sem-oab.png) |
-| **Usuários** (chefe) — cadastro com senha provisória, papel, remoção protegida ![usuarios](docs/prototipos/usuarios.png) | **Minha conta** — troca de senha exigindo a atual ![conta](docs/prototipos/conta.png) |
-| **Administração** (chefe) — contadores, o que exige atenção, atalhos e ficha da instância ![admin](docs/prototipos/admin-panorama.png) | **Administração** — cadastros do escritório: usuários, processos, prazos (com os cumpridos), peças, anexos ![admin-cadastros](docs/prototipos/admin-cadastros.png) |
+Do outro lado, toda peça que sai do escritório (petição, contestação, procuração) tem estrutura obrigatória e leva o nome e a OAB de quem assina. Redigir cada uma do zero, no editor de texto, é como um advogado júnior esquece o endereçamento — ou como um sócio descobre tarde demais que a peça saiu sem revisão.
 
-## Regras de negócio
+O praxis existe para resolver essas duas coisas:
 
-Consolidação das regras que o domínio faz cumprir (cada uma tem teste de unidade ou cenário BDD). Artigos citados são do CPC/2015.
+1. **Nenhum prazo processual passa em silêncio.** O advogado lança a intimação; o sistema calcula o vencimento pela regra do CPC (dias úteis, feriados do foro, recesso forense), congela essa data e avisa o responsável de forma escalonada — 5, 3, 1 e 0 dias antes, e de novo se o prazo for perdido — sem repetir o mesmo aviso duas vezes.
+2. **Nenhuma peça sai do escritório sem estrutura nem revisão.** Petição, contestação e procuração nascem de um template com esqueleto fixo (ou de um modelo cadastrado pelo próprio escritório), ficam registradas nos autos, respeitam o segredo de justiça e só são protocoladas depois de passar pela revisão do chefe.
+
+Em volta disso ficam os apoios que o dia a dia exige: cadastro de processos com linha do tempo, anexos, feriados, modelos de peça, honorários, audiências, clientes, partes contrárias — e o controle de quem pode fazer o quê (advogado × chefe).
+
+---
+
+## Comece por aqui
+
+Dois comandos, sem instalar banco nem configurar nada:
+
+```bash
+./mvnw test            # 168 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
+./mvnw spring-boot:run # sobe em http://localhost:8080
+```
+
+Abra <http://localhost:8080/painel>. Ele pede login, porque todo o painel é autenticado.
+
+A aplicação já sobe com um escritório de mentira montado: dois processos (um deles em segredo de justiça), três prazos em estados diferentes, dois modelos de peça e o calendário de feriados nacionais. É o suficiente para percorrer o sistema inteiro sem cadastrar nada.
+
+**Com quem entrar:**
+
+| Papel | Nome | Usuário no login | Senha | OAB |
+|---|---|---|---|---|
+| Chefe (admin) | Administrador | `admin` | `123` | ADMIN |
+| Chefe | Carla Mendes | `carla.mendes` | `praxis123` | PE00001 |
+| Advogada | Ana Beatriz Souza | `ana.souza` | `praxis123` | PE12345 |
+| Advogado | Bruno Carvalho | `bruno.carvalho` | `praxis123` | PE54321 |
+
+Basta o nome curto: sem `@`, o sistema completa o domínio (`praxis.dominio-email`). Ana é responsável pelo processo público; Bruno, pelo processo em segredo de justiça; Carla e o admin são chefes e podem aprovar peças. A senha dos usuários de exemplo vem de `praxis.senha-inicial` — troque em produção.
+
+> **Sugestão de roteiro:** entre como `admin` para ver tudo, depois como `ana.souza` para sentir o que um advogado *não* pode fazer.
+
+Outros endereços e chaves úteis:
+
+- Console do banco: <http://localhost:8080/h2-console> (JDBC `jdbc:h2:mem:praxis`, usuário `sa`, sem senha)
+- Desligar a carga de exemplo: `praxis.dados-exemplo=false` · feriados iniciais: `praxis.feriados-iniciais=false` · modelos: `praxis.modelos-iniciais=false` · usuários: `praxis.usuarios-iniciais=false`
+- O foro do escritório define quais feriados estaduais e comarcais contam: `praxis.foro.uf=PE` e `praxis.foro.comarca=Recife`
+
+---
+
+## Visita guiada: um dia no escritório
+
+Esta seção percorre o sistema na ordem em que ele é usado de verdade. Todas as imagens são capturas da interface real, não desenhos — estão em [`docs/prototipos/`](docs/prototipos/) e são regeradas por script.
+
+### 1. Entrar
+
+![Tela de login: usuário curto ou e-mail, senha, e a explicação dos dois papéis](docs/prototipos/login.png)
+
+A tela aceita o nome curto (`ana.souza`) ou o e-mail inteiro. Nada do painel é visível antes do login.
+
+E quando alguém erra?
+
+![Login recusado com a mensagem genérica "e-mail ou senha invalidos"](docs/prototipos/login-erro.png)
+
+A mensagem é **de propósito** vaga. Se o sistema dissesse "usuário não encontrado", qualquer um poderia descobrir quem tem conta no escritório testando e-mails. Errar cinco vezes seguidas bloqueia aquele e-mail por um minuto — um freio simples contra tentativa de senha em massa.
+
+### 2. A agenda do dia
+
+![Agenda: contadores no topo, prazos ordenados por vencimento e a fila de avisos](docs/prototipos/painel-agenda.png)
+
+É a primeira tela depois do login, e responde à pergunta que o advogado faz ao chegar: **o que vence hoje?**
+
+- Os cinco contadores no topo separam o que é urgente (prazos vencidos, vencendo em até 3 dias) do que é trabalho acumulado (peças esperando revisão, rascunhos a retrabalhar).
+- A agenda lista os prazos **em aberto**, do mais próximo ao mais distante, com a etiqueta `fatal` ou `comum` e o advogado responsável. Prazo cumprido some daqui.
+- Embaixo, os avisos que o motor de prazos já emitiu — é a caixa de entrada do escritório.
+
+### 3. Achar o processo
+
+![Lista de processos com busca e formulário de cadastro](docs/prototipos/processos.png)
+
+Busca por número CNJ, cliente ou comarca. No cadastro, o responsável é **escolhido entre os usuários do escritório** — não é um nome digitado à mão, porque é a OAB dele que vai assinar as peças e receber os avisos.
+
+### 4. A ficha do processo: onde o trabalho acontece
+
+![Ficha do processo: cabeçalho, registrar andamento, abrir prazo, linha do tempo, prazos, peças e anexos](docs/prototipos/processo-ficha.png)
+
+Esta é a tela mais importante do sistema. Ela reúne, em uma página:
+
+- **O cabeçalho** com cliente, comarca, responsável e a última intimação — e a etiqueta `publico` ou `segredo`.
+- **Registrar andamento**: cada movimentação do processo (intimação, citação, audiência, despacho, sentença, juntada). Intimação e citação são as que **iniciam contagem de prazo**.
+- **Abrir prazo**: você informa a data da intimação, quantos dias e o regime; o sistema calcula o vencimento. Repare no texto da tela — ele explica a regra que está sendo aplicada, com os artigos do CPC. O usuário não precisa confiar cegamente.
+- **Linha do tempo** sempre em ordem cronológica, independente da ordem em que os andamentos foram digitados.
+- **Prazos, peças e anexos** daquele processo, cada um com o que falta fazer.
+
+Um detalhe que vale o olhar: o prazo "Contestacao" foi aberto com intimação em 12/09 e 15 dias úteis, e venceu em **02/10/2026** — o sistema pulou fins de semana e feriado. Ninguém contou no calendário de parede.
+
+### 5. O motor de prazos trabalhando
+
+O sistema não espera alguém olhar a agenda. Todo dia útil às 7h ele varre os prazos em aberto e avisa quem precisa ser avisado. Na tela, dá para simular uma data e rodar a mesma varredura na hora:
+
+![Varredura rodada simulando uma data: prazo vencido em vermelho e os avisos ATENCAO e VENCIDO](docs/prototipos/agenda-varredura.png)
+
+O que aconteceu aqui:
+
+- O prazo "Embargos de declaracao" venceu em 14/09 e ninguém cumpriu: a linha fica vermelha, o contador de vencidos sobe e sai um aviso **[VENCIDO] Prazo perdido** para o responsável. Perder prazo é grave; o sistema não deixa isso passar em silêncio nem depois do fato consumado.
+- O prazo "Contestacao" entrou na faixa de 5 dias e gerou um **[ATENCAO]**.
+- A faixa verde diz "2 alerta(s) emitido(s)". Rodar de novo no mesmo dia emite **zero** — cada nível de alerta é avisado uma única vez por prazo. Sem isso, o advogado receberia o mesmo aviso todo dia e pararia de ler.
+
+Os níveis são escalonados por dias úteis restantes: `ATENCAO` (≤5) → `URGENTE` (≤3) → `CRITICO` (≤1) → `VENCE_HOJE` (0) → `VENCIDO`. E, por política padrão do escritório, **só prazo fatal dispara alerta**: prazo comum aparece na agenda, mas não interrompe o dia de ninguém.
+
+### 6. Gerar a peça
+
+![Gerar peça: escolhido o modelo, a tela pede um campo por marcador do template](docs/prototipos/documentos-gerar.png)
+
+O advogado escolhe o processo, o tipo de peça e (opcionalmente) um modelo cadastrado. Quando escolhe o modelo `COBRANCA_ALUGUEL`, a tela **descobre sozinha** quais campos aquele modelo precisa (`enderecoImovel`, `valorDivida`) e pede só esses. Cliente, comarca, número do processo, advogado e OAB não são pedidos: já estão nos autos.
+
+E de onde vêm esses modelos? Do próprio escritório, sem programador:
+
+![Cadastro de modelo: corpo e pedidos com marcadores, e os campos detectados enquanto se digita](docs/prototipos/modelos.png)
+
+Você escreve o corpo e os pedidos usando `{{marcadores}}`. Enquanto digita, a linha de baixo mostra quais campos serão pedidos na hora de gerar — os que vêm dos autos aparecem riscados, porque o sistema já os conhece. A caixa "Endereça ao juízo" existe porque uma procuração não se dirige ao juiz: desmarcando, as seções de endereçamento, qualificação e fecho somem de uma vez.
+
+O que o modelo **não** controla é a ordem das seções (cabeçalho → endereçamento → qualificação → corpo → pedidos → assinatura). Isso é regra do domínio, não preferência de quem cadastra.
+
+### 7. A revisão do chefe
+
+Peça gerada nasce como **rascunho**. Ela não vai para o fórum antes de passar por gente:
+
+```
+RASCUNHO → EM_REVISAO → APROVADO ou REJEITADO → (aprovado) PROTOCOLADO
+```
+
+![Peça em revisão: o chefe vê o texto completo, aprova com comentário ou rejeita com motivo](docs/prototipos/documento-aprovacao.png)
+
+O chefe vê a peça inteira — com o esqueleto obrigatório preenchido e a assinatura do responsável — e decide. Aprovar aceita um comentário; **rejeitar exige um motivo**, porque devolver trabalho sem dizer o porquê não ajuda ninguém.
+
+Depois de aprovada, a tela muda:
+
+![Peça aprovada: botões Protocolar e Desfazer decisão, e o histórico de transições com autor e comentário](docs/prototipos/documento-aprovado.png)
+
+Os botões de aprovar/rejeitar desaparecem e surgem **Protocolar** e **Desfazer decisão**. Embaixo fica o histórico: quem mudou o quê, quando, com qual OAB e com qual comentário. Nada se perde — inclusive um "desfazer", que volta a peça para revisão e **fica registrado** em vez de sumir.
+
+Quem é advogado e não chefe vê, no mesmo lugar, apenas "Aguardando revisao do chefe do escritorio".
+
+### 8. Juntar arquivos aos autos
+
+![Juntar arquivo: tipos aceitos, limite de tamanho e a lista de arquivos já juntados](docs/prototipos/anexos.png)
+
+Nem todo documento nasce dentro do sistema: procuração assinada, comprovante e laudo pericial chegam de fora. A tela diz claramente o que aceita (PDF, JPEG, PNG, texto, até 10 MB) — recusar na porta evita juntar aos autos um arquivo que o juízo não consegue abrir.
+
+Não existe botão de remover. **Documento juntado aos autos não se desanexa**: retirar peça dos autos depende de decisão judicial (desentranhamento), não de um clique.
+
+### 9. Segredo de justiça: a regra que o sistema não deixa esquecer
+
+Processo em segredo de justiça (CPC art. 189) só pode ser lido pelos advogados habilitados nos autos. Veja a mesma ficha de processo, agora com a advogada Ana logada — que **não** está habilitada:
+
+![Ficha de processo em segredo de justiça vista por advogada sem OAB habilitada: aviso vermelho](docs/prototipos/processo-sigiloso-sem-oab.png)
+
+O aviso vermelho não é decoração. A peça e o anexo desse processo respondem **403** para ela — na tela e também na API, se alguém tentar montar a requisição na mão. A checagem vive num Proxy pelo qual todo conteúdo restrito obrigatoriamente passa; é impossível esquecer de conferir, porque não existe caminho que desvie dele. Para liberar, um chefe habilita a OAB dela na peça.
+
+### 10. Feriados: o calendário que alimenta a contagem
+
+![Cadastro de feriados: recorrência, abrangência e a consulta "corre prazo em"](docs/prototipos/feriados.png)
+
+Aqui fica o motivo pelo qual a contagem de prazos acerta. Cada feriado tem:
+
+- **Quando incide**: data única (um ponto facultativo de 2026) ou todo ano na mesma data (Natal, Tiradentes).
+- **Onde vale**: nacional, estadual (UF) ou da comarca. Feriado de Olinda **não** suspende prazo que corre em Recife — e o sistema sabe disso porque conhece o foro do escritório.
+
+A caixinha "Corre prazo em" responde, para qualquer data, se aquele dia conta — é a forma mais direta de conferir o efeito de um cadastro.
+
+Duas decisões importantes: feriado cadastrado vale já na **próxima contagem**, sem reiniciar a aplicação; e **prazo já lançado não se move**, porque o vencimento foi congelado na abertura. Cadastrar um feriado hoje não pode mudar retroativamente uma data que o advogado já anotou na agenda.
+
+Fim de semana e recesso forense (20/12 a 20/01) não aparecem nessa lista: são regra de lei, ficam no código e ninguém pode apagá-los por engano.
+
+### 11. Pessoas: usuários, papéis e senha provisória
+
+![Gestão de usuários pelo chefe: cadastro com papel e senha provisória](docs/prototipos/usuarios.png)
+
+Só o chefe cadastra e remove usuários — com duas travas: ninguém remove a si mesmo, e o escritório não pode ficar sem nenhum chefe.
+
+A senha que o chefe define é **provisória**. Quando o novo usuário entra, o painel fica assim:
+
+![Primeiro acesso com senha provisória: só a tela Minha conta está disponível](docs/prototipos/senha-provisoria.png)
+
+Nada além de *Minha conta* funciona até ele trocar a senha — assim o chefe nunca sabe a senha definitiva de ninguém. Repare também no menu: Diego é `ADVOGADO`, então não existe "Administracao" ali.
+
+![Minha conta: troca de senha exigindo a senha atual](docs/prototipos/conta.png)
+
+E se um advogado digitar o endereço da tela de chefe direto na barra do navegador?
+
+![403: acesso negado, esta ação é reservada ao chefe do escritório](docs/prototipos/sem-permissao.png)
+
+Esconder o link do menu é conforto, não segurança. A proteção de verdade está no servidor, e o teste cobre os dois caminhos.
+
+### 12. Administração: o escritório inteiro em uma tela
+
+`/painel/admin`, reservada ao chefe. Antes dela, saber o que o sistema guardava exigia passar por seis telas — e três cadastros (cliente, parte contrária e audiência) **não tinham tela nenhuma**, só API REST.
+
+![Administração: contadores, o que exige atenção, atalhos e ficha da instância](docs/prototipos/admin-panorama.png)
+
+No topo, os contadores de doze cadastros, cada um ancorado na sua tabela. Os que exigem ação mudam de cor: prazo vencido fica vermelho; peça aguardando revisão e usuário com senha provisória ficam âmbar. A "ficha da instância" (perfil ativo, banco, Flyway, tempo no ar) responde "qual banco esta instância está usando?" sem abrir terminal.
+
+![Administração: usuários, processos, prazos (com os cumpridos), peças e anexos](docs/prototipos/admin-cadastros.png)
+
+Depois vêm as tabelas, uma seção por cadastro. Os prazos trazem os **já cumpridos** (etiqueta verde), que a agenda do dia esconde, e os vencidos em aberto aparecem com a linha em vermelho.
+
+![Administração: clientes, partes contrárias, audiências e contratos de honorário](docs/prototipos/admin-relacionados.png)
+
+Os três cadastros sem tela própria aparecem aqui, inclusive os desativados, marcados pela etiqueta de situação.
+
+![Administração: modelos, feriados e avisos emitidos](docs/prototipos/admin-apoio.png)
+
+E, no fim, o que sustenta o resto: modelos de peça, o calendário forense que alimenta a contagem de prazos e a fila de avisos emitidos por esta instância.
+
+**Três decisões desta tela que valem a discussão:**
+
+- **A tela só lê.** Criar e remover continua em cada cadastro, que é onde a regra vive: remover usuário não pode deixar o escritório sem chefe; remover feriado muda a contagem de prazo de todo mundo. Duplicar esses formulários aqui duplicaria a regra — ou, pior, deixaria uma cópia sem ela.
+- **Consulta própria, em vez de reaproveitar as do dia a dia.** As listagens existentes servem à tela do dia e por isso escondem o que já saiu de cena (a agenda só devolve prazo em aberto; cliente, parte e audiência filtram os ativos). Mudar esses métodos para trazer tudo estragaria as telas que dependem deles. Foram criadas operações novas — `PrazosUseCases.ListarTodosOsPrazos`, `listarTodosOsClientes()`, `listarTodasAsPartesContrarias()`, `listarTodasAsAudiencias()` — e as antigas ficaram como estavam.
+- **`ConsultarPanorama` não fala com repositório.** O `PanoramaAppService` compõe casos de uso que já existem; nenhuma consulta nova desce à persistência por fora das portas. Assim a tela não vira um segundo caminho até o banco, com regra de leitura própria.
+
+E o que ela não deixa vazar: `@SomenteChefe` na classe (advogado que montar a URL recebe `403`); a senha codificada não entra no panorama e portanto não chega ao HTML (`AdminHttpTest` falha se chegar); a URL do banco é mostrada sem os parâmetros, que em alguns drivers carregam credencial.
+
+---
+
+## As regras que o domínio faz cumprir
+
+Cada regra abaixo tem teste de unidade ou cenário BDD. Artigos citados são do CPC/2015.
 
 **Processo e andamentos**
-- Processo tem número **CNJ** válido (`NNNNNNN-DD.AAAA.J.TR.OOOO`), cliente, comarca e **um advogado responsável** (nome, e-mail, OAB); número é único.
+- Processo tem número **CNJ** válido (`NNNNNNN-DD.AAAA.J.TR.OOOO`), cliente, comarca e **um advogado responsável** (nome, e-mail, OAB); o número é único.
 - Pode nascer em **segredo de justiça** (art. 189): a OAB do responsável fica habilitada nos autos; qualquer outra precisa ser habilitada pelo chefe.
 - Andamento tem data, descrição e tipo (intimação, citação, audiência, despacho, sentença, juntada, outro). A linha do tempo é sempre **cronológica**, independente da ordem de registro.
 - **Intimação e citação** são os andamentos que iniciam contagem de prazo; registrar andamento avisa o responsável.
 
 **Prazos (motor de prazos)**
 - Prazo tem descrição, data da intimação, quantidade de dias (≥ 1), regime e é **fatal** ou comum; o responsável é o do processo.
-- Regime **dias úteis** (art. 219, regra para prazos processuais) ou **dias corridos** (prazos materiais).
+- Regime **dias úteis** (art. 219, para prazos processuais) ou **dias corridos** (prazos materiais).
 - **Termo inicial**: o primeiro dia útil seguinte à intimação (art. 224); o vencimento cai no último dia da contagem e, se for dia sem expediente, prorroga para o próximo útil.
-- Não contam como dia útil: **fim de semana**, **feriados** do calendário que valem para o foro (nacional, da UF ou da comarca) e o **recesso forense de 20/12 a 20/01** (art. 220). Fim de semana e recesso são regra de lei, não cadastráveis.
+- Não contam como dia útil: **fim de semana**, **feriados** que valem para o foro (nacional, da UF ou da comarca) e o **recesso forense de 20/12 a 20/01** (art. 220). Fim de semana e recesso são regra de lei, não cadastráveis.
 - O vencimento é **calculado e congelado na abertura**: cadastrar ou remover feriado depois não move prazo já lançado.
 - Alertas por dias contáveis restantes: `ATENCAO` (≤ 5), `URGENTE` (≤ 3), `CRITICO` (≤ 1), `VENCE_HOJE` (0) e `VENCIDO` (em aberto após o vencimento). Sempre o mais severo aplicável.
 - **Idempotência por marco**: cada nível é avisado uma única vez por prazo — rodar a varredura duas vezes no dia não repete aviso.
-- Política padrão do escritório: **só prazo fatal gera alerta**; prazo comum entra na agenda mas não dispara aviso (política "inclusiva" existe para quem quiser).
+- Política padrão do escritório: **só prazo fatal gera alerta**; prazo comum entra na agenda mas não dispara aviso (existe uma política "inclusiva" para quem quiser o contrário).
 - Prazo **cumprido** sai da varredura e não pode ser cumprido de novo.
-- A varredura roda todo dia útil às 7h e também sob demanda, pelo mesmo caso de uso; notificação segue para painel, e-mail (log) e trilha de auditoria em banco.
+- A varredura roda todo dia útil às 7h e também sob demanda, pelo mesmo caso de uso; a notificação segue para painel, e-mail (log) e trilha de auditoria em banco.
 
 **Peças (geração de documentos)**
 - Toda peça tem o mesmo **esqueleto**: cabeçalho, endereçamento, qualificação, corpo, pedidos e assinatura com nome e OAB do responsável. A ordem é regra do domínio e não pode ser alterada por modelo.
@@ -71,7 +279,7 @@ Consolidação das regras que o domínio faz cumprir (cada uma tem teste de unid
 - Editar ou remover modelo não altera peça já gerada (a peça persiste o próprio texto). Remover modelo é ação do chefe.
 
 **Anexos**
-- Aceitos: **PDF, JPEG, PNG e texto**, até **10 MB**; tipo é conferido pelo `Content-Type` e a extensão correta é garantida no nome.
+- Aceitos: **PDF, JPEG, PNG e texto**, até **10 MB**; o tipo é conferido pelo `Content-Type` e a extensão correta é garantida no nome.
 - O nome do arquivo é saneado: caminho de diretório (`../`) é descartado.
 - O anexo **copia** segredo de justiça e OABs habilitadas do processo **no momento da juntada**; a leitura passa pelo mesmo Proxy das peças.
 - Não existe remoção de anexo: documento juntado aos autos não se desanexa (desentranhamento é decisão judicial).
@@ -87,8 +295,8 @@ Consolidação das regras que o domínio faz cumprir (cada uma tem teste de unid
 - Quota litis acima de **30 %** é recusada (limite ético do Código de Ética da OAB).
 
 **Audiências, clientes e partes contrárias**
-- Audiência tem processo, parte autora, início, fim (posterior ao início) e sala; **duas audiências não se sobrepõem na mesma sala**; edição respeita a mesma regra e conflitos podem ser consultados antes de gravar.
-- Cliente (pessoa física ou jurídica) tem CPF/CNPJ **único**; exclusão é lógica (inativa) e reativação é possível; edição é parcial (campo omitido mantém o valor).
+- Audiência tem processo, parte autora, início, fim (posterior ao início) e sala; **duas audiências não se sobrepõem na mesma sala**; a edição respeita a mesma regra e conflitos podem ser consultados antes de gravar.
+- Cliente (pessoa física ou jurídica) tem CPF/CNPJ **único**; a exclusão é lógica (inativa) e a reativação é possível; a edição é parcial (campo omitido mantém o valor).
 - Parte contrária segue o mesmo modelo, sem unicidade de documento.
 
 **Acesso**
@@ -97,155 +305,13 @@ Consolidação das regras que o domínio faz cumprir (cada uma tem teste de unid
 - Ninguém remove a si mesmo, e o escritório precisa de **ao menos um chefe**.
 - 5 falhas de login seguidas bloqueiam o e-mail por 1 minuto; e-mail desconhecido e senha errada recebem a mesma resposta.
 
+---
+
+## Como o praxis é construído
+
 **Stack:** Java 17 · Spring Boot 4.1.1 (WebMVC, Data JPA, Validation, Thymeleaf) · H2 (dev/test) · PostgreSQL + Flyway (prod) · JUnit 5 · Cucumber 7 · Maven Wrapper.
 
-## Como rodar
-
-```bash
-./mvnw test            # 161 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
-./mvnw spring-boot:run # sobe em http://localhost:8080
-```
-
-- Interface web: <http://localhost:8080/painel> (pede login; veja [Acesso ao painel](#acesso-ao-painel-advogados-e-chefes))
-- Console do banco: <http://localhost:8080/h2-console> (`jdbc:h2:mem:praxis`, usuário `sa`, sem senha)
-- A aplicação sobe com carga de exemplo (dois processos, um deles em segredo de justiça, e três prazos em estados diferentes). Desligue com `praxis.dados-exemplo=false`.
-- O calendário nasce com os feriados nacionais, mais um estadual e um comarcal de exemplo. Desligue com `praxis.feriados-iniciais=false`.
-- O foro do escritório define quais feriados estaduais e comarcais contam: `praxis.foro.uf=PE` e `praxis.foro.comarca=Recife`.
-
-### Produção: PostgreSQL + Flyway
-
-```bash
-SPRING_PROFILES_ACTIVE=prod PRAXIS_DB_URL=jdbc:postgresql://localhost:5432/praxis PRAXIS_DB_USER=praxis PRAXIS_DB_PASSWORD=segredo PRAXIS_SENHA_INICIAL=troque-ja ./mvnw spring-boot:run
-```
-
-- O esquema é versionado em [`src/main/resources/db/migration`](src/main/resources/db/migration) (`V1__esquema_inicial.sql`); o Hibernate roda com `ddl-auto=validate`, então toda mudança de entidade exige uma nova `V{n}__*.sql`.
-- Em dev/test o Flyway fica desligado e o H2 em memória segue com `ddl-auto=update`. `MigracaoFlywayTest` sobe a aplicação com H2 em modo PostgreSQL, aplica a migração e deixa o Hibernate validar — migração e entidades não divergem sem um teste quebrar.
-- Binário e texto longo são `bytea`/`text` (colunas comuns), não large objects (`oid`): entram em backup e transação como qualquer coluna.
-- No perfil prod os usuários iniciais nascem com **senha provisória** (`praxis.exigir-troca-senha-inicial=true`): o primeiro acesso cai na troca de senha; a carga de exemplo não roda; cookie de sessão `Secure`.
-
-## Funcionalidades implementadas nesta entrega
-
-### 1. Motor de prazos processuais com alertas (complexidade alta)
-
-- Contagem legal em **dias úteis** (CPC art. 219) ou **dias corridos**, com termo inicial no primeiro dia útil seguinte à intimação (art. 224), feriados e **recesso forense** de 20/12 a 20/01 (art. 220).
-- Vencimento **congelado** na abertura do prazo: alterar o calendário depois não move prazo já lançado.
-- Alerta **escalonado** por dias contáveis restantes: `ATENCAO` (≤5), `URGENTE` (≤3), `CRITICO` (≤1), `VENCE_HOJE` (0) e `VENCIDO` (em aberto após o vencimento, aviso de perda) — sempre o nível mais severo aplicável.
-- **Idempotência por marco**: cada nível é notificado uma única vez por prazo, então rodar a varredura duas vezes no mesmo dia não gera aviso repetido.
-- Varredura automática todo dia útil às 7h (`@Scheduled`) e endpoint manual que chama **o mesmo caso de uso**.
-- Notificação entregue por cadeia de canais (painel, e-mail, trilha de auditoria em banco).
-- Cumprimento de prazo retira o item da varredura.
-
-### 2. Geração de documentos por template (complexidade alta)
-
-- Petição inicial, contestação e procuração a partir de template com esqueleto fixo.
-- Peça gerada é persistida, listada por processo e baixável em texto.
-- Documento herda o **segredo de justiça** do processo e a lista de OABs habilitadas nos autos; leitura por OAB não habilitada é bloqueada (CPC art. 189) — verificado também via HTTP (`403`).
-- Geração avisa o advogado responsável.
-
-### 3. Cadastro de feriados
-
-- Feriado com **data única** (ponto facultativo de um ano só) ou **recorrência anual fixa** (Natal, Tiradentes), escolhido por Strategy.
-- **Abrangência** nacional, estadual (UF) ou da comarca: feriado de Olinda não suspende prazo que corre em Recife.
-- O calendário forense passou a ser montado sobre o cadastro, e não sobre lista fixa no código: **feriado cadastrado vale na contagem seguinte, sem reiniciar** a aplicação.
-- Prazo **já lançado não se move**, porque o vencimento fica congelado na abertura — verificado em cenário BDD.
-- Fim de semana e recesso forense (art. 220) continuam no código, como regras de lei que o usuário não pode apagar por engano.
-- Carga de referência com os feriados nacionais na subida, mais um exemplo estadual (PE) e um comarcal (Recife).
-
-### 4. Cadastro de modelos de documento
-
-- O escritório cadastra **corpo** e **pedidos** com marcadores `{{campo}}`, e passa a gerar peça nova **sem alterar código**.
-- Modelo cadastrado **coexiste** com as peças compiladas: `GeradorPorModelo` é mais uma subclasse do Template Method, então `gerar()` segue `final` e a ordem das seções continua sendo regra do domínio, não escolha do usuário.
-- Marcadores resolvidos por **Interpreter**: `cliente`, `comarca`, `processo`, `advogado` e `oab` vêm dos autos automaticamente; os demais são cobrados na geração e o cadastro informa **quais campos cada modelo espera**.
-- Campo não informado vira marcador visível na peça (`(valorDivida a preencher)`) em vez de lacuna silenciosa.
-- Modelo que **não se endereça ao juízo** abandona as três seções do juízo de uma vez (endereçamento, qualificação e fecho), como a `Procuracao` faz — só que decidido pelo cadastro.
-- O `TipoDocumento` da peça registrada nos autos vem do **modelo**, não do pedido. `PECA_AVULSA` existe para o que não é petição, contestação nem procuração.
-- Editar modelo não altera peça já gerada, porque o documento persiste o próprio conteúdo.
-- Sobe com dois modelos de exemplo (`COBRANCA_ALUGUEL` e `ACORDO_EXTRAJUDICIAL`). Desligue com `praxis.modelos-iniciais=false`.
-
-### 5. Upload e anexação de arquivos ao processo
-
-- Arquivo recebido de fora (procuração assinada, comprovante, laudo) é juntado aos autos e guardado **no banco**, em BLOB.
-- **Agregado próprio** (`ArquivoAnexo`), e não um documento gerado com bytes: a peça nasce de template e tem seções; o anexo é binário opaco, com nome original, tipo e tamanho.
-- O que os dois têm em comum é só a **regra de acesso**, extraída em `ConteudoRestrito`: o mesmo Proxy do segredo de justiça protege peça gerada e anexo, sem duplicar a checagem do art. 189.
-- O anexo copia segredo de justiça e OABs habilitadas do processo **no momento da juntada** — anexo juntado quando os autos eram públicos não passa a ser sigiloso depois.
-- Tipos aceitos são uma lista curta (PDF, JPEG, PNG, texto) e o limite é de 10 MB: autos eletrônicos não recebem binário qualquer, e recusar na porta evita anexo que o juízo não abre.
-- O nome vem do computador de quem envia, então **não é confiável**: caminho de diretório é descartado (bloqueia `../`) e a extensão do tipo aceito é garantida.
-- Juntada avisa o advogado responsável, pelo mesmo Observer dos demais eventos.
-- Não existe caso de uso de remoção: documento juntado aos autos não se desanexa — retirar peça depende de decisão judicial (desentranhamento), que não é operação de tela.
-
-### 6. Acesso ao painel: advogados e chefes
-
-- Todo o painel (`/painel/**`) exige **login por e-mail e senha**; a sessão HTTP guarda só uma projeção do usuário (nome, OAB e papel), nunca a senha.
-- Dois **papéis**: `ADVOGADO` conduz os autos (gera peça, envia para revisão, protocola, junta anexo, cadastra feriado e modelo); `CHEFE` (sócio/coordenador) faz tudo isso e ainda **aprova, rejeita e desfaz decisão** sobre peça, **habilita OAB** em peça sigilosa e **remove** feriado e modelo.
-- A **OAB do solicitante deixou de ser digitada nas telas**: sai da sessão. O Proxy de segredo de justiça passa a conferir quem realmente está logado.
-- Ação do chefe é marcada com `@SomenteChefe` e barrada pelo `SessaoInterceptor` com `403`, mesmo que o advogado monte o POST na mão; a tela apenas esconde o botão.
-- Senha protegida com **PBKDF2-HMAC-SHA256** (sal por usuário, 120 mil iterações) do próprio JDK, atrás da porta de domínio `CodificadorDeSenha` — o agregado `Usuario` não sabe o algoritmo.
-- E-mail desconhecido e senha errada recebem a **mesma mensagem**, para não revelar quem tem conta; destino pós-login só aceita caminho interno do painel; a sessão é recriada ao autenticar (evita fixação).
-- A **API REST continua aberta** e recebendo a OAB na requisição, como antes — é o contrato dos testes HTTP e dos scripts abaixo.
-- O **fluxo de aprovação** de peça (rascunho → em revisão → aprovado/rejeitado → protocolado), antes só na API, agora está na tela de documentos, com histórico de transições.
-- **Gestão de usuários** pela tela (`/painel/usuarios`, chefe): cadastrar com senha provisória e remover — nunca a si mesmo nem o último chefe. **Minha conta** (`/painel/conta`): troca de senha exigindo a atual; a sessão é encerrada para entrar de novo.
-- **Freio de força bruta** no login: 5 falhas seguidas para o mesmo e-mail bloqueiam aquele e-mail por 1 minuto.
-- **CSRF**: todo POST do painel (e o `/sair`) leva um token sincronizado com a sessão (`_csrf` hidden ou cabeçalho `X-CSRF-Token`); sem ele, `403`. Sessão só por cookie (`HttpOnly`, `SameSite=Lax`, sem `;jsessionid` em URL).
-- **Cabeçalhos de segurança** em toda resposta: `Content-Security-Policy` (`script-src 'self'`, `frame-ancestors 'none'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, e `Cache-Control: no-store` nas páginas autenticadas. Por isso as telas não têm JavaScript inline: o comportamento (confirmações, anti-duplo-clique) está em `/js/praxis.js` via atributos `data-*`.
-- **Senha provisória**: usuário cadastrado pelo chefe entra e só consegue abrir *Minha conta* até trocar a senha; ao trocar, a flag cai.
-- **Tela de processos** (`/painel/processos`): cadastrar processo escolhendo o responsável entre os usuários, ficha com linha do tempo (Iterator), prazos, peças e anexos; registrar andamento e abrir prazo pela tela — antes só via API.
-- **Resumo do dia** no painel: prazos vencidos, críticos, sob sua responsabilidade, peças aguardando revisão e rascunhos a retrabalhar.
-- **Administração** (`/painel/admin`, chefe): o escritório inteiro em uma tela, detalhada em [7. Administração](#7-administração-o-escritório-inteiro-em-uma-tela).
-
-#### Acesso ao painel (advogados e chefes)
-
-A aplicação sobe com três usuários (desligue com `praxis.usuarios-iniciais=false`; a senha inicial é `praxis.senha-inicial`, padrão `praxis123` — troque em produção):
-
-| Papel | Nome | E-mail | OAB |
-|---|---|---|---|
-| Chefe (admin) | Administrador | `admin` (ou `admin@praxis.adv.br`), senha `123` — `praxis.admin.*`; em prod só existe com `PRAXIS_ADMIN_SENHA` | ADMIN |
-| Chefe | Carla Mendes | `carla.mendes@praxis.adv.br` | PE00001 |
-| Advogado | Ana Beatriz Souza | `ana.souza@praxis.adv.br` | PE12345 (responsável pelo processo público de exemplo) |
-| Advogado | Bruno Carvalho | `bruno.carvalho@praxis.adv.br` | PE54321 (responsável pelo processo em segredo de justiça) |
-
-No login basta o nome do usuário (`admin`, `ana.souza`): sem `@`, o domínio `praxis.dominio-email` é completado. Entre como Bruno para ler a peça sigilosa; como Ana, o Proxy recusa. Entre como Carla (ou admin) para aprovar a peça que Ana enviou para revisão.
-
-Funcionalidades de apoio já no repositório: cadastro de processo, registro de andamento com linha do tempo cronológica, e cálculo de honorários (fixo, por hora, quota litis com limite ético de 30%).
-
-### 7. Administração: o escritório inteiro em uma tela
-
-`/painel/admin`, reservada ao chefe. Antes dela, saber o que o sistema guardava exigia passar por seis telas — e três cadastros (cliente, parte contrária e audiência) **não tinham tela nenhuma**, só a API REST. A tela resolve isso com uma consulta só.
-
-**O que ela mostra**
-
-- **Contadores** de doze cadastros no topo, cada um ancorado na sua tabela. Os que exigem ação mudam de cor: prazo vencido fica vermelho, peça aguardando revisão e usuário com senha provisória ficam âmbar.
-- **O que exige atenção**: prazos vencidos em aberto, peças na fila de revisão, usuários que ainda não trocaram a senha provisória, processos em segredo de justiça e o total de andamentos registrados.
-- **Tabelas completas**: usuários, processos, prazos, peças geradas, anexos, clientes, partes contrárias, audiências, contratos de honorário, modelos, feriados e os avisos emitidos pelo notificador de painel.
-- **Ficha da instância** em execução: perfil ativo, URL do banco, `ddl-auto`, Flyway ligado ou não, dados de exemplo, domínio de e-mail, versão do Java e tempo no ar. É diagnóstico — responde "qual banco esta instância está usando?" sem abrir o terminal.
-- **Atalhos** para as telas onde se cadastra e se remove.
-
-![Administração: contadores, o que exige atenção, atalhos e ficha da instância](docs/prototipos/admin-panorama.png)
-
-Depois do topo vêm as tabelas, uma seção por cadastro. Os prazos trazem os já cumpridos (etiqueta verde), que a agenda do dia esconde, e os vencidos em aberto aparecem com a linha em vermelho:
-
-![Administração: usuários, processos, prazos, peças e anexos](docs/prototipos/admin-cadastros.png)
-
-Os três cadastros que não têm tela própria — cliente, parte contrária e audiência — aparecem aqui com os desativados juntos, marcados pela etiqueta de situação:
-
-![Administração: clientes, partes contrárias, audiências e contratos de honorário](docs/prototipos/admin-relacionados.png)
-
-No fim, o que sustenta o resto: modelos de peça, o calendário forense que alimenta a contagem de prazos e a fila de avisos emitidos por esta instância.
-
-![Administração: modelos, feriados e avisos emitidos](docs/prototipos/admin-apoio.png)
-
-**Três decisões que valem a defesa**
-
-- **A tela só lê.** Criar e remover continua em cada cadastro, que é onde a regra vive: remover usuário não pode deixar o escritório sem chefe, remover feriado muda a contagem de prazo de todo mundo. Duplicar esses formulários aqui duplicaria a regra — ou, pior, deixaria uma cópia sem ela.
-- **Consulta própria, em vez de reaproveitar as do dia a dia.** As listagens existentes servem à tela do dia e por isso escondem o que já saiu de cena: a agenda só devolve prazo em aberto (`cumprido = false`) e cliente, parte contrária e audiência filtram os ativos. Mudar esses métodos para trazer tudo estragaria as telas que dependem deles. Foram criadas operações novas — `PrazosUseCases.ListarTodosOsPrazos`, `listarTodosOsClientes()`, `listarTodasAsPartesContrarias()`, `listarTodasAsAudiencias()` — e as antigas ficaram como estavam.
-- **`ConsultarPanorama` não fala com repositório.** O `PanoramaAppService` compõe os casos de uso de listagem que já existem; nenhuma consulta nova desce à persistência por fora das portas. Assim a tela não vira um segundo caminho até o banco, com regra de leitura própria.
-
-**O que ela não deixa vazar**
-
-- `@SomenteChefe` na classe: advogado que montar a URL na mão recebe `403` do `SessaoInterceptor`. Esconder o link no menu é conforto, não proteção — e o teste cobre os dois.
-- A senha codificada não entra no panorama, então não chega ao HTML (`AdminHttpTest` falha se chegar).
-- A URL do banco é mostrada sem a parte de parâmetros, que em alguns drivers carrega credencial. Usuário e senha do banco nunca aparecem.
-
-## Arquitetura limpa
+### Arquitetura limpa
 
 ```
 presentation/   REST (/api/**) e web Thymeleaf (/painel/**, login e guarda de sessão) — só traduz HTTP em caso de uso
@@ -254,20 +320,24 @@ domain/         processo, prazo, documento, modelo, anexo, feriado, notificacao,
 infrastructure/ persistence (JPA + mappers + adapters), notificacao, scheduler, seguranca (PBKDF2), config
 ```
 
-Regra de dependência: **nada no `domain` importa Spring ou JPA**. As entidades JPA vivem em `infrastructure.persistence.entity` e o `PersistenciaMapper` traduz nos dois sentidos; quem instancia e liga as classes de domínio é `infrastructure.config.DominioConfig`.
+A regra de dependência é fácil de enunciar e fácil de verificar: **nada no `domain` importa Spring ou JPA**. As entidades JPA vivem em `infrastructure.persistence.entity` e o `PersistenciaMapper` traduz nos dois sentidos; quem instancia e liga as classes de domínio é `infrastructure.config.DominioConfig`.
 
-## DDD nos quatro níveis
+Na prática, isso significa que a regra do art. 219 do CPC é testável sem subir Spring, sem banco e sem HTTP.
+
+### DDD nos quatro níveis
 
 | Nível | Onde está |
 |---|---|
-| Preliminar | [`docs/dominio.md`](docs/dominio.md) — problema, e por que estas duas funcionalidades primeiro |
+| Preliminar | [`docs/dominio.md`](docs/dominio.md) — o problema, e por que estas duas funcionalidades primeiro |
 | Estratégico | 4 subdomínios / bounded contexts e suas relações — [`docs/praxis.cml`](docs/praxis.cml) (Context Mapper) |
 | Tático | Agregados `Processo`, `Prazo`, `DocumentoGerado`, `Feriado`, `ModeloDocumento`, `ArquivoAnexo`, `Usuario`; VOs `NumeroCnj`, `Advogado`, `AlertaPrazo`, `BaseCalculo`, `Abrangencia`, `Jurisdicao`, `CodigoModelo`, `TextoModelo`; núcleo compartilhado `ConteudoRestrito`; serviços `MotorDePrazos`, `CalendarioForense`; eventos em `EventoProcesso` |
 | Operacional | Casos de uso em `application.usecase`, job de varredura, endpoints REST e telas |
 
-Linguagem onipresente preservada no código: processo, andamento, intimação, citação, prazo fatal, termo inicial, dias úteis, recesso forense, cumprir, peça, endereçamento, qualificação, procuração ad judicia, segredo de justiça, OAB habilitada, quota litis, feriado, abrangência, comarca, foro.
+A linguagem onipresente foi preservada no código, não traduzida para jargão de programador: processo, andamento, intimação, citação, prazo fatal, termo inicial, dias úteis, recesso forense, cumprir, peça, endereçamento, qualificação, procuração ad judicia, segredo de justiça, OAB habilitada, quota litis, feriado, abrangência, comarca, foro.
 
-## Padrões de projeto (os 6 da lista do enunciado, mais Composite e Interpreter)
+### Padrões de projeto
+
+Os 6 padrões da lista do enunciado, mais Composite e Interpreter. Cada um entrou por um problema real — nenhum foi encaixado depois para cumprir tabela.
 
 | Padrão | Onde | Problema real que resolve |
 |---|---|---|
@@ -280,21 +350,35 @@ Linguagem onipresente preservada no código: processo, andamento, intimação, c
 | **Proxy** | `ProxyDeAcesso` sobre `ConteudoRestrito`, especializado em `DocumentoProxy` e `ArquivoProxy` | Segredo de justiça conferido antes de o conteúdo sair da persistência; impossível esquecer a checagem, porque o caso de uso só tem acesso ao Proxy. A regra do art. 189 é escrita uma vez e vale para peça gerada e arquivo anexado |
 | **Iterator** | `Processo implements Iterable<Andamento>` | Linha do tempo em ordem cronológica sem expor a coleção interna |
 
-## BDD
+### Segurança do painel
 
-Cenários em português em [`src/test/resources/features`](src/test/resources/features), automatizados com Cucumber + Spring (`src/test/java/school/cesar/praxis/bdd`). Os steps exercitam os casos de uso reais contra o banco, não dublês.
+- Login próprio por sessão HTTP (sem Spring Security). A sessão guarda só uma projeção do usuário (nome, OAB, papel) — nunca a senha.
+- Senha com **PBKDF2-HMAC-SHA256** (sal por usuário, 120 mil iterações) do próprio JDK, atrás da porta de domínio `CodificadorDeSenha`: o agregado `Usuario` não sabe o algoritmo.
+- Ação de chefe é marcada com `@SomenteChefe` e barrada pelo `SessaoInterceptor` com `403`, mesmo que o POST seja montado na mão.
+- **CSRF** em todo POST do painel (`_csrf` hidden ou cabeçalho `X-CSRF-Token`); sessão só por cookie (`HttpOnly`, `SameSite=Lax`, sem `;jsessionid` na URL) e recriada ao autenticar (evita fixação).
+- **Cabeçalhos de segurança** em toda resposta: `Content-Security-Policy` (`script-src 'self'`, `frame-ancestors 'none'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` e `Cache-Control: no-store` nas páginas autenticadas. É por isso que as telas não têm JavaScript inline: o comportamento (confirmações, anti-duplo-clique) mora em `/js/praxis.js` e é ligado por atributos `data-*`.
 
-> **Dado** um processo com prazo fatal em 5 dias úteis, **quando** faltarem 3 dias, **então** o advogado responsável deve ser notificado.
+---
+
+## Testes e BDD
 
 ```
 53 scenarios (53 passed)
 481 steps (481 passed)
-Tests run: 161, Failures: 0, Errors: 0
+Tests run: 168, Failures: 0, Errors: 0
 ```
 
-Os cenários chamam os casos de uso, então não cobrem o corpo da requisição dos controllers. `ModeloHttpTest`, `AnexoHttpTest` e `LoginHttpTest` fecham essa lacuna pelo mesmo caminho do navegador (MockMvc) — foi assim que apareceram um `codigoModelo` faltando no `record` de requisição e um `500` onde devia haver `400`, ambos invisíveis para o BDD.
+Os cenários são escritos em português, em [`src/test/resources/features`](src/test/resources/features), e automatizados com Cucumber + Spring (`src/test/java/school/cesar/praxis/bdd`). Os steps exercitam os casos de uso reais contra o banco, não dublês.
 
-## Endpoints
+> **Dado** um processo com prazo fatal em 5 dias úteis, **quando** faltarem 3 dias, **então** o advogado responsável deve ser notificado.
+
+Como os cenários chamam os casos de uso, eles não cobrem o corpo da requisição dos controllers. `ModeloHttpTest`, `AnexoHttpTest` e `LoginHttpTest` fecham essa lacuna pelo mesmo caminho do navegador (MockMvc) — foi assim que apareceram um `codigoModelo` faltando no `record` de requisição e um `500` onde devia haver `400`, ambos invisíveis para o BDD.
+
+---
+
+## A API REST
+
+O painel é a interface para gente; a API é o contrato para scripts e testes.
 
 ```
 POST /api/processos                            cadastra processo + responsável
@@ -331,25 +415,13 @@ POST /api/documentos/{id}/protocolar           aprovado -> protocolado
 POST /api/documentos/{id}/oabs                 {oab}  habilita OAB nos autos da peça (chefe)
 ```
 
-**Leitura é aberta; mutação exige a sessão do painel.** `GET`, `HEAD`, `OPTIONS` e
-`TRACE` em `/api/**` passam sem autenticar. Todo `POST`, `PUT`, `PATCH` e `DELETE`
-passa pelo `SessaoApiInterceptor`: sem sessão é `401`, sem o token CSRF (parâmetro
-`_csrf` ou cabeçalho `X-CSRF-Token`) é `403`, senha provisória é `403` e ação de
-chefe pedida por advogado é `403`. A recusa sai como `{"erro": ...}` — nunca um
-redirect para `/login`, que um script leria como sucesso.
+Existem ainda `/api/clientes`, `/api/partes-contrarias`, `/api/audiencias` e `/api/honorarios` — os três cadastros sem tela própria mais os contratos de honorário.
 
-A OAB de quem age **vem sempre da sessão**, nunca do corpo: gerar peça, aprovar,
-rejeitar e juntar anexo usam a inscrição de quem está logado. Continuam vindo da
-requisição as duas OABs que são de terceiro ou de leitura: a de `POST /api/documentos/{id}/oabs`
-(o chefe habilitando outro advogado nos autos) e a de `?oab=` nos downloads, que é
-o que o Proxy confere.
+**Leitura é aberta; mutação exige a sessão do painel.** `GET`, `HEAD`, `OPTIONS` e `TRACE` em `/api/**` passam sem autenticar. Todo `POST`, `PUT`, `PATCH` e `DELETE` passa pelo `SessaoApiInterceptor`: sem sessão é `401`, sem o token CSRF (parâmetro `_csrf` ou cabeçalho `X-CSRF-Token`) é `403`, senha provisória é `403` e ação de chefe pedida por advogado é `403`. A recusa sai como `{"erro": ...}` — nunca um redirect para `/login`, que um script leria como sucesso.
 
-O `?oab=` deixa de ser campo livre para quem está logado: informar a inscrição de
-outro advogado é `403`, mesmo que ela esteja habilitada nos autos — senão bastaria
-a um advogado do escritório descobrir uma OAB habilitada para ler processo alheio.
-Sem sessão nada muda, e aí está o limite: **um chamador anônimo que saiba o id da
-peça e uma OAB habilitada ainda lê os autos sigilosos**, porque o `GET` é aberto por
-decisão de projeto. Fechar isso é exigir sessão nos dois downloads.
+A OAB de quem age **vem sempre da sessão**, nunca do corpo: gerar peça, aprovar, rejeitar e juntar anexo usam a inscrição de quem está logado. Continuam vindo da requisição as duas OABs que são de terceiro ou de leitura: a de `POST /api/documentos/{id}/oabs` (o chefe habilitando outro advogado nos autos) e a de `?oab=` nos downloads, que é o que o Proxy confere.
+
+O `?oab=` deixa de ser campo livre para quem está logado: informar a inscrição de outro advogado é `403`, mesmo que ela esteja habilitada nos autos — senão bastaria a um advogado do escritório descobrir uma OAB habilitada para ler processo alheio. Sem sessão nada muda, e aí está o limite: **um chamador anônimo que saiba o id da peça e uma OAB habilitada ainda lê os autos sigilosos**, porque o `GET` é aberto por decisão de projeto. Fechar isso é exigir sessão nos dois downloads.
 
 Numa sessão de terminal, o ritual é logar e reusar o cookie:
 
@@ -358,10 +430,10 @@ curl -c praxis.jar -d 'email=admin&senha=123' localhost:8080/login
 csrf=$(curl -s -b praxis.jar -c praxis.jar localhost:8080/painel \
   | grep -o 'name="_csrf" value="[^"]*"' | head -1 | cut -d'"' -f4)
 
-curl -b praxis.jar -H "X-CSRF-Token: $csrf" -X POST localhost:8080/api/... 
+curl -b praxis.jar -H "X-CSRF-Token: $csrf" -X POST localhost:8080/api/...
 ```
 
-Telas (exigem sessão):
+### Telas (todas exigem sessão)
 
 ```
 GET  /login                        formulário; POST /login autentica; POST /sair encerra
@@ -374,10 +446,12 @@ GET  /painel/modelos               cadastro de modelos (remover: chefe)
 GET  /painel/feriados              cadastro de feriados (remover: chefe)
 GET  /painel/usuarios              gestão de usuários (chefe)
 GET  /painel/conta                 minha conta; POST /painel/conta/senha troca a senha
-GET  /painel/admin                 administração (chefe): panorama de todos os cadastros e ficha da instância
+GET  /painel/admin                 administração (chefe): panorama dos cadastros e ficha da instância
 ```
 
-Exemplo:
+### Exemplos que mostram as regras funcionando
+
+O motor de prazos contando dias úteis e feriado:
 
 ```bash
 curl -X POST localhost:8080/api/prazos -H 'Content-Type: application/json' -d '{
@@ -389,7 +463,7 @@ curl -X POST 'localhost:8080/api/prazos/varredura?hoje=2026-09-09'
 # -> alerta URGENTE, 3 dias restantes
 ```
 
-O cadastro de feriados muda a contagem sem reiniciar a aplicação:
+O cadastro de feriados mudando a contagem sem reiniciar a aplicação:
 
 ```bash
 curl 'localhost:8080/api/feriados/dia-util?data=2026-10-15'
@@ -434,38 +508,54 @@ curl 'localhost:8080/api/anexos/1?oab=PE54321'   # -> 200, o arquivo
 curl 'localhost:8080/api/anexos/1?oab=PE99999'   # -> 403, barrado pelo Proxy
 ```
 
-Falha de domínio vira status HTTP correto (`TratadorDeErrosRest`): invariante violada
-pela requisição é `400` (inclusive data ou enum mal formados), agregado inexistente é `404`,
-segredo de justiça é `403`, transição de estado inválida (aprovar rascunho, cumprir prazo já
-cumprido) e violação de unicidade no banco são `409` — nunca `500`.
+Falha de domínio vira status HTTP correto (`TratadorDeErrosRest`): invariante violada pela requisição é `400` (inclusive data ou enum mal formados), agregado inexistente é `404`, segredo de justiça é `403`, transição de estado inválida (aprovar rascunho, cumprir prazo já cumprido) e violação de unicidade no banco são `409` — nunca `500`.
 
-## Documentação
+---
+
+## Rodar em produção: PostgreSQL + Flyway
+
+```bash
+SPRING_PROFILES_ACTIVE=prod PRAXIS_DB_URL=jdbc:postgresql://localhost:5432/praxis PRAXIS_DB_USER=praxis PRAXIS_DB_PASSWORD=segredo PRAXIS_SENHA_INICIAL=troque-ja ./mvnw spring-boot:run
+```
+
+- O esquema é versionado em [`src/main/resources/db/migration`](src/main/resources/db/migration) (`V1__esquema_inicial.sql`); o Hibernate roda com `ddl-auto=validate`, então toda mudança de entidade exige uma nova `V{n}__*.sql`.
+- Em dev/test o Flyway fica desligado e o H2 em memória segue com `ddl-auto=update`. `MigracaoFlywayTest` sobe a aplicação com H2 em modo PostgreSQL, aplica a migração e deixa o Hibernate validar — migração e entidades não divergem sem um teste quebrar.
+- Binário e texto longo são `bytea`/`text` (colunas comuns), não large objects (`oid`): entram em backup e transação como qualquer coluna.
+- No perfil prod os usuários iniciais nascem com **senha provisória** (`praxis.exigir-troca-senha-inicial=true`): o primeiro acesso cai na troca de senha; a carga de exemplo não roda; o cookie de sessão é `Secure`. O usuário `admin` só existe se `PRAXIS_ADMIN_SENHA` for definida.
+
+---
+
+## Mapa da documentação
 
 - [`docs/dominio.md`](docs/dominio.md) — descrição do domínio e linguagem onipresente, DDD nos 4 níveis
 - [`docs/mapa-historia-usuario.md`](docs/mapa-historia-usuario.md) — mapa da história do usuário
 - [`docs/praxis.cml`](docs/praxis.cml) — modelo dos subdomínios em Context Mapper (CML)
-- [`docs/prototipos/`](docs/prototipos/) — protótipos de alta fidelidade (capturas da interface real)
+- [`docs/prototipos/`](docs/prototipos/) — as capturas usadas neste README, e o script que as regera
 - [`docs/declaracao-uso-ia.md`](docs/declaracao-uso-ia.md) — declaração de uso de IA por participante do grupo
 - [`docs/Atividade-Requisitos-Praxis.pdf`](docs/Atividade-Requisitos-Praxis.pdf) — enunciado da atividade
 
-## Limites desta entrega
+---
+
+## O que esta entrega ainda não faz
+
+Limites conhecidos, ditos abertamente — todos com um ponto de troca identificado no código.
 
 - E-mail é registrado em log e memória (o `NotificadorEmail` é o ponto de troca por `JavaMailSender`).
 - Observadores são reanexados pela camada de aplicação a cada carregamento do agregado — suficiente para instância única, não para escala horizontal.
-- H2 em memória: dados se perdem no shutdown. Trocar para PostgreSQL altera apenas `application.properties`.
-- Autenticação é de sessão HTTP, própria (sem Spring Security), e vale só para o painel: a API REST continua recebendo a OAB na requisição. Não há recuperação de senha por e-mail: quem esquece pede ao chefe para recadastrar.
-- O freio de força bruta do login é em memória, por instância — suficiente para instância única.
-- `AgendaDeAudiencias` (domínio) não é usado pelo serviço de audiências, que consulta o repositório diretamente; a classe ficou como modelo de referência e as regras vigentes são as da JPQL.
-- Papel é binário (advogado/chefe); não há vínculo entre usuário e processo além da OAB, então qualquer advogado logado vê a agenda inteira do escritório.
-- Cliente, parte contrária e audiência continuam sem tela de cadastro: a administração (`/painel/admin`) mostra os três, inclusive os desativados, mas criar, editar e desativar segue só pela API REST.
+- H2 em memória: os dados se perdem no shutdown. Trocar para PostgreSQL altera apenas `application.properties` (ou usa o perfil `prod` acima).
+- A autenticação é de sessão HTTP, própria (sem Spring Security), e vale só para o painel: o `GET` da API REST segue aberto, recebendo a OAB de leitura na requisição. Não há recuperação de senha por e-mail: quem esquece pede ao chefe para recadastrar.
+- O freio de força bruta do login é em memória, por instância.
+- `AgendaDeAudiencias` (domínio) não é usada pelo serviço de audiências, que consulta o repositório diretamente; a classe ficou como modelo de referência e as regras vigentes são as da JPQL.
+- O papel é binário (advogado/chefe); não há vínculo entre usuário e processo além da OAB, então qualquer advogado logado vê a agenda inteira do escritório.
+- Cliente, parte contrária e audiência continuam sem tela de cadastro: a administração mostra os três, inclusive os desativados, mas criar, editar e desativar segue só pela API REST.
 - A administração carrega tudo de uma vez, sem paginação nem filtro: cabe no volume de um escritório, não em base grande. Paginar afeta só `PanoramaAppService` e o template.
 - Os avisos listados na administração são a fila em memória do `NotificadorPainel` (200 últimos, por instância): somem no restart e não são histórico.
 - O foro dos feriados é único e vem de propriedade (`praxis.foro.*`), não de cada processo: o `Processo` guarda a comarca, mas não a UF. Feriado por processo exigiria derivar a UF do código do tribunal no número CNJ.
-- O cadastro de feriados é mantido em memória pelo adaptador (`FeriadoRepositorioJpa`), porque o calendário pergunta dia a dia ao percorrer um prazo. A escrita descarta o cache — suficiente para instância única, não para escala horizontal.
+- O cadastro de feriados é mantido em memória pelo adaptador (`FeriadoRepositorioJpa`), porque o calendário pergunta dia a dia ao percorrer um prazo. A escrita descarta o cache — suficiente para instância única.
 - O modelo de documento define corpo e pedidos, não a ordem das seções: o esqueleto é regra do domínio. Modelo que precise de estrutura própria exigiria nova subclasse de `GeradorDocumento`.
 - Modelos não têm versão. Editar o modelo não afeta peça já gerada (o documento persiste o conteúdo), mas o histórico do próprio modelo não é guardado.
 - Os campos do modelo são texto simples, sem tipo nem obrigatoriedade: campo esquecido sai como `(nome a preencher)` na peça, e não barra a geração.
-- Anexos são guardados em BLOB no banco. Simplifica o backup e a transação (arquivo e metadados commitam juntos), mas não escala para volume alto — a troca por armazenamento de objetos afeta apenas `ArquivoRepositorioJpa`.
+- Anexos são guardados em BLOB no banco. Simplifica backup e transação (arquivo e metadados commitam juntos), mas não escala para volume alto — a troca por armazenamento de objetos afeta apenas `ArquivoRepositorioJpa`.
 - O conteúdo do anexo não é inspecionado: confia-se no `Content-Type` declarado no upload. Um PDF renomeado passaria. Validar assinatura de arquivo (magic number) e antivírus fica para produção.
 - Anexo não tem versão nem desentranhamento: a juntada é definitiva na tela.
 - O arquivo `.cml` não foi validado com o plugin do Context Mapper nesta máquina (extensão não instalada).
