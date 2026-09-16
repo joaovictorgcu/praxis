@@ -25,12 +25,16 @@ public class ContratoHonorarioRestController {
         this.consultar = consultar;
     }
 
+    /**
+     * horasTrabalhadas e Integer, e nao int: so a modalidade POR_HORA o informa, e
+     * omiti-lo no JSON de um contrato fixo nao pode virar erro de desserializacao.
+     */
     public record NovoContrato(@NotBlank String numeroProcesso,
                                @NotBlank String modalidade,
                                LocalDate celebradoEm,
                                BigDecimal valorFixo,
                                BigDecimal valorHora,
-                               int horasTrabalhadas,
+                               Integer horasTrabalhadas,
                                BigDecimal valorCausa,
                                BigDecimal percentualExito) {
     }
@@ -43,7 +47,7 @@ public class ContratoHonorarioRestController {
                 corpo.celebradoEm() == null ? LocalDate.now() : corpo.celebradoEm(),
                 corpo.valorFixo(),
                 corpo.valorHora(),
-                corpo.horasTrabalhadas(),
+                corpo.horasTrabalhadas() == null ? 0 : corpo.horasTrabalhadas(),
                 corpo.valorCausa(),
                 corpo.percentualExito()));
     }

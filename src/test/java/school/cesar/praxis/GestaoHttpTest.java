@@ -206,6 +206,14 @@ class GestaoHttpTest {
 
         mvc.perform(post("/api/documentos/" + doc.getId() + "/desfazer").session(carla))
                 .andExpect(status().isConflict());
+
+        // Contrato fixo nao informa horas: campo ausente nao pode virar 400 de desserializacao.
+        mvc.perform(post("/api/honorarios").session(carla)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"numeroProcesso\":\"" + numero + "\",\"modalidade\":\"FIXO\","
+                                + "\"celebradoEm\":\"2026-09-01\",\"valorFixo\":8500}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.modalidade").value("FIXO"));
     }
 
     @Test
