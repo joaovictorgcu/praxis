@@ -7,47 +7,176 @@
 <body>
 
 <!--
-  Cabecalho comum a todas as telas do painel. Recebe o nome da tela ativa e
-  le ${usuario} (posto no modelo pelo SessaoControllerAdvice) para mostrar
-  quem esta logado, o papel e o botao de sair.
+  Casca comum a todas as telas do painel: menu lateral + barra superior.
+
+  O fragmento entrega <aside> e <header> como irmaos (o <div> de fora sai por
+  th:remove), e a grade de body.app poe o menu na coluna da esquerda e a barra
+  sobre o conteudo. Assim nenhuma tela precisou mudar a estrutura do <body>:
+  elas continuam com um th:replace e o <main> logo abaixo.
+
+  Recebe o nome da tela ativa e le ${usuario} (posto no modelo pelo
+  SessaoControllerAdvice) para mostrar quem esta logado, o papel e o sair.
 -->
-<header th:fragment="cabecalho(ativo)">
-  <!-- Primeiro tabulavel da pagina: pula o menu inteiro (WCAG 2.4.1). -->
-  <a class="pular" href="#conteudo">Ir para o conteudo</a>
-  <h1><a th:href="@{/painel}">Praxis</a></h1>
-  <nav aria-label="Secoes do painel">
-    <a th:href="@{/painel}" th:classappend="${ativo == 'painel'} ? 'ativo'"
-       th:attr="aria-current=${ativo == 'painel'} ? 'page' : null">Agenda</a>
-    <a th:href="@{/painel/processos}" th:classappend="${ativo == 'processos'} ? 'ativo'"
-       th:attr="aria-current=${ativo == 'processos'} ? 'page' : null">Processos</a>
-    <a th:href="@{/painel/documentos}" th:classappend="${ativo == 'documentos'} ? 'ativo'"
-       th:attr="aria-current=${ativo == 'documentos'} ? 'page' : null">Documentos</a>
-    <a th:href="@{/painel/anexos}" th:classappend="${ativo == 'anexos'} ? 'ativo'"
-       th:attr="aria-current=${ativo == 'anexos'} ? 'page' : null">Anexos</a>
-    <a th:href="@{/painel/modelos}" th:classappend="${ativo == 'modelos'} ? 'ativo'"
-       th:attr="aria-current=${ativo == 'modelos'} ? 'page' : null">Modelos</a>
-    <a th:href="@{/painel/feriados}" th:classappend="${ativo == 'feriados'} ? 'ativo'"
-       th:attr="aria-current=${ativo == 'feriados'} ? 'page' : null">Feriados</a>
-    <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/usuarios}"
-       th:classappend="${ativo == 'usuarios'} ? 'ativo'"
-       th:attr="aria-current=${ativo == 'usuarios'} ? 'page' : null">Usuarios</a>
-    <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/admin}"
-       th:classappend="${ativo == 'admin'} ? 'ativo'"
-       th:attr="aria-current=${ativo == 'admin'} ? 'page' : null">Administracao</a>
-  </nav>
-  <div class="sessao" th:if="${usuario != null}">
-    <a class="quem" th:href="@{/painel/conta}" title="Minha conta">
-      <strong th:text="${usuario.nome()}">Nome</strong>
-      <span th:text="'OAB ' + ${usuario.oab()}">OAB</span>
+<div th:fragment="cabecalho(ativo)" th:remove="tag">
+
+  <aside class="menu-lateral">
+    <!-- Primeiro tabulavel da pagina: pula o menu inteiro (WCAG 2.4.1). -->
+    <a class="pular" href="#conteudo">Ir para o conteudo</a>
+
+    <!--
+      Sprite dos icones: um <symbol> por icone, referenciado por <use>. Fica
+      inline porque a CSP nao permite script externo nem SVG de outro host, e
+      um arquivo por icone seria uma requisicao por item de menu.
+    -->
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-agenda" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>
+      </symbol>
+      <symbol id="i-processos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 3h9l5 5v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M13 3v5h5M7 13h8M7 17h6"/>
+      </symbol>
+      <symbol id="i-documentos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 2h8l4 4v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M16 2v4h4M10 12h6M10 16h4"/>
+      </symbol>
+      <symbol id="i-anexos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 11.5 12.5 20a5 5 0 0 1-7-7l8-8a3.5 3.5 0 0 1 5 5l-8 8a2 2 0 0 1-3-3l7.5-7.5"/>
+      </symbol>
+      <symbol id="i-modelos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/>
+      </symbol>
+      <symbol id="i-feriados" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/><path d="m9 15 2 2 4-4"/>
+      </symbol>
+      <symbol id="i-usuarios" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      </symbol>
+      <symbol id="i-admin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 7 2.6h.1A1.6 1.6 0 0 0 9 1.1V1a2 2 0 1 1 4 0v.1A1.6 1.6 0 0 0 15 2.6h.1a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.1a2 2 0 1 1 0 4H21a1.6 1.6 0 0 0-1.5 1z"/>
+      </symbol>
+      <symbol id="i-conta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>
+      </symbol>
+      <symbol id="i-relogio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+      </symbol>
+      <symbol id="i-alerta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+        <path d="M12 9v4M12 17h.01"/>
+      </symbol>
+      <symbol id="i-balanca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v18M7 21h10M3 8h18M6 8l-3 6h6zM18 8l-3 6h6z"/>
+      </symbol>
+      <symbol id="i-raio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2 4 14h7l-1 8 9-12h-7z"/>
+      </symbol>
+    </svg>
+
+    <a class="marca" th:href="@{/painel}">
+      <img class="marca-sigla" th:src="@{/img/praxis-marca.svg}" alt="" aria-hidden="true"
+           width="40" height="40">
+      <span class="marca-nome">Praxis<span>Gestao juridica</span></span>
     </a>
-    <span class="papel" th:classappend="${usuario.chefe()} ? 'chefe'"
-          th:text="${usuario.rotuloPapel()}">Advogado</span>
-    <form th:action="@{/sair}" method="post">
-      <input type="hidden" name="_csrf" th:value="${csrf}">
-      <button type="submit" title="Encerrar sessao">Sair</button>
-    </form>
-  </div>
-</header>
+
+    <p class="menu-titulo">Escritorio</p>
+
+    <nav aria-label="Secoes do painel">
+      <a th:href="@{/painel}" th:classappend="${ativo == 'painel'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'painel'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-agenda"/></svg>
+        <span>Agenda</span>
+      </a>
+      <a th:href="@{/painel/processos}" th:classappend="${ativo == 'processos'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'processos'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-processos"/></svg>
+        <span>Processos</span>
+      </a>
+      <a th:href="@{/painel/documentos}" th:classappend="${ativo == 'documentos'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'documentos'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-documentos"/></svg>
+        <span>Documentos</span>
+      </a>
+      <a th:href="@{/painel/anexos}" th:classappend="${ativo == 'anexos'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'anexos'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-anexos"/></svg>
+        <span>Anexos</span>
+      </a>
+      <a th:href="@{/painel/modelos}" th:classappend="${ativo == 'modelos'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'modelos'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-modelos"/></svg>
+        <span>Modelos</span>
+      </a>
+      <a th:href="@{/painel/feriados}" th:classappend="${ativo == 'feriados'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'feriados'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-feriados"/></svg>
+        <span>Feriados</span>
+      </a>
+      <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/usuarios}"
+         th:classappend="${ativo == 'usuarios'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'usuarios'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-usuarios"/></svg>
+        <span>Usuarios</span>
+      </a>
+      <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/admin}"
+         th:classappend="${ativo == 'admin'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'admin'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-admin"/></svg>
+        <span>Administracao</span>
+      </a>
+      <a th:href="@{/painel/conta}" th:classappend="${ativo == 'conta'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'conta'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-conta"/></svg>
+        <span>Minha conta</span>
+      </a>
+    </nav>
+  </aside>
+
+  <header class="barra-topo">
+    <p class="trilha">
+      <!-- O icone acompanha a secao: 'painel' e a agenda, as demais tem o mesmo nome do simbolo. -->
+      <svg class="icone" aria-hidden="true" focusable="false">
+        <use th:attr="href='#i-' + (${ativo == 'painel'} ? 'agenda' : ${ativo})" href="#i-agenda"/>
+      </svg>
+      <span th:text="${ativo == 'painel'} ? 'Agenda de prazos'
+                     : (${ativo == 'processos'} ? 'Processos'
+                     : (${ativo == 'documentos'} ? 'Documentos'
+                     : (${ativo == 'anexos'} ? 'Anexos'
+                     : (${ativo == 'modelos'} ? 'Modelos'
+                     : (${ativo == 'feriados'} ? 'Feriados'
+                     : (${ativo == 'usuarios'} ? 'Usuarios'
+                     : (${ativo == 'admin'} ? 'Administracao'
+                     : 'Minha conta')))))))">Agenda de prazos</span>
+    </p>
+
+    <div class="sessao" th:if="${usuario != null}">
+      <a class="quem" th:href="@{/painel/conta}" title="Minha conta">
+        <strong th:text="${usuario.nome()}">Nome</strong>
+        <span th:text="'OAB ' + ${usuario.oab()}">OAB</span>
+      </a>
+      <span class="papel" th:classappend="${usuario.chefe()} ? 'chefe'"
+            th:text="${usuario.rotuloPapel()}">Advogado</span>
+      <form th:action="@{/sair}" method="post">
+        <input type="hidden" name="_csrf" th:value="${csrf}">
+        <button type="submit" title="Encerrar sessao">Sair</button>
+      </form>
+    </div>
+  </header>
+
+</div>
 
 <!-- Resultado da ultima acao (flash do POST-redirect-GET) ou recusa do dominio. -->
 <div th:fragment="mensagens" th:remove="tag">

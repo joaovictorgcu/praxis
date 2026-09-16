@@ -26,6 +26,7 @@
     --azul-fundo: #e6eefb;
     --menu-texto: #cdd8ea;
     --sombra: rgba(20, 33, 61, .18);
+    --menu-largura: 236px;
     --botao-fundo: #14213d;
     --botao-texto: #ffffff;
     --botao-hover: #1c2d52;
@@ -94,20 +95,122 @@ body {
     line-height: 1.45;
 }
 
-/* ---------- cabecalho ---------- */
+/* ---------- casca: menu lateral + barra superior ---------- */
 
-header {
-    background: var(--tinta);
-    color: var(--branco);
-    padding: 12px 32px;
+/*
+  Telas do painel (body.app): o menu lateral ocupa a coluna da esquerda inteira
+  e a barra superior fica sobre o conteudo. Grade, e nao flex, porque a barra
+  precisa comecar depois do menu sem estar dentro dele - assim o fragmento
+  continua entregando <aside> e <header> como irmaos, e nenhuma tela precisou
+  mudar a estrutura do <body>.
+*/
+body.app {
+    display: grid;
+    grid-template-columns: var(--menu-largura) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+}
+
+.menu-lateral {
+    grid-row: 1 / -1;
+    background: var(--branco);
+    border-right: 1px solid var(--borda);
+    padding: 18px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.marca {
     display: flex;
     align-items: center;
+    gap: 9px;
+    padding: 0 12px;
+    height: 48px;
+    margin-bottom: 14px;
+    color: inherit;
+    text-decoration: none;
+}
+
+/*
+  A sigla virou a marca em SVG. O ladrilho navy vem dentro do arquivo, entao
+  nao ha regra de tema aqui: o contraste e o mesmo nos dois fundos.
+*/
+.marca-sigla {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    display: block;
+    flex-shrink: 0;
+}
+
+.marca-nome { font-size: 16px; font-weight: 700; line-height: 1.1; }
+.marca-nome span { display: block; font-size: 10px; font-weight: 400; color: var(--cinza); }
+
+.menu-titulo {
+    font-size: 11px;
+    color: var(--cinza);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 0 12px;
+    margin: 4px 0 6px;
+}
+
+.menu-lateral nav { display: flex; flex-direction: column; gap: 2px; }
+
+.menu-lateral nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 38px;
+    padding: 0 11px;
+    border-radius: 7px;
+    color: var(--tinta);
+    text-decoration: none;
+    font-size: 13.5px;
+}
+
+.menu-lateral nav a:hover { background: var(--realce); }
+
+.menu-lateral nav a.ativo {
+    background: var(--marca);
+    font-weight: 600;
+}
+
+.menu-lateral .icone { width: 18px; height: 18px; flex-shrink: 0; color: var(--tinta-clara); }
+.menu-lateral nav a.ativo .icone { color: var(--tinta); }
+
+/* O sprite de icones e um <svg> escondido no inicio do fragmento. */
+.sprite { display: none; }
+
+.barra-topo {
+    grid-column: 2;
+    background: var(--branco);
+    border-bottom: 1px solid var(--borda);
+    padding: 0 20px;
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px 32px;
+    gap: 8px 16px;
     position: sticky;
     top: 0;
     z-index: 20;
 }
+
+.barra-topo .trilha {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.barra-topo .trilha .icone { width: 17px; height: 17px; color: var(--tinta-clara); }
 
 /*
   Atalho de teclado: fica fora da tela ate receber foco. Na administracao, que
@@ -130,73 +233,65 @@ header {
 
 main:focus { outline: none; }
 
-header h1 {
-    margin: 0;
-    font-size: 22px;
-    letter-spacing: 1px;
+/*
+  Pagina sem casca (erro): cabecalho simples. O :not(.topo-entrada) importa -
+  este seletor tem especificidade maior que a classe do login e, sem ele,
+  venceria a faixa da tela de entrada mesmo estando declarado antes.
+*/
+body:not(.app) header:not(.topo-entrada) {
+    background: var(--branco);
+    border-bottom: 1px solid var(--borda);
+    padding: 12px 24px;
 }
 
-header h1 a { color: inherit; text-decoration: none; }
-
-header nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 20px;
-    flex: 1;
-}
-
-header nav a {
-    color: var(--menu-texto);
-    text-decoration: none;
-    padding: 4px 0 3px;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
-}
-
-header nav a:hover { color: var(--branco); }
-
-header nav a.ativo {
-    color: var(--branco);
-    border-bottom-color: var(--branco);
-}
+body:not(.app) header h1 { margin: 0; font-size: 20px; }
+body:not(.app) header h1 a { color: inherit; text-decoration: none; }
 
 .sessao {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-left: auto;
-    font-size: 13.5px;
+    font-size: 13px;
 }
 
-.sessao .quem { display: flex; flex-direction: column; line-height: 1.25; text-align: right; }
+.sessao .quem {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    text-align: right;
+    color: inherit;
+    text-decoration: none;
+}
+
 .sessao .quem strong { font-weight: 600; }
-.sessao .quem span { color: var(--menu-texto); font-size: 12px; }
+.sessao .quem span { color: var(--cinza); font-size: 11.5px; }
 
 .sessao form { margin: 0; }
 
 .sessao button {
     background: transparent;
-    border: 1px solid #5d78a8;
-    color: #e6ecf7;
+    border: 1px solid var(--borda);
+    color: var(--tinta);
     padding: 5px 12px;
     font-size: 13px;
 }
 
-.sessao button:hover { background: #24365e; }
+.sessao button:hover { background: var(--realce); }
 
 .papel {
     display: inline-block;
     padding: 2px 9px;
     border-radius: 10px;
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: .4px;
     text-transform: uppercase;
-    background: #2f4a7c;
-    color: #e6ecf7;
+    background: var(--azul-fundo);
+    color: var(--azul);
 }
 
-.papel.chefe { background: #c98a1b; color: #1f1400; }
+.papel.chefe { background: var(--ambar-fundo); color: var(--ambar); }
 
 /* ---------- layout ---------- */
 
@@ -207,6 +302,15 @@ main {
     display: flex;
     flex-direction: column;
     gap: 22px;
+}
+
+/* Dentro da casca o conteudo usa a largura da coluna, nao os 1080px centrados. */
+body.app main {
+    grid-column: 2;
+    max-width: none;
+    margin: 0;
+    padding: 20px;
+    gap: 18px;
 }
 
 .cartao {
@@ -645,15 +749,8 @@ input[type=checkbox], input[type=radio] { width: 18px; height: 18px; accent-colo
   sobrescrevem regras declaradas acima (cascata por ordem, sem !important).
 */
 @media (prefers-color-scheme: dark) {
-    /* O texto do cabecalho e claro sobre a faixa escura: nao segue --branco,
-       que no tema escuro passou a ser a superficie dos cartoes. */
-    header { background: #0e1220; color: #e8ecf5; }
-    header nav a:hover, header nav a.ativo { color: #ffffff; }
-    header nav a.ativo { border-bottom-color: #ffffff; }
     .sessao button { border-color: #3c4658; color: var(--tinta); }
     .sessao button:hover { background: #222938; }
-    .papel { background: #2b3447; color: #dbe3f2; }
-    .papel.chefe { background: #6b4a10; color: #ffe9bb; }
     .pular { background: #e8ecf5; color: #12161f; }
     body.entrada { background: linear-gradient(160deg, #0e1220 0%, #1c2438 55%, var(--papel) 55.1%); }
     th { background: var(--branco); }
