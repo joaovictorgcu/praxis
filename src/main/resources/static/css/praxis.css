@@ -539,17 +539,37 @@ pre {
 
 /* ---------- login ---------- */
 
+/*
+  Login: faixa clara no topo com o ladrilho da marca e o cartao centrado
+  abaixo. A assinatura horizontal era desenhada para fundo escuro (letras
+  brancas), entao sumia na faixa clara; o ladrilho traz o proprio fundo navy e
+  se ve nos dois temas.
+*/
 body.entrada {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 24px 16px;
-    background: linear-gradient(160deg, var(--tinta) 0%, #2b4470 55%, var(--papel) 55.1%);
+    padding: 0 0 24px;
+    background: var(--papel);
 }
+
+.topo-entrada {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 30px 16px;
+    margin-bottom: 40px;
+    background: var(--branco);
+    border-bottom: 1px solid var(--borda);
+}
+
+/* 96px: o mesmo desenho do favicon, no tamanho em que a balanca ainda se le. */
+.marca-topo { display: block; width: 96px; height: 96px; }
 
 .entrada .cartao-login {
     width: 100%;
     max-width: 400px;
+    margin: 0 16px;
     background: var(--branco);
     border: 1px solid var(--borda);
     border-radius: 10px;
@@ -752,7 +772,9 @@ input[type=checkbox], input[type=radio] { width: 18px; height: 18px; accent-colo
     .sessao button { border-color: #3c4658; color: var(--tinta); }
     .sessao button:hover { background: #222938; }
     .pular { background: #e8ecf5; color: #12161f; }
-    body.entrada { background: linear-gradient(160deg, #0e1220 0%, #1c2438 55%, var(--papel) 55.1%); }
+    /* O ladrilho da marca ja e navy: a faixa segue a superficie do tema, para
+       o desenho nao se dissolver no fundo. */
+    .topo-entrada { background: var(--branco); }
     th { background: var(--branco); }
 }
 
