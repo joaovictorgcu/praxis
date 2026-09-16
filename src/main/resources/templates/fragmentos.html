@@ -14,7 +14,7 @@
 <header th:fragment="cabecalho(ativo)">
   <!-- Primeiro tabulavel da pagina: pula o menu inteiro (WCAG 2.4.1). -->
   <a class="pular" href="#conteudo">Ir para o conteudo</a>
-  <h1><a th:href="@{/painel}">praxis</a></h1>
+  <h1><a th:href="@{/painel}">Praxis</a></h1>
   <nav aria-label="Secoes do painel">
     <a th:href="@{/painel}" th:classappend="${ativo == 'painel'} ? 'ativo'"
        th:attr="aria-current=${ativo == 'painel'} ? 'page' : null">Agenda</a>
