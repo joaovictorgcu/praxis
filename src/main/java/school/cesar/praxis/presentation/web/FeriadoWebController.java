@@ -18,8 +18,9 @@ import java.util.NoSuchElementException;
  * nao inflar o painel de prazos. Nao contem regra - so traduz formulario em
  * caso de uso.
  *
- * <p>Remover feriado muda a contagem de prazo de todo o escritorio, entao e
- * acao do chefe.
+ * <p>Cadastrar e remover feriado mudam a contagem de prazo de todo o
+ * escritorio, entao sao acoes do chefe. A consulta fica aberta a qualquer
+ * usuario logado: o advogado precisa ver o calendario que rege os prazos dele.
  */
 @Controller
 @RequestMapping("/painel/feriados")
@@ -51,6 +52,7 @@ public class FeriadoWebController {
         return montarTela(model);
     }
 
+    @SomenteChefe
     @PostMapping
     public String cadastrar(@RequestParam String descricao,
                             @RequestParam String data,

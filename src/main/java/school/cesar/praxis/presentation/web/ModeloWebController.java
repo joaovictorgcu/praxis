@@ -15,8 +15,9 @@ import java.util.NoSuchElementException;
  * Camada de apresentacao web do cadastro de modelos de peca. Nao contem regra -
  * so traduz formulario em caso de uso.
  *
- * <p>Remover modelo tira uma peca do alcance de todo o escritorio, entao e
- * acao do chefe.
+ * <p>Cadastrar e remover modelo mudam o que todo o escritorio pode gerar,
+ * entao sao acoes do chefe. Listar fica aberto: o advogado escolhe o modelo
+ * na hora de gerar a peca.
  */
 @Controller
 @RequestMapping("/painel/modelos")
@@ -39,6 +40,7 @@ public class ModeloWebController {
         return montarTela(model);
     }
 
+    @SomenteChefe
     @PostMapping
     public String cadastrar(@RequestParam String codigo,
                             @RequestParam String nome,

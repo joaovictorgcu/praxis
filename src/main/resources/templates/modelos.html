@@ -27,8 +27,12 @@
       Qualquer outro nome sera pedido na hora de gerar a peca.
     </p>
 
-    <form th:action="@{/painel/modelos}" method="post" class="empilhado" id="form-modelo"
-          th:attr="data-reservados=${#strings.setJoin(reservados, ',')}">
+    <p class="apoio" th:unless="${usuario.chefe()}">
+      Cadastrar modelo e acao do chefe do escritorio.
+    </p>
+
+    <form th:if="${usuario.chefe()}" th:action="@{/painel/modelos}" method="post" class="empilhado"
+          id="form-modelo" th:attr="data-reservados=${#strings.setJoin(reservados, ',')}">
       <input type="hidden" name="_csrf" th:value="${csrf}">
       <div class="linha">
         <label for="codigo">Codigo

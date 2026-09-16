@@ -12,8 +12,8 @@ import java.util.List;
 /**
  * Camada de apresentacao (REST) da funcionalidade Cadastro de feriados.
  *
- * <p>Remover feriado muda a contagem de prazo de todo o escritorio, entao e
- * acao do chefe - a mesma regra da tela.
+ * <p>Cadastrar e remover feriado mudam a contagem de prazo de todo o
+ * escritorio, entao sao acoes do chefe - a mesma regra da tela.
  */
 @RestController
 @RequestMapping("/api/feriados")
@@ -41,6 +41,7 @@ public class FeriadoRestController {
                               String abrangencia) {
     }
 
+    @SomenteChefe
     @PostMapping
     public FeriadosUseCases.ItemFeriado cadastrar(@RequestBody NovoFeriado corpo) {
         return cadastrar.executar(new FeriadosUseCases.CadastrarFeriado.Comando(

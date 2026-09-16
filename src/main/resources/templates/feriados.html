@@ -22,7 +22,11 @@
       Prazo ja lancado nao se move: o vencimento fica congelado na abertura.
     </p>
 
-    <form th:action="@{/painel/feriados}" method="post" class="linha">
+    <p class="apoio" th:unless="${usuario.chefe()}">
+      Cadastrar feriado altera a contagem de todo o escritorio: acao do chefe.
+    </p>
+
+    <form th:if="${usuario.chefe()}" th:action="@{/painel/feriados}" method="post" class="linha">
       <input type="hidden" name="_csrf" th:value="${csrf}">
       <label for="descricao">Descricao
         <input type="text" id="descricao" name="descricao" required

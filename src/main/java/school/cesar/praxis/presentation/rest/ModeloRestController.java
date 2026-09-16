@@ -11,8 +11,8 @@ import java.util.List;
 /**
  * Camada de apresentacao (REST) da funcionalidade Cadastro de modelos.
  *
- * <p>Remover modelo tira uma peca do alcance de todo o escritorio, entao e
- * acao do chefe - a mesma regra da tela.
+ * <p>Cadastrar e remover modelo mudam o que todo o escritorio pode gerar,
+ * entao sao acoes do chefe - a mesma regra da tela.
  */
 @RestController
 @RequestMapping("/api/modelos")
@@ -39,6 +39,7 @@ public class ModeloRestController {
                              boolean enderecaAoJuizo) {
     }
 
+    @SomenteChefe
     @PostMapping
     public ModelosUseCases.ItemModelo cadastrar(@RequestBody NovoModelo corpo) {
         return cadastrar.executar(new ModelosUseCases.CadastrarModelo.Comando(
