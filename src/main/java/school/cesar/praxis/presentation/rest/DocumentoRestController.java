@@ -9,6 +9,7 @@ import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.TipoDocumento;
 import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
+import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,10 @@ import java.util.Map;
  *
  * <p>Revisar a peca e habilitar OAB nos autos sigilosos sao decisoes do chefe,
  * como nas telas: a anotacao vale aqui pela mesma guarda de sessao.
+ *
+ * <p>A OAB de quem age vem da sessao, nunca do corpo. A do
+ * {@link OabDoCorpo} e outra coisa: e a OAB <em>de terceiro</em> que o chefe
+ * habilita ou revoga nos autos, e continua sendo dado da requisicao.
  */
 @RestController
 @RequestMapping("/api/documentos")
@@ -60,17 +65,17 @@ public class DocumentoRestController {
     public record NovoDocumento(String numeroProcesso,
                                 TipoDocumento tipo,
                                 Map<String, String> campos,
-                                String oabSolicitante,
                                 String codigoModelo) {
     }
 
-    public record DecisaoDocumento(String oab, String texto) {}
+    public record DecisaoDocumento(String texto) {}
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> gerar(@RequestBody NovoDocumento corpo) {
+    public ResponseEntity<Map<String, Object>> gerar(@RequestBody NovoDocumento corpo,
+                                                    UsuarioLogado usuario) {
         DocumentoGerado documento = gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
                 corpo.numeroProcesso(), corpo.tipo(), corpo.campos(),
-                corpo.oabSolicitante(), corpo.codigoModelo()));
+                usuario.oab(), corpo.codigoModelo()));
 
         return ResponseEntity.ok(Map.of(
                 "id", documento.getId(),
@@ -91,17 +96,21 @@ public class DocumentoRestController {
 
     @SomenteChefe
     @PostMapping("/{id}/aprovar")
-    public ResponseEntity<Map<String, Object>> aprovar(@PathVariable Long id, @RequestBody DecisaoDocumento corpo) {
+    public ResponseEntity<Map<String, Object>> aprovar(@PathVariable Long id,
+                                                       @RequestBody DecisaoDocumento corpo,
+                                                       UsuarioLogado usuario) {
         DocumentoGerado documento = aprovarDocumento.executar(
-                new DocumentosUseCases.AprovarDocumento.Comando(id, corpo.oab(), corpo.texto()));
+                new DocumentosUseCases.AprovarDocumento.Comando(id, usuario.oab(), corpo.texto()));
         return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
     }
 
     @SomenteChefe
     @PostMapping("/{id}/rejeitar")
-    public ResponseEntity<Map<String, Object>> rejeitar(@PathVariable Long id, @RequestBody DecisaoDocumento corpo) {
+    public ResponseEntity<Map<String, Object>> rejeitar(@PathVariable Long id,
+                                                        @RequestBody DecisaoDocumento corpo,
+                                                        UsuarioLogado usuario) {
         DocumentoGerado documento = rejeitarDocumento.executar(
-                new DocumentosUseCases.RejeitarDocumento.Comando(id, corpo.oab(), corpo.texto()));
+                new DocumentosUseCases.RejeitarDocumento.Comando(id, usuario.oab(), corpo.texto()));
         return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
     }
 

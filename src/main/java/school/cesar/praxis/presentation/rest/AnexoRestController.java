@@ -8,11 +8,19 @@ import org.springframework.web.multipart.MultipartFile;
 import school.cesar.praxis.application.port.in.AnexosUseCases;
 import school.cesar.praxis.domain.anexo.ArquivoAnexo;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
+import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
 import java.io.IOException;
 import java.util.List;
 
-/** Camada de apresentacao (REST) da funcionalidade Anexacao de arquivos. */
+/**
+ * Camada de apresentacao (REST) da funcionalidade Anexacao de arquivos.
+ *
+ * <p>A juntada carrega a OAB da sessao: quem anexa e quem esta logado, e nao
+ * quem o corpo da requisicao disser que e. O download continua recebendo a OAB
+ * em {@code ?oab=}, porque o Proxy precisa saber por qual inscricao a leitura
+ * esta sendo pedida e o GET segue aberto.
+ */
 @RestController
 @RequestMapping("/api/anexos")
 public class AnexoRestController {
@@ -33,7 +41,7 @@ public class AnexoRestController {
     public AnexosUseCases.ItemAnexo anexar(@RequestParam String numeroProcesso,
                                            @RequestParam MultipartFile arquivo,
                                            @RequestParam(required = false) String descricao,
-                                           @RequestParam(required = false) String oab)
+                                           UsuarioLogado usuario)
             throws IOException {
         return anexar.executar(new AnexosUseCases.AnexarArquivo.Comando(
                 numeroProcesso,
@@ -41,7 +49,7 @@ public class AnexoRestController {
                 arquivo.getContentType(),
                 arquivo.getBytes(),
                 descricao,
-                oab));
+                usuario.oab()));
     }
 
     @GetMapping

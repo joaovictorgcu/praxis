@@ -324,11 +324,34 @@ DELETE /api/feriados/{id}                      remove feriado
 GET    /api/feriados/dia-util?data=YYYY-MM-DD  corre prazo neste dia? (efeito do cadastro no motor)
 
 POST /api/documentos/{id}/enviar-revisao       rascunho -> em revisão
-POST /api/documentos/{id}/aprovar              {oab, texto}   em revisão -> aprovado
-POST /api/documentos/{id}/rejeitar             {oab, texto}   em revisão -> rejeitado
-POST /api/documentos/{id}/desfazer             desfaz a última decisão (volta a em revisão)
+POST /api/documentos/{id}/aprovar              {texto}   em revisão -> aprovado  (chefe)
+POST /api/documentos/{id}/rejeitar             {texto}   em revisão -> rejeitado (chefe)
+POST /api/documentos/{id}/desfazer             desfaz a última decisão (chefe)
 POST /api/documentos/{id}/protocolar           aprovado -> protocolado
-POST /api/documentos/{id}/oabs                 {oab}  habilita OAB nos autos da peça
+POST /api/documentos/{id}/oabs                 {oab}  habilita OAB nos autos da peça (chefe)
+```
+
+**Leitura é aberta; mutação exige a sessão do painel.** `GET`, `HEAD`, `OPTIONS` e
+`TRACE` em `/api/**` passam sem autenticar. Todo `POST`, `PUT`, `PATCH` e `DELETE`
+passa pelo `SessaoApiInterceptor`: sem sessão é `401`, sem o token CSRF (parâmetro
+`_csrf` ou cabeçalho `X-CSRF-Token`) é `403`, senha provisória é `403` e ação de
+chefe pedida por advogado é `403`. A recusa sai como `{"erro": ...}` — nunca um
+redirect para `/login`, que um script leria como sucesso.
+
+A OAB de quem age **vem sempre da sessão**, nunca do corpo: gerar peça, aprovar,
+rejeitar e juntar anexo usam a inscrição de quem está logado. Continuam vindo da
+requisição as duas OABs que são de terceiro ou de leitura: a de `POST /api/documentos/{id}/oabs`
+(o chefe habilitando outro advogado nos autos) e a de `?oab=` nos downloads, que é
+o que o Proxy confere.
+
+Numa sessão de terminal, o ritual é logar e reusar o cookie:
+
+```bash
+curl -c praxis.jar -d 'email=admin&senha=123' localhost:8080/login
+csrf=$(curl -s -b praxis.jar -c praxis.jar localhost:8080/painel \
+  | grep -o 'name="_csrf" value="[^"]*"' | head -1 | cut -d'"' -f4)
+
+curl -b praxis.jar -H "X-CSRF-Token: $csrf" -X POST localhost:8080/api/... 
 ```
 
 Telas (exigem sessão):
@@ -385,8 +408,9 @@ curl -X POST localhost:8080/api/modelos -H 'Content-Type: application/json' -d '
 
 curl -X POST localhost:8080/api/documentos -H 'Content-Type: application/json' -d '{
   "numeroProcesso":"0001234-56.2026.8.17.0001","tipo":"PECA_AVULSA",
-  "codigoModelo":"ACORDO","oabSolicitante":"PE12345",
+  "codigoModelo":"ACORDO",
   "campos":{"outraParte":"Imobiliaria Beta ME","valorAcordo":"R$ 9.000,00"}}'
+# a OAB do solicitante vem da sessao, nao do corpo
 # -> peca com o mesmo esqueleto das compiladas, sem linguagem de juizo
 ```
 
@@ -396,8 +420,8 @@ Juntada de arquivo e o sigilo dos autos:
 curl -X POST localhost:8080/api/anexos \
   -F 'numeroProcesso=0007654-32.2026.8.17.0002' \
   -F 'arquivo=@laudo.pdf;type=application/pdf' \
-  -F 'descricao=Laudo pericial' -F 'oab=PE54321'
-# -> {"id":1,...,"segredoJustica":true}   (herdado do processo)
+  -F 'descricao=Laudo pericial'
+# -> {"id":1,...,"segredoJustica":true}   (herdado do processo; a OAB e a da sessao)
 
 curl 'localhost:8080/api/anexos/1?oab=PE54321'   # -> 200, o arquivo
 curl 'localhost:8080/api/anexos/1?oab=PE99999'   # -> 403, barrado pelo Proxy
