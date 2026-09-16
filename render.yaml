@@ -1,0 +1,53 @@
+# Blueprint do Render: cria o banco PostgreSQL e o servico web em uma operacao.
+# No painel do Render: New > Blueprint > escolher este repositorio > Apply.
+#
+# O banco do plano gratuito do Render expira em 30 dias. Quando isso acontecer,
+# crie um PostgreSQL gratuito permanente (Neon, por exemplo) e troque as
+# variaveis de banco por uma unica PRAXIS_DB_URL no formato
+# jdbc:postgresql://<host>/<base>?sslmode=require.
+
+databases:
+  - name: praxis-db
+    plan: free
+    databaseName: praxis
+    user: praxis
+
+services:
+  - type: web
+    name: praxis
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /login
+    envVars:
+      # O Render entrega os dados da conexao um por variavel; a string JDBC e
+      # montada em application-prod.properties.
+      - key: PRAXIS_DB_HOST
+        fromDatabase:
+          name: praxis-db
+          property: host
+      - key: PRAXIS_DB_PORT
+        fromDatabase:
+          name: praxis-db
+          property: port
+      - key: PRAXIS_DB_NAME
+        fromDatabase:
+          name: praxis-db
+          property: database
+      - key: PRAXIS_DB_USER
+        fromDatabase:
+          name: praxis-db
+          property: user
+      - key: PRAXIS_DB_PASSWORD
+        fromDatabase:
+          name: praxis-db
+          property: password
+      # Instancia de demonstracao: escritorio de exemplo montado e login direto.
+      - key: PRAXIS_ADMIN_USUARIO
+        value: admin@admin
+      - key: PRAXIS_ADMIN_SENHA
+        value: "1405"
+      - key: PRAXIS_DADOS_EXEMPLO
+        value: "true"
+      - key: PRAXIS_EXIGIR_TROCA
+        value: "false"

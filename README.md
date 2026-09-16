@@ -30,7 +30,7 @@ Em volta disso ficam os apoios que o dia a dia exige: cadastro de processos com 
 Dois comandos, sem instalar banco nem configurar nada:
 
 ```bash
-./mvnw test            # 171 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
+./mvnw test            # 174 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
 ./mvnw spring-boot:run # sobe em http://localhost:8080
 ```
 
@@ -380,7 +380,7 @@ Uma folha de estilo (`/css/praxis.css`), um arquivo de comportamento (`/js/praxi
 ```
 53 scenarios (53 passed)
 481 steps (481 passed)
-Tests run: 171, Failures: 0, Errors: 0
+Tests run: 174, Failures: 0, Errors: 0
 ```
 
 Os cenários são escritos em português, em [`src/test/resources/features`](src/test/resources/features), e automatizados com Cucumber + Spring (`src/test/java/school/cesar/praxis/bdd`). Os steps exercitam os casos de uso reais contra o banco, não dublês.
@@ -526,6 +526,35 @@ curl 'localhost:8080/api/anexos/1?oab=PE99999'   # -> 403, barrado pelo Proxy
 Falha de domínio vira status HTTP correto (`TratadorDeErrosRest`): invariante violada pela requisição é `400` (inclusive data ou enum mal formados), agregado inexistente é `404`, segredo de justiça é `403`, transição de estado inválida (aprovar rascunho, cumprir prazo já cumprido) e violação de unicidade no banco são `409` — nunca `500`.
 
 ---
+
+## Publicar de graça (Render + PostgreSQL)
+
+O repositório já traz o que a plataforma precisa: [`Dockerfile`](Dockerfile) (compila e entrega só o JRE com o jar) e [`render.yaml`](render.yaml), um blueprint que cria o banco e o serviço web juntos.
+
+1. Em <https://render.com>, entre com a conta do GitHub.
+2. **New → Blueprint**, escolha o repositório `praxis`, confirme em **Apply**.
+3. O Render cria o PostgreSQL `praxis-db`, injeta host, porta, base, usuário e senha no serviço web, compila a imagem e publica em `https://<nome>.onrender.com`. O primeiro build leva de 5 a 8 minutos.
+
+No primeiro boot, o Flyway aplica `V1__esquema_inicial.sql` e a carga de exemplo monta o escritório. A instância publicada é uma **demonstração**: entra com `admin@admin` / `1405`, direto, sem troca de senha.
+
+Para virar instalação real, troque as variáveis no painel do Render (Environment) e faça um redeploy:
+
+```
+PRAXIS_ADMIN_USUARIO=<seu e-mail>   PRAXIS_ADMIN_SENHA=<senha forte>
+PRAXIS_DADOS_EXEMPLO=false          PRAXIS_EXIGIR_TROCA=true
+PRAXIS_SENHA_INICIAL=<senha forte>
+```
+
+**O que o plano gratuito cobra em outra moeda:**
+
+- O serviço dorme depois de 15 minutos sem tráfego; a primeira visita depois disso espera a JVM subir (~30 a 60 s). Como a sessão vive em memória, quem estava logado precisa entrar de novo.
+- A varredura automática das 7h só roda se a instância estiver acordada. Um ping externo diário resolve, se isso importar.
+- O PostgreSQL gratuito do Render **expira em 30 dias**. Depois disso, crie um banco gratuito permanente (Neon, Supabase) e troque as cinco variáveis de banco por uma só:
+  `PRAXIS_DB_URL=jdbc:postgresql://<host>/<base>?sslmode=require`, mais `PRAXIS_DB_USER` e `PRAXIS_DB_PASSWORD`.
+- 512 MB de RAM: a imagem já sobe com `-XX:MaxRAMPercentage=70 -XX:+UseSerialGC`.
+- Anexos moram em BLOB no banco, e o plano gratuito dá pouco espaço — é demonstração, não arquivo do escritório.
+
+`ImplantacaoHttpTest` sobe a aplicação com o perfil `prod` (Flyway criando o esquema, Hibernate só validando) e confirma o que a instância publicada promete: `admin@admin` entra, não cai na troca de senha e encontra o escritório de exemplo montado.
 
 ## Rodar em produção: PostgreSQL + Flyway
 
