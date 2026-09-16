@@ -4,12 +4,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import school.cesar.praxis.application.port.in.ClienteUseCase;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.application.port.in.ModelosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
+import school.cesar.praxis.application.port.in.ProcessosUseCases;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.documento.TipoDocumento;
+import school.cesar.praxis.domain.processo.Processo;
 import school.cesar.praxis.infrastructure.notificacao.NotificadorPainel;
 import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
@@ -47,6 +50,8 @@ public class PainelWebController {
     private final DocumentosUseCases.ProtocolarDocumento protocolar;
     private final DocumentosUseCases.HabilitarOab habilitarOab;
     private final ModelosUseCases.ListarModelos listarModelos;
+    private final ProcessosUseCases.ListarProcessos listarProcessos;
+    private final ClienteUseCase clientes;
     private final NotificadorPainel painel;
 
     /** Prefixo dos inputs gerados pela tela para os marcadores do modelo. */
@@ -65,6 +70,8 @@ public class PainelWebController {
                                DocumentosUseCases.ProtocolarDocumento protocolar,
                                DocumentosUseCases.HabilitarOab habilitarOab,
                                ModelosUseCases.ListarModelos listarModelos,
+                               ProcessosUseCases.ListarProcessos listarProcessos,
+                               ClienteUseCase clientes,
                                NotificadorPainel painel) {
         this.agenda = agenda;
         this.varredura = varredura;
@@ -79,6 +86,8 @@ public class PainelWebController {
         this.protocolar = protocolar;
         this.habilitarOab = habilitarOab;
         this.listarModelos = listarModelos;
+        this.listarProcessos = listarProcessos;
+        this.clientes = clientes;
         this.painel = painel;
     }
 
@@ -113,6 +122,13 @@ public class PainelWebController {
                 .filter(d -> "EM_REVISAO".equals(d.status())).count());
         model.addAttribute("rascunhos", documentos.stream()
                 .filter(d -> "RASCUNHO".equals(d.status()) || "REJEITADO".equals(d.status())).count());
+
+        // Carteira do escritorio: os dois cartoes de contexto do dashboard.
+        var carteira = listarProcessos.executar();
+        model.addAttribute("processos", carteira.size());
+        model.addAttribute("processosSigilosos", carteira.stream().filter(Processo::isSegredoJustica).count());
+        model.addAttribute("clientesAtivos", clientes.listarClientes().size());
+        model.addAttribute("clientesTotal", clientes.listarTodosOsClientes().size());
         return "painel";
     }
 

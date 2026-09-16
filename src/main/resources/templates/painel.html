@@ -4,44 +4,197 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Praxis - agenda de prazos</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3EP%3C/text%3E%3C/svg%3E">
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
   <link rel="stylesheet" th:href="@{/css/praxis.css}">
   <script th:src="@{/js/praxis.js}" defer></script>
 </head>
-<body>
+<body class="app">
 <header th:replace="~{fragmentos :: cabecalho('painel')}"></header>
 
 <main id="conteudo" tabindex="-1">
   <div th:replace="~{fragmentos :: mensagens}"></div>
 
-  <section class="resumo" aria-label="Resumo do dia">
-    <div th:classappend="${vencidos > 0} ? 'alerta' : 'ok'">
-      <span class="numero" th:text="${vencidos}">0</span>
-      <span class="rotulo">prazos vencidos em aberto</span>
-    </div>
-    <div th:classappend="${criticos > 0} ? 'atencao' : 'ok'">
-      <span class="numero" th:text="${criticos}">0</span>
-      <span class="rotulo">vencem em ate 3 dias</span>
-    </div>
-    <div>
-      <span class="numero" th:text="${meus}">0</span>
-      <span class="rotulo">prazos sob sua responsabilidade</span>
-    </div>
-    <a th:href="@{/painel/documentos}" th:classappend="${usuario.chefe() and emRevisao > 0} ? 'atencao'">
-      <span class="numero" th:text="${emRevisao}">0</span>
-      <span class="rotulo" th:text="${usuario.chefe()} ? 'pecas aguardando sua revisao' : 'pecas em revisao'">pecas em revisao</span>
+  <div class="cabecalho-pagina">
+    <h2>Agenda de prazos</h2>
+    <p class="apoio" style="margin:0">
+      Hoje: <strong th:text="${#temporals.format(hoje, 'dd/MM/yyyy')}">08/09/2026</strong> &middot;
+      em aberto ate <strong th:text="${#temporals.format(limite, 'dd/MM/yyyy')}">08/10/2026</strong>
+    </p>
+  </div>
+
+  <!--
+    Cartoes de contexto: numero grande e, embaixo, o dado que explica o numero.
+    Os dois primeiros sao a carteira do escritorio; os dois ultimos sao o que
+    exige acao hoje - por isso levam para a tabela da agenda.
+  -->
+  <section class="estatisticas" aria-label="Resumo do escritorio">
+    <a class="estatistica" th:href="@{/painel/processos}">
+      <span>
+        <span class="rotulo">Processos</span>
+        <span class="numero" th:text="${processos}">0</span>
+        <span class="apoio" th:text="${processosSigilosos} + ' em segredo de justica'">0 em segredo de justica</span>
+      </span>
+      <span class="icone-circulo" aria-hidden="true">
+        <svg class="icone" focusable="false"><use href="#i-balanca"/></svg>
+      </span>
     </a>
-    <a th:href="@{/painel/documentos}">
-      <span class="numero" th:text="${rascunhos}">0</span>
-      <span class="rotulo">rascunhos e rejeitadas a retrabalhar</span>
+
+    <div class="estatistica">
+      <span>
+        <span class="rotulo">Clientes ativos</span>
+        <span class="numero" th:text="${clientesAtivos}">0</span>
+        <span class="apoio" th:text="'de ' + ${clientesTotal} + ' cadastrados'">de 0 cadastrados</span>
+      </span>
+      <span class="icone-circulo verde" aria-hidden="true">
+        <svg class="icone" focusable="false"><use href="#i-usuarios"/></svg>
+      </span>
+    </div>
+
+    <a class="estatistica" href="#agenda">
+      <span>
+        <span class="rotulo">Prazos vencidos</span>
+        <span class="numero" th:text="${vencidos}">0</span>
+        <span class="apoio" th:classappend="${vencidos > 0} ? 'alerta' : 'bom'"
+              th:text="${vencidos > 0} ? 'em aberto apos o vencimento' : 'nenhum prazo perdido'">nenhum prazo perdido</span>
+      </span>
+      <span class="icone-circulo" th:classappend="${vencidos > 0} ? 'vermelha'" aria-hidden="true">
+        <svg class="icone" focusable="false"><use href="#i-alerta"/></svg>
+      </span>
+    </a>
+
+    <a class="estatistica" href="#agenda">
+      <span>
+        <span class="rotulo">Vencem em ate 3 dias</span>
+        <span class="numero" th:text="${criticos}">0</span>
+        <span class="apoio" th:classappend="${criticos > 0} ? 'atencao'"
+              th:text="${meus} + ' sob sua responsabilidade'">0 sob sua responsabilidade</span>
+      </span>
+      <span class="icone-circulo" th:classappend="${criticos > 0} ? 'ambar'" aria-hidden="true">
+        <svg class="icone" focusable="false"><use href="#i-relogio"/></svg>
+      </span>
     </a>
   </section>
 
-  <section class="cartao">
+  <div class="painel-duplo">
+
+    <section class="cartao">
+      <div class="cartao-cabecalho">
+        <h2>Proximos prazos</h2>
+        <span class="contador" th:text="${#lists.size(itens)}">0</span>
+      </div>
+      <ul class="lista-prazos">
+        <li th:each="item, iter : ${itens}" th:if="${iter.index < 5}"
+            th:classappend="${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : '')">
+          <span class="icone-circulo" aria-hidden="true">
+            <svg class="icone" focusable="false"><use href="#i-agenda"/></svg>
+          </span>
+          <span class="corpo">
+            <a class="titulo" th:href="@{'/painel/processos/' + ${item.numeroProcesso()}}"
+               th:text="${item.descricao()}">Contestacao</a>
+            <span class="detalhe" th:text="${item.numeroProcesso()}">0000000-00.0000.0.00.0000</span>
+            <span class="detalhe" th:text="'Vence em ' + ${#temporals.format(item.vencimento(), 'dd/MM/yyyy')}
+                                           + ' - OAB ' + ${item.responsavel()}">Vence em 00/00/0000</span>
+          </span>
+          <span th:if="${item.fatal()}" class="etiqueta vermelha">fatal</span>
+          <span th:unless="${item.fatal()}" class="etiqueta cinza">comum</span>
+        </li>
+        <li th:if="${#lists.isEmpty(itens)}" class="vazio">Nenhum prazo em aberto no periodo.</li>
+      </ul>
+    </section>
+
+    <section class="cartao">
+      <div class="cartao-cabecalho">
+        <h2>Situacao da carteira</h2>
+      </div>
+      <ul class="niveis">
+        <li>
+          <span class="bolinha vermelha" aria-hidden="true"></span>
+          <span class="nome">Vencidos em aberto</span>
+          <strong class="quanto" th:text="${vencidos}">0</strong>
+          <span class="unidade">prazos</span>
+        </li>
+        <li>
+          <span class="bolinha ambar" aria-hidden="true"></span>
+          <span class="nome">Vencem em ate 3 dias</span>
+          <strong class="quanto" th:text="${criticos}">0</strong>
+          <span class="unidade">prazos</span>
+        </li>
+        <li>
+          <span class="bolinha verde" aria-hidden="true"></span>
+          <span class="nome">Demais prazos do periodo</span>
+          <strong class="quanto" th:text="${#lists.size(itens) - vencidos - criticos}">0</strong>
+          <span class="unidade">prazos</span>
+        </li>
+        <li>
+          <span class="bolinha" aria-hidden="true"></span>
+          <span class="nome"
+                th:text="${usuario.chefe()} ? 'Pecas aguardando sua revisao' : 'Pecas em revisao'">Pecas em revisao</span>
+          <strong class="quanto" th:text="${emRevisao}">0</strong>
+          <span class="unidade">pecas</span>
+        </li>
+        <li>
+          <span class="bolinha" aria-hidden="true"></span>
+          <span class="nome">Rascunhos e rejeitadas a retrabalhar</span>
+          <strong class="quanto" th:text="${rascunhos}">0</strong>
+          <span class="unidade">pecas</span>
+        </li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="painel-duplo">
+
+    <section class="cartao">
+      <div class="cartao-cabecalho">
+        <h2>Acoes rapidas</h2>
+      </div>
+      <!-- Cada atalho e um link ou um submit: nada aqui depende de JavaScript. -->
+      <div class="atalhos">
+        <a class="atalho" th:href="@{/painel/processos}">
+          <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-processos"/></svg>
+          Novo processo
+        </a>
+        <a class="atalho" th:href="@{/painel/documentos}">
+          <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-documentos"/></svg>
+          Gerar peca
+        </a>
+        <a class="atalho" th:href="@{/painel/anexos}">
+          <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-anexos"/></svg>
+          Juntar anexo
+        </a>
+        <form th:action="@{/painel/varredura}" method="post">
+          <input type="hidden" name="_csrf" th:value="${csrf}">
+          <button type="submit" class="atalho">
+            <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-raio"/></svg>
+            Rodar varredura
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section class="cartao">
+      <div class="cartao-cabecalho">
+        <h2>Avisos do motor de prazos</h2>
+        <span class="contador" th:text="${#lists.size(avisos)}">0</span>
+      </div>
+      <ul class="avisos">
+        <li th:each="aviso, iter : ${avisos}" th:if="${iter.index < 4}">
+          <strong th:text="${aviso.assunto()}">assunto</strong>
+          <span th:text="${aviso.destinatario()}">destinatario</span>
+          <p th:text="${aviso.corpo()}">corpo</p>
+        </li>
+        <li th:if="${#lists.isEmpty(avisos)}" class="vazio">
+          Nenhum alerta nesta sessao. Rode a varredura para avaliar a agenda.
+        </li>
+      </ul>
+    </section>
+  </div>
+
+  <section class="cartao" id="agenda">
     <div class="cartao-cabecalho">
-      <h2>Agenda de prazos</h2>
+      <h2>Todos os prazos do periodo</h2>
       <form th:action="@{/painel/varredura}" method="post" class="linha" style="margin:0">
-      <input type="hidden" name="_csrf" th:value="${csrf}">
+        <input type="hidden" name="_csrf" th:value="${csrf}">
         <label for="hoje">Simular data</label>
         <input type="date" id="hoje" name="hoje">
         <button type="submit">Rodar varredura</button>
@@ -49,8 +202,8 @@
     </div>
     <div class="cartao-cabecalho">
       <p class="apoio" style="margin:0">
-        Hoje: <strong th:text="${#temporals.format(hoje, 'dd/MM/yyyy')}">08/09/2026</strong> &middot;
-        prazos em aberto com vencimento ate <strong th:text="${#temporals.format(limite, 'dd/MM/yyyy')}">08/10/2026</strong>.
+        Prazos em aberto com vencimento ate
+        <strong th:text="${#temporals.format(limite, 'dd/MM/yyyy')}">08/10/2026</strong>.
       </p>
       <form th:action="@{/painel}" method="get" class="linha" style="margin:0">
         <label for="ate">Ate</label>
@@ -94,7 +247,7 @@
           <td class="acoes">
             <form th:action="@{'/painel/prazos/' + ${item.prazoId()} + '/cumprir'}" method="post"
                   th:attr="data-confirmar='Registrar o prazo \'' + ${item.descricao()} + '\' como cumprido?'">
-      <input type="hidden" name="_csrf" th:value="${csrf}">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
               <button type="submit" class="secundario pequeno">Cumprir</button>
             </form>
           </td>
@@ -105,20 +258,6 @@
         </tbody>
       </table>
     </div>
-  </section>
-
-  <section class="cartao">
-    <h2>Avisos emitidos pelo motor de prazos</h2>
-    <ul class="avisos">
-      <li th:each="aviso : ${avisos}">
-        <strong th:text="${aviso.assunto()}">assunto</strong>
-        <span th:text="${aviso.destinatario()}">destinatario</span>
-        <p th:text="${aviso.corpo()}">corpo</p>
-      </li>
-      <li th:if="${#lists.isEmpty(avisos)}" class="vazio">
-        Nenhum alerta nesta sessao. Rode a varredura para avaliar a agenda.
-      </li>
-    </ul>
   </section>
 </main>
 </body>

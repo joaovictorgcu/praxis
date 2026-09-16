@@ -276,7 +276,7 @@ class GestaoHttpTest {
     void resumoDoPainel() throws Exception {
         mvc.perform(get("/painel").session(chefe()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("prazos vencidos em aberto")))
+                .andExpect(content().string(containsString("Prazos vencidos")))
                 .andExpect(content().string(containsString("aguardando sua revisao")))
                 .andExpect(content().string(containsString("/painel/conta")))
                 .andExpect(content().string(containsString("/painel/usuarios")));
