@@ -170,6 +170,59 @@ Cada participante deve preencher individualmente a sua respectiva seção, infor
 
 79. quero fazer uma revisão final da tela de admin como se você fosse um professor avaliando o projeto. analisa arquitetura, segurança, testes, decisões tomadas e possíveis problemas da solução e me faça perguntas para eu justificar cada escolha.
 
+80. to estudando a segurança da API REST do praxis e quero entender primeiro o problema antes de mexer no codigo. me explica por que os GETs podem continuar abertos mas as operações que alteram dados precisam de sessão, CSRF e autorização.
+
+81. me explica como funcionaria um SessaoApiInterceptor no praxis. quero entender onde ele entra no fluxo de uma requisição, o que ele deve verificar e por que faz sentido registrar ele somente em /api/**.
+
+82. no SessaoApiInterceptor, alguns metodos como GET, HEAD, OPTIONS e TRACE ficam liberados. me explica por que esses metodos não devem passar pelas mesmas verificações das mutações e quais riscos existem nos outros metodos.
+
+83. me explica a diferença entre retornar 401 e 403 na API REST do praxis. usa os casos de sessão ausente, CSRF inválido, senha provisória e falta de permissão de chefe para eu entender quando cada um deve acontecer.
+
+84. a API do praxis hoje pode redirecionar para login em alguns fluxos. me explica por que isso é ruim para uma API REST e como seria melhor retornar um JSON como {"erro": "..."}.
+
+85. quero entender como reaproveitar a validação de CSRF que já existe no CsrfInterceptor dentro do SessaoApiInterceptor. me explica como fazer isso sem duplicar a regra de validação.
+
+86. no praxis existe SessaoInterceptor.exigeChefe. me explica por que tornar esse método package-visible pode ser útil nessa mudança e o que isso tem a ver com reutilização da regra de autorização.
+
+87. existe um Javadoc dizendo que a API REST é aberta. me explica por que esse comentário precisa ser atualizado depois de proteger as mutações e como uma documentação errada pode atrapalhar quem mantém o projeto.
+
+88. quero revisar quais endpoints REST realmente deveriam exigir @SomenteChefe. considera aprovação, rejeição e desfazer documento, habilitar e revogar OAB, remover feriado e remover modelo. me explica o motivo de cada operação exigir esse nível de autorização.
+
+89. no painel do praxis também existe criação de feriado e modelo. me explica por que não basta proteger os endpoints REST e por que essas operações do painel também precisam de @SomenteChefe.
+
+90. quero entender o problema de receber a OAB pelo corpo ou por parâmetro nas operações de documento e anexo. me explica por que a OAB deveria vir da sessão e o que poderia acontecer se eu confiar na OAB enviada pelo cliente.
+
+91. alguns GETs de download do praxis ainda usam OabDoCorpo.oab e ?oab=. me explica por que pode fazer sentido manter isso nesses downloads mesmo depois de mudar as operações de mutação para usar a OAB da sessão.
+
+92. me explica como sessão, OAB, autenticação, autorização e segredo de justiça se relacionam numa operação de documento do praxis. usa um exemplo em que um advogado tenta acessar um documento sigiloso pertencente a outra OAB.
+
+93. quero entender como testar a segurança da API REST sem testar só o código interno. me explica como os testes HTTP existentes do praxis podem verificar sessão, CSRF, autorização e o conteúdo JSON das respostas.
+
+94. cria alguns cenários de teste para a API REST do praxis, mas não mostra as respostas. quero tentar descobrir qual deveria ser o status HTTP em cada situação: sem login, advogado tentando ação de chefe, CSRF inválido, senha provisória e acesso a documento sigiloso de outra OAB.
+
+95. me explica por que um POST sem CSRF deve retornar 403 mesmo quando o usuario está logado. relaciona isso com sessão baseada em cookie e explica qual ataque essa proteção tenta evitar.
+
+96. no caso de upload multipart, o token CSRF pode não chegar pelo campo normal do formulario. me explica por que isso pode acontecer e como enviar o token pelo header sem criar uma exceção insegura na proteção.
+
+97. quero analisar a diferença entre proteger uma rota pelo controller e proteger a API inteira com um interceptor. me explica as vantagens e desvantagens de cada abordagem usando o SessaoApiInterceptor do praxis como exemplo.
+
+98. me explica o que poderia acontecer se eu colocasse @SomenteChefe em alguns endpoints mas esquecesse outros endpoints que fazem a mesma alteração. quero entender por que a proteção precisa estar em todos os caminhos que permitem a mutação.
+
+99. quero revisar o fluxo completo de uma mutação REST no praxis. começa na requisição HTTP e passa pelo interceptor, sessão, CSRF, senha provisória, @SomenteChefe, controller e caso de uso. explica uma etapa por vez e espera eu confirmar que entendi antes de continuar.
+
+100. faz uma simulação de banca sobre a segurança da API REST do praxis. pergunta uma coisa por vez, começando por 401 e 403 e depois passando por sessão, CSRF, OAB, @SomenteChefe, interceptor e documentos sigilosos. depois de cada resposta fala somente o que eu acertei e o que faltou.
+
+101. analisa os testes HTTP que eu deveria criar para fechar a segurança das mutações da API. quero entender o que cada teste protege e qual comportamento poderia voltar a ficar vulnerável se ele fosse removido.
+
+102. quero entender por que os GETs devem continuar funcionando mesmo sem sessão, enquanto POST, PUT, PATCH e DELETE precisam ser protegidos. cria exemplos do proprio contexto do praxis e depois me passa situações para eu decidir se devem ser liberadas ou bloqueadas.
+
+103. me explica como eu verificaria se a API realmente nunca redireciona para login. quero entender como isso poderia ser validado em um teste HTTP e o que eu deveria verificar na resposta.
+
+104. me explica como revisar uma implementação do SessaoApiInterceptor sem simplesmente olhar se os testes passaram. cria um checklist de coisas que eu deveria procurar em arquitetura, segurança, autorização, CSRF, sessão e compatibilidade com os GETs existentes.
+
+105. quero fazer uma revisão final da segurança das mutações REST do praxis. considera interceptor, 401, 403, JSON de erro, CSRF, senha provisória, @SomenteChefe, OAB da sessão, documentos sigilosos, multipart e testes HTTP. me faça perguntas de banca uma por vez para eu justificar cada decisão.
+
+
 
 ## Caio Sena
 
