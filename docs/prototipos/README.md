@@ -34,6 +34,6 @@ Capturas da interface real (Chrome headless, 1280 px), logado como chefe (`admin
 
 Detalhes do script:
 
-- Cliente, parte contrária, audiência, contrato de honorário e anexo **não entram na carga de exemplo**: `semear()` os cria pela API REST, usando a sessão e o token CSRF do próprio navegador, para as tabelas da administração não aparecerem vazias.
+- Todos os cadastros que aparecem nas capturas vêm da carga de exemplo (`DadosDeExemplo`), inclusive clientes, parte contrária, audiência, contratos de honorário e o anexo — o script não semeia mais nada pela API.
 - As quatro capturas da administração são recortes por seção da mesma página (`/painel/admin`), longa demais para uma imagem só.
 - As capturas que **alteram estado** (varredura, aprovação da peça, criação de usuário) ficam no fim do roteiro, para não contaminar as anteriores.

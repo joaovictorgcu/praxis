@@ -30,13 +30,13 @@ Em volta disso ficam os apoios que o dia a dia exige: cadastro de processos com 
 Dois comandos, sem instalar banco nem configurar nada:
 
 ```bash
-./mvnw test            # 168 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
+./mvnw test            # 171 testes: unidade + contrato HTTP + 53 cenários BDD (481 steps)
 ./mvnw spring-boot:run # sobe em http://localhost:8080
 ```
 
 Abra <http://localhost:8080/painel>. Ele pede login, porque todo o painel é autenticado.
 
-A aplicação já sobe com um escritório de mentira montado: dois processos (um deles em segredo de justiça), três prazos em estados diferentes, dois modelos de peça e o calendário de feriados nacionais. É o suficiente para percorrer o sistema inteiro sem cadastrar nada.
+A aplicação já sobe com um escritório de mentira montado: dois processos (um deles em segredo de justiça), quatro prazos em estados diferentes (inclusive um vencido e um já cumprido), uma peça esperando revisão, dois clientes, uma parte contrária, uma audiência marcada, dois contratos de honorário, um anexo nos autos, dois modelos de peça e o calendário de feriados nacionais. É o suficiente para percorrer o sistema inteiro sem cadastrar nada.
 
 **Com quem entrar:**
 
@@ -350,6 +350,21 @@ Os 6 padrões da lista do enunciado, mais Composite e Interpreter. Cada um entro
 | **Proxy** | `ProxyDeAcesso` sobre `ConteudoRestrito`, especializado em `DocumentoProxy` e `ArquivoProxy` | Segredo de justiça conferido antes de o conteúdo sair da persistência; impossível esquecer a checagem, porque o caso de uso só tem acesso ao Proxy. A regra do art. 189 é escrita uma vez e vale para peça gerada e arquivo anexado |
 | **Iterator** | `Processo implements Iterable<Andamento>` | Linha do tempo em ordem cronológica sem expor a coleção interna |
 
+### O front: sem framework, mas com o básico inegociável
+
+Uma folha de estilo (`/css/praxis.css`), um arquivo de comportamento (`/js/praxis.js`) e Thymeleaf. Não há build de front, e as decisões abaixo existem para que isso não custe acessibilidade nem desempenho.
+
+- **Atalho de teclado** em toda tela: o primeiro `Tab` revela "Ir para o conteudo" e pula o menu inteiro (WCAG 2.4.1). O link do menu correspondente à tela atual leva `aria-current="page"`, então o leitor de tela anuncia onde você está — antes era só uma cor diferente.
+- **Tema claro e escuro** pela preferência do sistema (`prefers-color-scheme`). Toda cor virou token em `:root`; o tema escuro redefine os tokens e quase nenhuma regra precisa saber que ele existe.
+- **Movimento é preferência do usuário**: com `prefers-reduced-motion`, a rolagem suave e as transições são desligadas (WCAG 2.3.3).
+- **Folha de impressão**: peça, ficha e agenda vão ao papel sem menu, sem formulário e sem botão; o cabeçalho da tabela repete a cada página e links externos imprimem o endereço. Peça aprovada é levada impressa para a audiência — essa é a tela que mais vai para a impressora.
+- **Cabeçalho fixo** com `scroll-margin-top` nos alvos de âncora, para o foco nunca ficar escondido atrás dele (WCAG 2.4.11); em tela estreita o cabeçalho volta a rolar, porque ali o menu ocupa três linhas. Nas tabelas longas da administração, o cabeçalho de coluna acompanha a rolagem.
+- **Alvo de toque** de no mínimo 24 px nos botões de tabela (WCAG 2.5.8), e caixas de seleção maiores.
+- **Feedback de envio**: ao submeter, o botão vira "Enviando..." com `aria-busy` e trava contra duplo clique; voltar pelo histórico o destrava.
+- **Desempenho**: HTML, CSS, JS e JSON saem comprimidos; CSS e JS levam o hash do conteúdo na URL (`/css/praxis-<hash>.css`) e são cacheados por um ano — publicar versão nova troca a URL e invalida sozinho.
+
+`FrontHttpTest` cobre o que é invisível a olho nu: o atalho existe em todas as telas do painel, o menu marca a página atual e os estáticos saem com cache longo.
+
 ### Segurança do painel
 
 - Login próprio por sessão HTTP (sem Spring Security). A sessão guarda só uma projeção do usuário (nome, OAB, papel) — nunca a senha.
@@ -365,7 +380,7 @@ Os 6 padrões da lista do enunciado, mais Composite e Interpreter. Cada um entro
 ```
 53 scenarios (53 passed)
 481 steps (481 passed)
-Tests run: 168, Failures: 0, Errors: 0
+Tests run: 171, Failures: 0, Errors: 0
 ```
 
 Os cenários são escritos em português, em [`src/test/resources/features`](src/test/resources/features), e automatizados com Cucumber + Spring (`src/test/java/school/cesar/praxis/bdd`). Os steps exercitam os casos de uso reais contra o banco, não dublês.
