@@ -42,7 +42,8 @@ public class SessaoInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    private static boolean exigeChefe(Object handler) {
+    /** Visivel no pacote: a guarda da API REST aplica a mesma regra de papel. */
+    static boolean exigeChefe(Object handler) {
         if (!(handler instanceof HandlerMethod metodo)) {
             return false;
         }

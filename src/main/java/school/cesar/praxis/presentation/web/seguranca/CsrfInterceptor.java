@@ -32,23 +32,39 @@ public class CsrfInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest requisicao, HttpServletResponse resposta, Object handler)
             throws Exception {
-        if (METODOS_SEGUROS.contains(requisicao.getMethod().toUpperCase())) {
+        if (metodoSeguro(requisicao)) {
             tokenDa(requisicao.getSession(true));
             return true;
         }
+        if (!tokenValido(requisicao)) {
+            resposta.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "token CSRF ausente ou invalido; recarregue a pagina e tente de novo");
+            return false;
+        }
+        return true;
+    }
+
+    /** Metodo que nao muda estado e por isso dispensa token. */
+    static boolean metodoSeguro(HttpServletRequest requisicao) {
+        return METODOS_SEGUROS.contains(requisicao.getMethod().toUpperCase());
+    }
+
+    /**
+     * Token recebido (parametro {@code _csrf} ou cabecalho {@code X-CSRF-Token})
+     * confere com o da sessao. Comparacao em tempo constante.
+     *
+     * <p>O cabecalho existe porque requisicao multipart nem sempre traz o
+     * parametro antes do arquivo ser lido.
+     */
+    static boolean tokenValido(HttpServletRequest requisicao) {
         HttpSession sessao = requisicao.getSession(false);
         String esperado = sessao == null ? null : (String) sessao.getAttribute(CHAVE_SESSAO);
         String recebido = requisicao.getParameter(PARAMETRO);
         if (recebido == null) {
             recebido = requisicao.getHeader(CABECALHO);
         }
-        if (esperado == null || recebido == null
-                || !MessageDigest.isEqual(esperado.getBytes(), recebido.getBytes())) {
-            resposta.sendError(HttpServletResponse.SC_FORBIDDEN,
-                    "token CSRF ausente ou invalido; recarregue a pagina e tente de novo");
-            return false;
-        }
-        return true;
+        return esperado != null && recebido != null
+                && MessageDigest.isEqual(esperado.getBytes(), recebido.getBytes());
     }
 
     /** Devolve o token da sessao, criando um se ainda nao houver. */
