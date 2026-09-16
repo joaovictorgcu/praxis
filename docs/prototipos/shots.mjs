@@ -69,35 +69,8 @@ await js(`document.querySelector('input[name=email]').value='admin';document.que
 await new Promise(r => setTimeout(r, 800)); await esperarCarga();
 await foto('login-erro', 720);
 
-/**
- * Cliente, parte contraria, audiencia, contrato e anexo nao entram nos dados de exemplo:
- * sao criados pela API REST (com a sessao e o CSRF do navegador) para as tabelas da
- * administracao nao aparecerem vazias nas capturas.
- */
-async function semear() {
-  const csrf = await js(`document.querySelector('input[name=_csrf]').value`);
-  return js(`(async () => {
-    const json = (url, corpo) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '${csrf}' }, body: JSON.stringify(corpo) }).then(r => r.status);
-    const r = [];
-    r.push(await json('/api/clientes', { nome: 'Construtora Alfa Ltda.', cpfOuCnpj: '12.345.678/0001-90', tipoPessoa: 'JURIDICA', email: 'contato@alfa.com.br', telefone: '(81) 3333-1010', cidade: 'Recife', estado: 'PE' }));
-    r.push(await json('/api/clientes', { nome: 'Helena Barros', cpfOuCnpj: '123.456.789-09', tipoPessoa: 'FISICA', email: 'helena.barros@email.com', cidade: 'Olinda', estado: 'PE' }));
-    r.push(await json('/api/partes-contrarias', { nome: 'Imobiliaria Beta ME', cpfOuCnpj: '98.765.432/0001-10', tipoPessoa: 'JURIDICA', cidade: 'Recife', estado: 'PE' }));
-    r.push(await json('/api/audiencias', { numeroProcesso: '0001234-56.2026.8.17.0001', nomeParteAutora: 'Construtora Alfa Ltda.', dataHoraInicio: '2026-10-08T14:00:00', dataHoraFim: '2026-10-08T15:30:00', sala: 'Sala 3 - 2a Vara Civel' }));
-    r.push(await json('/api/honorarios', { numeroProcesso: '0001234-56.2026.8.17.0001', modalidade: 'QUOTA_LITIS', celebradoEm: '2026-08-20', valorCausa: 120000, percentualExito: 20, horasTrabalhadas: 0 }));
-    r.push(await json('/api/honorarios', { numeroProcesso: '0007654-32.2026.8.17.0002', modalidade: 'FIXO', celebradoEm: '2026-09-01', valorFixo: 8500, horasTrabalhadas: 0 }));
-    const pdf = new Blob(['%PDF-1.4\\n% laudo pericial de exemplo\\n'], { type: 'application/pdf' });
-    const form = new FormData();
-    form.append('numeroProcesso', '0001234-56.2026.8.17.0001');
-    form.append('arquivo', pdf, 'laudo-pericial.pdf');
-    form.append('descricao', 'Laudo pericial do engenheiro');
-    r.push(await fetch('/api/anexos', { method: 'POST', headers: { 'X-CSRF-Token': '${csrf}' }, body: form }).then(x => x.status));
-    return r.join(',');
-  })()`);
-}
-
 // 2. Chefe
 await entrar('admin', '123');
-console.log('semeadura (status HTTP):', await semear());
 await ir('/painel');
 await foto('painel-agenda');
 await ir('/painel/processos'); await foto('processos');
