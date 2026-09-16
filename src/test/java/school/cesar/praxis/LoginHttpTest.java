@@ -195,7 +195,7 @@ class LoginHttpTest {
     }
 
     @Test
-    @DisplayName("API REST continua aberta, sem sessao")
+    @DisplayName("leitura da API REST continua aberta, sem sessao")
     void apiSegueAberta() throws Exception {
         mvc.perform(get("/api/feriados")).andExpect(status().isOk());
         mvc.perform(get("/api/documentos")).andExpect(status().isOk());

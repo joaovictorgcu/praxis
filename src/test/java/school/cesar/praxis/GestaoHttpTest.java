@@ -191,17 +191,20 @@ class GestaoHttpTest {
         DocumentoGerado doc = gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
                 numero, TipoDocumento.PETICAO_INICIAL, Map.of("fatos", "x"), "PE12345"));
 
+        MockHttpSession carla = chefe();
+
         // Aprovar rascunho: estado invalido -> 409
-        mvc.perform(post("/api/documentos/" + doc.getId() + "/aprovar")
+        mvc.perform(post("/api/documentos/" + doc.getId() + "/aprovar").session(carla)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"oab\":\"PE00001\",\"texto\":\"ok\"}"))
+                        .content("{\"texto\":\"ok\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.erro", containsString("RASCUNHO")));
 
+        // Leitura da API segue aberta: sem sessao, o 400 vem do parametro, nao da guarda.
         mvc.perform(get("/api/prazos/agenda").param("ate", "14/09/2026"))
                 .andExpect(status().isBadRequest());
 
-        mvc.perform(post("/api/documentos/" + doc.getId() + "/desfazer"))
+        mvc.perform(post("/api/documentos/" + doc.getId() + "/desfazer").session(carla))
                 .andExpect(status().isConflict());
     }
 

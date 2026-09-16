@@ -5,9 +5,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
+import school.cesar.praxis.domain.usuario.Papel;
+import school.cesar.praxis.presentation.web.seguranca.CsrfInterceptor;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.hamcrest.Matchers.*;
@@ -18,9 +23,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Testes do contrato HTTP da anexacao. Cobrem o que os cenarios BDD nao
  * alcancam: o upload multipart e o 403 do Proxy saindo pela API.
+ *
+ * <p>A juntada e mutacao, entao leva sessao. O token CSRF vai pelo cabecalho:
+ * num multipart o parametro so existe depois do corpo ser lido, e o cabecalho
+ * esta disponivel antes disso.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(ApoioDeTesteWeb.class)
 class AnexoHttpTest {
 
     @Autowired
@@ -29,6 +39,15 @@ class AnexoHttpTest {
     private ProcessosUseCases.CadastrarProcesso cadastrarProcesso;
     @Autowired
     private ObjectMapper json;
+
+    /** Juntada assinada pela OAB da sessao, com o token no cabecalho. */
+    private static MockMultipartHttpServletRequestBuilder juntada(String oab) {
+        MockHttpSession sessao = ApoioDeTesteWeb.sessaoDe(1L, "Ana Souza", oab, Papel.ADVOGADO);
+        MockMultipartHttpServletRequestBuilder requisicao = multipart("/api/anexos");
+        requisicao.session(sessao);
+        requisicao.header(CsrfInterceptor.CABECALHO, ApoioDeTesteWeb.TOKEN_CSRF);
+        return requisicao;
+    }
 
     private void processo(String numero, boolean segredo, String oab) {
         cadastrarProcesso.executar(new ProcessosUseCases.CadastrarProcesso.Comando(
@@ -46,11 +65,10 @@ class AnexoHttpTest {
         MockMultipartFile arquivo = new MockMultipartFile(
                 "arquivo", "procuracao.pdf", "application/pdf", bytes);
 
-        String resposta = mvc.perform(multipart("/api/anexos")
+        String resposta = mvc.perform(juntada("PE12345")
                         .file(arquivo)
                         .param("numeroProcesso", numero)
-                        .param("descricao", "Procuracao assinada")
-                        .param("oab", "PE12345"))
+                        .param("descricao", "Procuracao assinada"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("procuracao.pdf"))
                 .andExpect(jsonPath("$.tipo").value("PDF"))
@@ -82,10 +100,9 @@ class AnexoHttpTest {
         MockMultipartFile arquivo = new MockMultipartFile(
                 "arquivo", "laudo.pdf", "application/pdf", "laudo sigiloso".getBytes());
 
-        String resposta = mvc.perform(multipart("/api/anexos")
+        String resposta = mvc.perform(juntada("PE54321")
                         .file(arquivo)
-                        .param("numeroProcesso", numero)
-                        .param("oab", "PE54321"))
+                        .param("numeroProcesso", numero))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.segredoJustica").value(true))
                 .andReturn().getResponse().getContentAsString();
@@ -110,10 +127,9 @@ class AnexoHttpTest {
                 "arquivo", "virus.exe", "application/x-msdownload", "MZ".getBytes());
 
         // Recusa de invariante e erro do cliente (400), nao falha do servidor.
-        mvc.perform(multipart("/api/anexos")
+        mvc.perform(juntada("PE12345")
                         .file(executavel)
-                        .param("numeroProcesso", numero)
-                        .param("oab", "PE12345"))
+                        .param("numeroProcesso", numero))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro", containsString("tipo de arquivo nao aceito")));
 

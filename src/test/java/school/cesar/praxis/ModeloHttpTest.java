@@ -5,9 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
+import school.cesar.praxis.domain.usuario.Papel;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -22,9 +25,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>Existem porque os cenarios BDD chamam os casos de uso diretamente: um campo
  * que falte no corpo JSON do controller passa despercebido por eles. Aqui o
  * caminho e o mesmo do navegador.
+ *
+ * <p>Cadastrar modelo e acao do chefe e gerar peca exige sessao, entao as
+ * chamadas levam a sessao correspondente; o token CSRF vem do
+ * {@link ApoioDeTesteWeb}.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(ApoioDeTesteWeb.class)
 class ModeloHttpTest {
 
     @Autowired
@@ -34,10 +42,18 @@ class ModeloHttpTest {
     @Autowired
     private ObjectMapper json;
 
+    private static MockHttpSession chefe() {
+        return ApoioDeTesteWeb.sessaoDe(1L, "Carla Mendes", "PE00001", Papel.CHEFE);
+    }
+
+    private static MockHttpSession ana() {
+        return ApoioDeTesteWeb.sessaoDe(2L, "Ana Souza", "PE12345", Papel.ADVOGADO);
+    }
+
     @Test
     @DisplayName("POST /api/modelos cadastra e GET /api/modelos lista o modelo")
     void cadastraEListaModelo() throws Exception {
-        mvc.perform(post("/api/modelos")
+        mvc.perform(post("/api/modelos").session(chefe())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -67,7 +83,7 @@ class ModeloHttpTest {
                 processo, "Construtora Alfa Ltda.", "Recife", false,
                 "Ana Souza", "ana@praxis.adv.br", "PE12345"));
 
-        mvc.perform(post("/api/modelos")
+        mvc.perform(post("/api/modelos").session(chefe())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -81,14 +97,14 @@ class ModeloHttpTest {
                                 }"""))
                 .andExpect(status().isOk());
 
-        String resposta = mvc.perform(post("/api/documentos")
+        // A OAB do solicitante nao vai no corpo: vem da sessao de Ana (PE12345).
+        String resposta = mvc.perform(post("/api/documentos").session(ana())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "numeroProcesso": "%s",
                                   "tipo": "PECA_AVULSA",
                                   "codigoModelo": "HTTP_ACORDO",
-                                  "oabSolicitante": "PE12345",
                                   "campos": { "valorAcordo": "R$ 12.500,00" }
                                 }""".formatted(processo)))
                 .andExpect(status().isOk())
