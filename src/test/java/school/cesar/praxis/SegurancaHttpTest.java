@@ -15,6 +15,7 @@ import school.cesar.praxis.presentation.web.seguranca.CsrfInterceptor;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -81,7 +82,10 @@ class SegurancaHttpTest {
                 .andExpect(header().string("Content-Security-Policy", containsString("script-src 'self'")))
                 .andExpect(header().string("Content-Security-Policy", containsString("frame-ancestors 'none'")))
                 .andExpect(header().string("Cache-Control", "no-store"))
-                .andExpect(content().string(containsString("/js/praxis.js")));
+                // Sem script inline: o comportamento vem do arquivo, servido com o
+                // hash do conteudo na URL (/js/praxis-<hash>.js).
+                .andExpect(content().string(matchesPattern(
+                        "(?s).*<script src=\"/js/praxis-[0-9a-f]{32}\\.js\" defer></script>.*")));
 
         mvc.perform(get("/api/feriados"))
                 .andExpect(header().exists("Content-Security-Policy"));
