@@ -13,9 +13,10 @@ import java.nio.charset.StandardCharsets;
  * URL pedida para voltar depois; acao marcada com {@link SomenteChefe}
  * pedida por advogado responde 403.
  *
- * <p>Vale so para {@code /painel/**}. A API REST continua aberta e recebendo
- * a OAB na requisicao, como antes - e o contrato dos testes HTTP e dos
- * scripts de exemplo do README.
+ * <p>Vale so para {@code /painel/**}, onde a recusa e uma tela. A API REST
+ * tem guarda propria - {@link SessaoApiInterceptor} -, que responde em JSON e
+ * so exige sessao nas mutacoes: a leitura continua aberta, como nos scripts de
+ * exemplo do README.
  */
 public class SessaoInterceptor implements HandlerInterceptor {
 

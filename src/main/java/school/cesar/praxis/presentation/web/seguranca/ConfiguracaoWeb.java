@@ -14,8 +14,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.List;
 
 /**
- * Liga a guarda de sessao ao painel e permite que controller de tela receba
- * {@link UsuarioLogado} como parametro, em vez de mexer na {@code HttpSession}.
+ * Liga a guarda de sessao ao painel e as mutacoes da API, e permite que
+ * controller receba {@link UsuarioLogado} como parametro, em vez de mexer na
+ * {@code HttpSession}.
  */
 @Configuration
 public class ConfiguracaoWeb implements WebMvcConfigurer {
@@ -24,6 +25,7 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registro) {
         registro.addInterceptor(new SessaoInterceptor()).addPathPatterns("/painel/**");
         registro.addInterceptor(new CsrfInterceptor()).addPathPatterns("/painel/**", "/sair");
+        registro.addInterceptor(new SessaoApiInterceptor()).addPathPatterns("/api/**");
     }
 
     @Override
