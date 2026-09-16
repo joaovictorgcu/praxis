@@ -8,11 +8,17 @@ import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.TipoDocumento;
+import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
 
 import java.util.List;
 import java.util.Map;
 
-/** Camada de apresentacao (REST) da funcionalidade Geracao de documentos. */
+/**
+ * Camada de apresentacao (REST) da funcionalidade Geracao de documentos.
+ *
+ * <p>Revisar a peca e habilitar OAB nos autos sigilosos sao decisoes do chefe,
+ * como nas telas: a anotacao vale aqui pela mesma guarda de sessao.
+ */
 @RestController
 @RequestMapping("/api/documentos")
 public class DocumentoRestController {
@@ -83,6 +89,7 @@ public class DocumentoRestController {
         return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
     }
 
+    @SomenteChefe
     @PostMapping("/{id}/aprovar")
     public ResponseEntity<Map<String, Object>> aprovar(@PathVariable Long id, @RequestBody DecisaoDocumento corpo) {
         DocumentoGerado documento = aprovarDocumento.executar(
@@ -90,6 +97,7 @@ public class DocumentoRestController {
         return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
     }
 
+    @SomenteChefe
     @PostMapping("/{id}/rejeitar")
     public ResponseEntity<Map<String, Object>> rejeitar(@PathVariable Long id, @RequestBody DecisaoDocumento corpo) {
         DocumentoGerado documento = rejeitarDocumento.executar(
@@ -97,6 +105,7 @@ public class DocumentoRestController {
         return ResponseEntity.ok(Map.of("id", documento.getId(), "status", documento.getStatus().nome()));
     }
 
+    @SomenteChefe
     @PostMapping("/{id}/desfazer")
     public ResponseEntity<Map<String, Object>> desfazer(@PathVariable Long id) {
         DocumentoGerado documento = desfazerDecisao.executar(
@@ -113,6 +122,7 @@ public class DocumentoRestController {
 
     public record OabDoCorpo(String oab) {}
 
+    @SomenteChefe
     @PostMapping("/{id}/oabs")
     public ResponseEntity<Map<String, Object>> habilitarOab(@PathVariable Long id, @RequestBody OabDoCorpo corpo) {
         DocumentoGerado documento = habilitarOab.executar(
@@ -123,6 +133,7 @@ public class DocumentoRestController {
                 "oabsHabilitadas", documento.getOabsHabilitadas()));
     }
 
+    @SomenteChefe
     @DeleteMapping("/{id}/oabs/{oab}")
     public ResponseEntity<Map<String, Object>> revogarOab(@PathVariable Long id, @PathVariable String oab) {
         DocumentoGerado documento = revogarOab.executar(

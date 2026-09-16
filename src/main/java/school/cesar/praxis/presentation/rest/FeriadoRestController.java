@@ -4,11 +4,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.cesar.praxis.application.port.in.FeriadosUseCases;
 import school.cesar.praxis.domain.feriado.Abrangencia;
+import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
 
 import java.time.LocalDate;
 import java.util.List;
 
-/** Camada de apresentacao (REST) da funcionalidade Cadastro de feriados. */
+/**
+ * Camada de apresentacao (REST) da funcionalidade Cadastro de feriados.
+ *
+ * <p>Remover feriado muda a contagem de prazo de todo o escritorio, entao e
+ * acao do chefe - a mesma regra da tela.
+ */
 @RestController
 @RequestMapping("/api/feriados")
 public class FeriadoRestController {
@@ -50,6 +56,7 @@ public class FeriadoRestController {
         return listar.executar();
     }
 
+    @SomenteChefe
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable Long id) {
         remover.executar(id);

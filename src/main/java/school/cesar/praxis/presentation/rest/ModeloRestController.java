@@ -4,10 +4,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.cesar.praxis.application.port.in.ModelosUseCases;
 import school.cesar.praxis.domain.documento.TipoDocumento;
+import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
 
 import java.util.List;
 
-/** Camada de apresentacao (REST) da funcionalidade Cadastro de modelos. */
+/**
+ * Camada de apresentacao (REST) da funcionalidade Cadastro de modelos.
+ *
+ * <p>Remover modelo tira uma peca do alcance de todo o escritorio, entao e
+ * acao do chefe - a mesma regra da tela.
+ */
 @RestController
 @RequestMapping("/api/modelos")
 public class ModeloRestController {
@@ -50,6 +56,7 @@ public class ModeloRestController {
         return listar.executar();
     }
 
+    @SomenteChefe
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable Long id) {
         remover.executar(id);
