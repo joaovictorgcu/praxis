@@ -16,7 +16,7 @@ import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -77,9 +77,18 @@ class ImplantacaoHttpTest {
     }
 
     @Test
-    @DisplayName("a instancia publicada sobe com o escritorio de exemplo montado")
+    @DisplayName("a instancia publicada sobe com a carteira de exemplo montada")
     void dadosDeExemplo() {
-        assertEquals(3, agenda.executar(LocalDate.now().plusMonths(2)).size(),
-                "tres prazos em aberto (o quarto ja nasce cumprido)");
+        var emAberto = agenda.executar(LocalDate.now().plusMonths(3));
+
+        assertTrue(emAberto.size() >= 8,
+                "a carteira de demonstracao tem varios prazos em aberto, e nao so os do nucleo");
+        assertTrue(emAberto.stream().anyMatch(PrazosUseCases.ConsultarAgenda.ItemAgenda::vencido),
+                "um prazo vencido em aberto, para a agenda mostrar o alerta de prazo perdido");
+        assertTrue(emAberto.stream().anyMatch(PrazosUseCases.ConsultarAgenda.ItemAgenda::fatal),
+                "prazos fatais, que sao os que disparam alerta");
+        assertTrue(emAberto.stream().map(PrazosUseCases.ConsultarAgenda.ItemAgenda::numeroProcesso)
+                        .distinct().count() >= 5,
+                "prazos espalhados por varios processos");
     }
 }

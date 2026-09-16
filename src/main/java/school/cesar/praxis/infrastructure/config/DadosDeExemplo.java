@@ -88,12 +88,14 @@ public class DadosDeExemplo implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (processos.porNumero(NumeroCnj.de(PROCESSO_PUBLICO)).isPresent()) {
-            return;
-        }
-
         LocalDate hoje = relogio.hoje();
+        if (processos.porNumero(NumeroCnj.de(PROCESSO_PUBLICO)).isEmpty()) {
+            carregarNucleo(hoje);
+        }
+        carregarCarteira(hoje);
+    }
 
+    private void carregarNucleo(LocalDate hoje) {
         cadastrar.executar(new ProcessosUseCases.CadastrarProcesso.Comando(
                 PROCESSO_PUBLICO, "Construtora Alfa Ltda.", "Recife", false,
                 "Ana Beatriz Souza", "ana.souza@praxis.adv.br", "PE12345"));
@@ -130,6 +132,91 @@ public class DadosDeExemplo implements CommandLineRunner {
         enviarParaRevisao.executar(new DocumentosUseCases.EnviarDocumentoParaRevisao.Comando(contestacao.getId()));
 
         entornoDoEscritorio(hoje);
+    }
+
+    /**
+     * Carteira do escritorio: processos com prazos em todos os estagios de
+     * alerta, para a agenda e a administracao terem volume parecido com o de um
+     * escritorio pequeno em funcionamento.
+     *
+     * <p>Roda processo a processo, e nao de uma vez como {@link #carregarNucleo}:
+     * numa base que ja existe, so entra o que ainda falta. Sao dezenas de linhas
+     * curtas - a ordem de grandeza e de dezenas de KB, longe do limite de
+     * qualquer banco gratuito. Volume mesmo esta nos anexos, que sao binarios e
+     * continuam sendo um so.
+     */
+    private void carregarCarteira(LocalDate hoje) {
+        // numero CNJ, cliente, comarca, segredo, responsavel, e-mail, OAB
+        processo("0002345-77.2026.8.17.0001", "Mercadinho Sao Jose Ltda.", "Recife", false,
+                "Ana Beatriz Souza", "ana.souza@praxis.adv.br", "PE12345",
+                hoje.minusDays(12), "Intimacao para replica", TipoAndamento.INTIMACAO,
+                // descricao, intimacao (dias atras), dias, fatal, regime, cumprido
+                prazo("Replica a contestacao", 12, 15, true, RegimeContagem.DIAS_UTEIS, false),
+                prazo("Especificacao de provas", 3, 5, false, RegimeContagem.DIAS_UTEIS, false));
+
+        processo("0003456-93.2026.8.17.0002", "Helena Barros", "Olinda", false,
+                "Bruno Carvalho", "bruno.carvalho@praxis.adv.br", "PE54321",
+                hoje.minusDays(6), "Sentenca publicada", TipoAndamento.SENTENCA,
+                prazo("Apelacao", 6, 15, true, RegimeContagem.DIAS_UTEIS, false),
+                prazo("Custas de preparo", 6, 10, false, RegimeContagem.DIAS_CORRIDOS, false));
+
+        processo("0004567-12.2026.8.17.0003", "Transportes Norte S.A.", "Jaboatao dos Guararapes", false,
+                "Carla Mendes", "carla.mendes@praxis.adv.br", "PE00001",
+                hoje.minusDays(2), "Despacho saneador", TipoAndamento.DESPACHO,
+                prazo("Manifestacao sobre saneador", 2, 5, true, RegimeContagem.DIAS_UTEIS, false),
+                prazo("Rol de testemunhas", 2, 15, false, RegimeContagem.DIAS_UTEIS, false));
+
+        processo("0005678-28.2026.8.17.0004", "Padaria Dois Irmaos ME", "Recife", false,
+                "Ana Beatriz Souza", "ana.souza@praxis.adv.br", "PE12345",
+                hoje.minusDays(45), "Intimacao para impugnacao", TipoAndamento.INTIMACAO,
+                // Vencido em aberto: o alerta de prazo perdido tem de aparecer na agenda.
+                prazo("Impugnacao ao cumprimento de sentenca", 45, 15, true, RegimeContagem.DIAS_UTEIS, false),
+                prazo("Juntada de substabelecimento", 40, 5, false, RegimeContagem.DIAS_UTEIS, true));
+
+        processo("0006789-44.2026.8.17.0005", "Condominio Edificio Aurora", "Recife", false,
+                "Bruno Carvalho", "bruno.carvalho@praxis.adv.br", "PE54321",
+                hoje.minusDays(20), "Audiencia de conciliacao designada", TipoAndamento.AUDIENCIA,
+                prazo("Proposta de acordo", 20, 30, false, RegimeContagem.DIAS_CORRIDOS, false),
+                prazo("Comprovacao de pagamento", 30, 10, false, RegimeContagem.DIAS_UTEIS, true));
+
+        processo("0008901-80.2026.8.17.0006", "J. P. M.", "Camaragibe", true,
+                "Carla Mendes", "carla.mendes@praxis.adv.br", "PE00001",
+                hoje.minusDays(1), "Citacao por oficial de justica", TipoAndamento.CITACAO,
+                prazo("Contestacao", 1, 15, true, RegimeContagem.DIAS_UTEIS, false));
+    }
+
+    /** Descricao de um prazo da carteira, resolvida contra a data de hoje. */
+    private record PrazoDemo(String descricao, int diasAtras, int quantidade, boolean fatal,
+                             RegimeContagem regime, boolean cumprido) {
+    }
+
+    private static PrazoDemo prazo(String descricao, int diasAtras, int quantidade, boolean fatal,
+                                   RegimeContagem regime, boolean cumprido) {
+        return new PrazoDemo(descricao, diasAtras, quantidade, fatal, regime, cumprido);
+    }
+
+    /** Cadastra o processo com um andamento e seus prazos, se ele ainda nao existir. */
+    private void processo(String numero, String cliente, String comarca, boolean segredo,
+                          String responsavel, String email, String oab,
+                          LocalDate dataAndamento, String andamento, TipoAndamento tipo,
+                          PrazoDemo... prazos) {
+        if (processos.porNumero(NumeroCnj.de(numero)).isPresent()) {
+            return;
+        }
+        cadastrar.executar(new ProcessosUseCases.CadastrarProcesso.Comando(
+                numero, cliente, comarca, segredo, responsavel, email, oab));
+        registrar.executar(new ProcessosUseCases.RegistrarAndamento.Comando(
+                numero, dataAndamento, andamento, tipo));
+
+        LocalDate hoje = relogio.hoje();
+        for (PrazoDemo p : prazos) {
+            Prazo aberto = abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
+                    numero, p.descricao(), hoje.minusDays(p.diasAtras()), p.quantidade(),
+                    p.fatal(), p.regime()));
+            if (p.cumprido()) {
+                cumprirPrazo.executar(aberto.getId());
+            }
+        }
     }
 
     /**
