@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Assinatura horizontal (marca + nome), para o cartao de login e material
+  externo. Sem fundo proprio: herda o do container. As cores das linhas sao as
+  da versao escura, que e a aprovada.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 200" width="780" height="200" role="img" aria-label="Praxis - gestao para escritorios de advocacia">
+  <defs>
+    <linearGradient id="praxis-ouro-h" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#c9973f"/>
+      <stop offset=".5" stop-color="#e7be66"/>
+      <stop offset="1" stop-color="#f7e2ac"/>
+    </linearGradient>
+  </defs>
+
+  <g fill="none" stroke="#6fa3d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity=".45">
+    <polygon points="100,22 167.5,61 167.5,139 100,178 32.5,139 32.5,61"/>
+    <polygon points="129,49.8 158,100 129,150.2 71,150.2 42,100 71,49.8"/>
+    <path d="M100,22 129,49.8 M100,22 71,49.8
+             M167.5,61 129,49.8 M167.5,61 158,100
+             M167.5,139 158,100 M167.5,139 129,150.2
+             M100,178 129,150.2 M100,178 71,150.2
+             M32.5,139 71,150.2 M32.5,139 42,100
+             M32.5,61 42,100 M32.5,61 71,49.8"/>
+  </g>
+  <g fill="#8fbbe6">
+    <circle cx="100" cy="22" r="4.2"/><circle cx="167.5" cy="61" r="4.2"/>
+    <circle cx="167.5" cy="139" r="4.2"/><circle cx="100" cy="178" r="4.2"/>
+    <circle cx="32.5" cy="139" r="4.2"/><circle cx="32.5" cy="61" r="4.2"/>
+    <circle cx="129" cy="49.8" r="3.2"/><circle cx="158" cy="100" r="3.2"/>
+    <circle cx="129" cy="150.2" r="3.2"/><circle cx="71" cy="150.2" r="3.2"/>
+    <circle cx="42" cy="100" r="3.2"/><circle cx="71" cy="49.8" r="3.2"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round">
+    <path d="M70,90 H130" stroke-width="6"/>
+    <path d="M82,132 H118" stroke-width="6"/>
+    <path d="M70,90 V104 M130,90 V104" stroke-width="3"/>
+    <path d="M58,104 A13,10 0 0 0 82,104" stroke-width="5"/>
+    <path d="M118,104 A13,10 0 0 0 142,104" stroke-width="5"/>
+  </g>
+  <path d="M100,130 V78" fill="none" stroke="url(#praxis-ouro-h)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M100,54 86,80 114,80 Z" fill="url(#praxis-ouro-h)"/>
+
+  <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+    <text x="218" y="112" fill="#ffffff" font-size="78" font-weight="700" letter-spacing="1.5">PRAXIS</text>
+    <text x="221" y="146" fill="#a8c8e8" font-size="16.2" font-weight="500" letter-spacing="3.35">GESTAO PARA ESCRITORIOS DE ADVOCACIA</text>
+  </g>
+</svg>
