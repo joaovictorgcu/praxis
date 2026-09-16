@@ -40,3 +40,26 @@ replay_pid*.log
 ### Database ###
 *.h2.db
 *.mv.db
+
+### Segredos e configuracao local ###
+# Nada de credencial em arquivo versionado: em prod as senhas entram por
+# variavel de ambiente (ver application-prod.properties).
+.env
+.env.*
+*-local.properties
+application-local.yml
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+### Dumps ###
+*.hprof
+heapdump*
+*.dump
+
+### SO e ferramentas ###
+.DS_Store
+Thumbs.db
+node_modules/

@@ -43,9 +43,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.username=sa",
         "spring.datasource.password=",
         // Cookie Secure recusaria a sessao no MockMvc, que fala http.
-        "server.servlet.session.cookie.secure=false"
+        "server.servlet.session.cookie.secure=false",
+        // O perfil prod nao traz senha de administrador embutida (viria publicada
+        // no repositorio): quem implanta injeta PRAXIS_ADMIN_SENHA. O teste faz o
+        // papel do ambiente e define a sua.
+        "praxis.admin.senha=" + ImplantacaoHttpTest.SENHA_ADMIN
 })
 class ImplantacaoHttpTest {
+
+    static final String SENHA_ADMIN = "senha-do-teste-de-implantacao";
 
     @Autowired private MockMvc mvc;
     @Autowired private PrazosUseCases.ConsultarAgenda agenda;
@@ -55,7 +61,7 @@ class ImplantacaoHttpTest {
     void loginDaDemonstracao() throws Exception {
         MvcResult resultado = mvc.perform(post("/login")
                         .param("email", "admin@admin")
-                        .param("senha", "1405"))
+                        .param("senha", SENHA_ADMIN))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/painel"))
                 .andReturn();
@@ -71,7 +77,7 @@ class ImplantacaoHttpTest {
     @Test
     @DisplayName("senha errada do administrador nao entra")
     void senhaErrada() throws Exception {
-        mvc.perform(post("/login").param("email", "admin@admin").param("senha", "1406"))
+        mvc.perform(post("/login").param("email", "admin@admin").param("senha", SENHA_ADMIN + "-errada"))
                 .andExpect(status().isOk())   // volta ao formulario com a mensagem generica
                 .andReturn();
     }

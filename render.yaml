@@ -45,8 +45,12 @@ services:
       # Instancia de demonstracao: escritorio de exemplo montado e login direto.
       - key: PRAXIS_ADMIN_USUARIO
         value: admin@admin
+      # Senha do administrador: sync: false pede o valor no Apply do blueprint e
+      # guarda so no painel. Senha em arquivo versionado seria publica junto com
+      # o repositorio - e esta abre a instancia no ar como chefe. Sem valor, o
+      # administrador nao e criado (ver UsuariosIniciais).
       - key: PRAXIS_ADMIN_SENHA
-        value: "1405"
+        sync: false
       - key: PRAXIS_DADOS_EXEMPLO
         value: "true"
       - key: PRAXIS_EXIGIR_TROCA

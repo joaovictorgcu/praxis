@@ -534,10 +534,10 @@ O repositório já traz o que a plataforma precisa: [`Dockerfile`](Dockerfile) (
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/joaovictorgcu/praxis)
 
 1. Clique no botão acima (ou, no painel do Render, **New → Blueprint**) e entre com a conta do GitHub.
-2. Escolha o repositório `praxis` e confirme em **Apply**.
+2. Escolha o repositório `praxis`. O Render pede o valor de `PRAXIS_ADMIN_SENHA` (a única variável marcada `sync: false`): é a senha do administrador da instância, escolhida por quem publica e guardada só no painel — o blueprint não a traz escrita. Confirme em **Apply**.
 3. O Render cria o PostgreSQL `praxis-db`, injeta host, porta, base, usuário e senha no serviço web, compila a imagem e publica em `https://<nome>.onrender.com`. O primeiro build leva de 5 a 8 minutos.
 
-No primeiro boot, o Flyway aplica `V1__esquema_inicial.sql` e a carga de exemplo monta o escritório. A instância publicada é uma **demonstração**: entra com `admin@admin` / `1405`, direto, sem troca de senha.
+No primeiro boot, o Flyway aplica `V1__esquema_inicial.sql` e a carga de exemplo monta o escritório. A instância publicada é uma **demonstração**: entra com `admin@admin` e a senha definida no Apply, direto, sem troca de senha. Sem `PRAXIS_ADMIN_SENHA` no ambiente o administrador não é criado — nenhuma senha padrão fica valendo.
 
 Para virar instalação real, troque as variáveis no painel do Render (Environment) e faça um redeploy:
 
@@ -556,7 +556,7 @@ PRAXIS_SENHA_INICIAL=<senha forte>
 - 512 MB de RAM: a imagem já sobe com `-XX:MaxRAMPercentage=70 -XX:+UseSerialGC`.
 - Anexos moram em BLOB no banco, e o plano gratuito dá pouco espaço — é demonstração, não arquivo do escritório.
 
-`ImplantacaoHttpTest` sobe a aplicação com o perfil `prod` (Flyway criando o esquema, Hibernate só validando) e confirma o que a instância publicada promete: `admin@admin` entra, não cai na troca de senha e encontra o escritório de exemplo montado.
+`ImplantacaoHttpTest` sobe a aplicação com o perfil `prod` (Flyway criando o esquema, Hibernate só validando) e confirma o que a instância publicada promete: `admin@admin` entra com a senha injetada pelo ambiente, não cai na troca de senha e encontra o escritório de exemplo montado.
 
 ## Rodar em produção: PostgreSQL + Flyway
 
