@@ -2,16 +2,46 @@ name: CI Build & Test Coverage
 
 on:
   push:
-    branches: [ "main", "master", "develop" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "master", "develop" ]
+    branches: [ "main" ]
+
+# O token so precisa ler o repositorio: nenhum passo escreve commit, release
+# ou comentario. Sem isto o GITHUB_TOKEN nasce com permissao de escrita.
+permissions:
+  contents: read
+
+# Push em cima de push cancela a execucao antiga: o que importa e o resultado
+# do ultimo commit, e a fila nao cresce sozinha.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Postgres de verdade para o passo de migracao. O MigracaoFlywayTest usa H2
+    # em modo PostgreSQL, o que prova que migracao e entidades concordam em
+    # tabelas e colunas - nao que o SQL e valido no PostgreSQL real.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: praxis
+          POSTGRES_USER: praxis
+          POSTGRES_PASSWORD: praxis
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U praxis"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - name: Checkout do código
+      - name: Checkout do codigo
         uses: actions/checkout@v4
 
       - name: Configurar Java 17
@@ -21,22 +51,75 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Dar permissão de execução ao wrapper do Maven
+      - name: Dar permissao de execucao ao wrapper do Maven
         run: chmod +x mvnw
 
-      - name: Executar Build e Testes (mvnw -B verify)
-        run: ./mvnw -B verify
+      # verify roda os testes, gera o relatorio do JaCoCo e reprova o build se
+      # a cobertura cair abaixo do piso do pom. -ntp tira o ruido de download
+      # do log, que e o que sobra para ler quando algo quebra.
+      - name: Build, testes e piso de cobertura (mvnw -B verify)
+        run: ./mvnw -B -ntp verify
 
-      - name: Upload Relatório JaCoCo
+      # A migracao roda contra o PostgreSQL de verdade, com ddl-auto=validate:
+      # se o SQL de db/migration nao for PostgreSQL valido, ou se uma entidade
+      # divergir do esquema, a aplicacao nao sobe e o passo falha.
+      - name: Subir no perfil prod contra PostgreSQL real
+        env:
+          SPRING_PROFILES_ACTIVE: prod
+          PRAXIS_DB_URL: jdbc:postgresql://localhost:5432/praxis
+          PRAXIS_DB_USER: praxis
+          PRAXIS_DB_PASSWORD: praxis
+          PRAXIS_SENHA_INICIAL: ci-apenas-para-o-build
+        run: |
+          java -jar target/praxis-*.jar > prod-startup.log 2>&1 &
+          pid=$!
+          for _ in $(seq 1 60); do
+            if curl -sf -o /dev/null http://localhost:8080/login; then
+              echo "aplicacao respondeu no perfil prod; migracao validada"
+              kill "$pid"
+              exit 0
+            fi
+            kill -0 "$pid" 2>/dev/null || break
+            sleep 2
+          done
+          echo "::error::a aplicacao nao subiu no perfil prod - veja prod-startup.log"
+          tail -n 60 prod-startup.log
+          exit 1
+
+      # Numeros no resumo da execucao: quem abre o build ve a cobertura sem
+      # baixar e abrir o HTML.
+      - name: Resumo da cobertura
+        if: always()
+        run: |
+          csv=target/site/jacoco/jacoco.csv
+          [ -f "$csv" ] || { echo "sem relatorio do JaCoCo" >> "$GITHUB_STEP_SUMMARY"; exit 0; }
+          awk -F, 'NR>1 {im+=$4; ic+=$5; bm+=$6; bc+=$7; lm+=$8; lc+=$9} END {
+            printf "## Cobertura\n\n| Contador | Coberto | Total | %% |\n|---|---|---|---|\n"
+            printf "| Instrucoes | %d | %d | %.1f%% |\n", ic, ic+im, 100*ic/(ic+im)
+            printf "| Ramos | %d | %d | %.1f%% |\n", bc, bc+bm, 100*bc/(bc+bm)
+            printf "| Linhas | %d | %d | %.1f%% |\n", lc, lc+lm, 100*lc/(lc+lm)
+          }' "$csv" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Relatorio JaCoCo
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-coverage-report
           path: target/site/jacoco/
 
-      - name: Upload Relatório Cucumber (HTML)
+      - name: Upload Relatorio Cucumber (HTML)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cucumber-html-report
           path: target/cucumber-reports/
+
+      # So quando quebra: e o XML do Surefire que diz qual teste falhou e por que.
+      - name: Upload relatorios do Surefire (em caso de falha)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: |
+            target/surefire-reports/
+            prod-startup.log
