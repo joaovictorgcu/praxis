@@ -160,18 +160,21 @@ class SegurancaApiHttpTest {
         DocumentoGerado peca = gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
                 numero, TipoDocumento.PETICAO_INICIAL, Map.of("fatos", "sigiloso"), "PE54321"));
 
-        // Ana esta logada, mas a OAB dela nao esta habilitada nos autos.
+        // Ana esta logada e le com a propria inscricao, que nao esta habilitada.
         mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE12345"))
                         .param("oab", "PE12345"))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string(containsString("segredo de justica")));
 
-        // Nem informando a OAB de quem esta habilitado: o Proxy barra a inscricao,
-        // e a peca gerada por Ana passaria a sair assinada por Bruno.
+        // O caso que importa: Ana logada informando a OAB de Bruno, que esta
+        // habilitada nos autos. Sem a conciliacao, o ?oab= seria campo livre e
+        // bastaria descobrir uma inscricao habilitada para ler autos alheios.
         mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE12345"))
-                        .param("oab", "PE99999"))
-                .andExpect(status().isForbidden());
+                        .param("oab", "PE54321"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(containsString("nao e a da sessao")));
 
+        // Bruno, o responsavel, le os proprios autos.
         mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE54321"))
                         .param("oab", "PE54321"))
                 .andExpect(status().isOk());

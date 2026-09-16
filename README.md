@@ -344,6 +344,13 @@ requisição as duas OABs que são de terceiro ou de leitura: a de `POST /api/do
 (o chefe habilitando outro advogado nos autos) e a de `?oab=` nos downloads, que é
 o que o Proxy confere.
 
+O `?oab=` deixa de ser campo livre para quem está logado: informar a inscrição de
+outro advogado é `403`, mesmo que ela esteja habilitada nos autos — senão bastaria
+a um advogado do escritório descobrir uma OAB habilitada para ler processo alheio.
+Sem sessão nada muda, e aí está o limite: **um chamador anônimo que saiba o id da
+peça e uma OAB habilitada ainda lê os autos sigilosos**, porque o `GET` é aberto por
+decisão de projeto. Fechar isso é exigir sessão nos dois downloads.
+
 Numa sessão de terminal, o ritual é logar e reusar o cookie:
 
 ```bash

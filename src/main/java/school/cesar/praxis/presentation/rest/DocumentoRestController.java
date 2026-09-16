@@ -8,6 +8,7 @@ import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.TipoDocumento;
+import school.cesar.praxis.presentation.web.seguranca.OabDeLeitura;
 import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
@@ -159,12 +160,17 @@ public class DocumentoRestController {
         return listarDocumentos.executar(processo);
     }
 
-    /** Leitura protegida pelo Proxy: exige a OAB do solicitante. */
+    /**
+     * Leitura protegida pelo Proxy: exige a OAB do solicitante. Quem esta
+     * logado so le com a propria inscricao - ver {@link OabDeLeitura}.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<String> baixar(@PathVariable Long id,
-                                         @RequestParam(name = "oab") String oab) {
+                                         @RequestParam(name = "oab") String oab,
+                                         UsuarioLogado usuario) {
         try {
-            DocumentoGerado documento = baixarDocumento.executar(id, oab);
+            DocumentoGerado documento = baixarDocumento.executar(
+                    id, OabDeLeitura.conciliar(usuario, oab));
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + documento.nomeArquivo() + "\"")

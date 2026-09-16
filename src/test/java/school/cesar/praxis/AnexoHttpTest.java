@@ -24,9 +24,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Testes do contrato HTTP da anexacao. Cobrem o que os cenarios BDD nao
  * alcancam: o upload multipart e o 403 do Proxy saindo pela API.
  *
- * <p>A juntada e mutacao, entao leva sessao. O token CSRF vai pelo cabecalho:
- * num multipart o parametro so existe depois do corpo ser lido, e o cabecalho
- * esta disponivel antes disso.
+ * <p>A juntada e mutacao, entao leva sessao e token. O token vai no parametro
+ * {@code _csrf}, como nos formularios: o DispatcherServlet resolve o multipart
+ * antes de chamar os interceptors, entao {@code getParameter} ja funciona. O
+ * cabecalho {@code X-CSRF-Token} continua aceito, para cliente que monta o
+ * corpo por conta propria.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -40,12 +42,12 @@ class AnexoHttpTest {
     @Autowired
     private ObjectMapper json;
 
-    /** Juntada assinada pela OAB da sessao, com o token no cabecalho. */
+    /** Juntada assinada pela OAB da sessao, com o token no parametro. */
     private static MockMultipartHttpServletRequestBuilder juntada(String oab) {
         MockHttpSession sessao = ApoioDeTesteWeb.sessaoDe(1L, "Ana Souza", oab, Papel.ADVOGADO);
         MockMultipartHttpServletRequestBuilder requisicao = multipart("/api/anexos");
         requisicao.session(sessao);
-        requisicao.header(CsrfInterceptor.CABECALHO, ApoioDeTesteWeb.TOKEN_CSRF);
+        requisicao.param(CsrfInterceptor.PARAMETRO, ApoioDeTesteWeb.TOKEN_CSRF);
         return requisicao;
     }
 
@@ -115,6 +117,13 @@ class AnexoHttpTest {
         mvc.perform(get("/api/anexos/" + id).param("oab", "PE99999"))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string(containsString("segredo de justica")));
+
+        // Advogada logada nao le o anexo sigiloso com a inscricao de outro.
+        mvc.perform(get("/api/anexos/" + id)
+                        .session(ApoioDeTesteWeb.sessaoDe(2L, "Ana Souza", "PE12345", Papel.ADVOGADO))
+                        .param("oab", "PE54321"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(containsString("nao e a da sessao")));
     }
 
     @Test

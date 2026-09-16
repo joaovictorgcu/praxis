@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import school.cesar.praxis.application.port.in.AnexosUseCases;
 import school.cesar.praxis.domain.anexo.ArquivoAnexo;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
+import school.cesar.praxis.presentation.web.seguranca.OabDeLeitura;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
 import java.io.IOException;
@@ -57,12 +58,16 @@ public class AnexoRestController {
         return listar.executar(processo);
     }
 
-    /** Leitura protegida pelo Proxy: exige a OAB do solicitante. */
+    /**
+     * Leitura protegida pelo Proxy: exige a OAB do solicitante. Quem esta
+     * logado so le com a propria inscricao - ver {@link OabDeLeitura}.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<byte[]> baixar(@PathVariable Long id,
-                                         @RequestParam(name = "oab") String oab) {
+                                         @RequestParam(name = "oab") String oab,
+                                         UsuarioLogado usuario) {
         try {
-            ArquivoAnexo anexo = baixar.executar(id, oab);
+            ArquivoAnexo anexo = baixar.executar(id, OabDeLeitura.conciliar(usuario, oab));
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + anexo.getNome() + "\"")
