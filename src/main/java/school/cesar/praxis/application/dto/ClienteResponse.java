@@ -1,6 +1,6 @@
 package school.cesar.praxis.application.dto;
 
-import school.cesar.praxis.domain.cliente.TipoPessoa;
+import school.cesar.praxis.domain.compartilhado.TipoPessoa;
 
 import java.time.LocalDateTime;
 

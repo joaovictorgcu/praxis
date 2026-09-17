@@ -17,7 +17,7 @@ import school.cesar.praxis.application.port.in.ProcessosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.documento.TipoDocumento;
 import school.cesar.praxis.application.port.out.ProcessoRepositorio;
-import school.cesar.praxis.domain.cliente.TipoPessoa;
+import school.cesar.praxis.domain.compartilhado.TipoPessoa;
 import school.cesar.praxis.domain.compartilhado.Relogio;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.prazo.RegimeContagem;
@@ -233,8 +233,7 @@ public class DadosDeExemplo implements CommandLineRunner {
 
         CriarParteContrariaRequest parte = new CriarParteContrariaRequest(
                 "Imobiliaria Beta ME", "98.765.432/0001-10",
-                // parte contraria tem enum proprio, de outro bounded context
-                school.cesar.praxis.domain.partecontraria.TipoPessoa.JURIDICA);
+                TipoPessoa.JURIDICA);
         parte.setCidade("Recife");
         parte.setEstado("PE");
         partesContrarias.criarParteContraria(parte);

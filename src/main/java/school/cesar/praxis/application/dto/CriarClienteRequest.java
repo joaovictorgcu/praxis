@@ -1,6 +1,6 @@
 package school.cesar.praxis.application.dto;
 
-import school.cesar.praxis.domain.cliente.TipoPessoa;
+import school.cesar.praxis.domain.compartilhado.TipoPessoa;
 
 /**
  * DTO para criar/atualizar um cliente.

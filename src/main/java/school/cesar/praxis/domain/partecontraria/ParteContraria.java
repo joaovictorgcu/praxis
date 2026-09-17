@@ -1,6 +1,7 @@
 package school.cesar.praxis.domain.partecontraria;
 
-import jakarta.persistence.*;
+import school.cesar.praxis.domain.compartilhado.TipoPessoa;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -10,52 +11,21 @@ import java.util.Objects;
  * - Manter os dados da parte contrária
  * - Validar regras de negócio
  */
-@Entity
-@Table(name = "partes_contrarias")
 public class ParteContraria {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
     private String nome;
-
-    @Column(nullable = false)
     private String cpfOuCnpj;
-
-    @Column(name = "tipo_pessoa", nullable = false)
-    @Enumerated(EnumType.STRING)
     private TipoPessoa tipoPessoa;
-
-    @Column
     private String email;
-
-    @Column
     private String telefone;
-
-    @Column
     private String endereco;
-
-    @Column
     private String cidade;
-
-    @Column
     private String estado;
-
-    @Column
     private String cep;
-
-    @Column
     private String observacoes;
-
-    @Column(nullable = false)
     private boolean ativa = true;
-
-    @Column(name = "criada_em", nullable = false, updatable = false)
     private LocalDateTime criadaEm;
-
-    @Column(name = "atualizada_em")
     private LocalDateTime atualizadaEm;
 
     // Construtores
@@ -71,6 +41,26 @@ public class ParteContraria {
         this.tipoPessoa = tipoPessoa;
         this.criadaEm = LocalDateTime.now();
         this.ativa = true;
+    }
+
+    /** Construtor de restauracao: usado pelo mapper para reidratar uma parte contraria ja persistida. */
+    public ParteContraria(Long id, String nome, String cpfOuCnpj, TipoPessoa tipoPessoa, String email,
+                        String telefone, String endereco, String cidade, String estado, String cep,
+                        String observacoes, boolean ativa, LocalDateTime criadaEm, LocalDateTime atualizadaEm) {
+        this.id = id;
+        this.nome = nome;
+        this.cpfOuCnpj = cpfOuCnpj;
+        this.tipoPessoa = tipoPessoa;
+        this.email = email;
+        this.telefone = telefone;
+        this.endereco = endereco;
+        this.cidade = cidade;
+        this.estado = estado;
+        this.cep = cep;
+        this.observacoes = observacoes;
+        this.ativa = ativa;
+        this.criadaEm = criadaEm;
+        this.atualizadaEm = atualizadaEm;
     }
 
     // Métodos de negócio
@@ -94,8 +84,8 @@ public class ParteContraria {
     /**
      * Atualiza os dados da parte contrária
      */
-    public void atualizar(String nome, String email, String telefone, 
-                         String endereco, String cidade, String estado, 
+    public void atualizar(String nome, String email, String telefone,
+                         String endereco, String cidade, String estado,
                          String cep, String observacoes) {
         if (nome != null && !nome.isBlank()) {
             this.nome = nome;

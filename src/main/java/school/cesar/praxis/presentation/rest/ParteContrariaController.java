@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import school.cesar.praxis.application.dto.CriarParteContrariaRequest;
 import school.cesar.praxis.application.dto.ParteContrariaResponse;
 import school.cesar.praxis.application.port.in.ParteContrariaUseCase;
-import school.cesar.praxis.domain.partecontraria.TipoPessoa;
+import school.cesar.praxis.domain.compartilhado.TipoPessoa;
 
 import java.util.List;
 

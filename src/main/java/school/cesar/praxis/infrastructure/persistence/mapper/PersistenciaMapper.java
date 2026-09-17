@@ -1,5 +1,6 @@
 package school.cesar.praxis.infrastructure.persistence.mapper;
 
+import school.cesar.praxis.domain.cliente.Cliente;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.documento.RegistroAprovacao;
 import school.cesar.praxis.domain.documento.StatusDocumento;
@@ -14,16 +15,19 @@ import school.cesar.praxis.domain.honorario.ContratoHonorario;
 import school.cesar.praxis.domain.modelo.CodigoModelo;
 import school.cesar.praxis.domain.modelo.ModeloDocumento;
 import school.cesar.praxis.domain.modelo.TextoModelo;
+import school.cesar.praxis.domain.partecontraria.ParteContraria;
 import school.cesar.praxis.domain.prazo.NivelAlerta;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
 import school.cesar.praxis.domain.usuario.Usuario;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ArquivoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.ClienteEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ContratoHonorarioEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.ParteContrariaEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.PrazoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ProcessoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.UsuarioEntity;
@@ -252,6 +256,90 @@ public final class PersistenciaMapper {
                 entidade.getDescricao(),
                 recorrencia,
                 new Abrangencia(entidade.getAbrangenciaNivel(), entidade.getAbrangenciaValor()));
+    }
+
+    // --- Cliente ---
+
+    public static ClienteEntity paraEntidade(Cliente cliente) {
+        ClienteEntity entidade = new ClienteEntity();
+        entidade.setId(cliente.getId());
+        entidade.setNome(cliente.getNome());
+        entidade.setCpfOuCnpj(cliente.getCpfOuCnpj());
+        entidade.setTipoPessoa(cliente.getTipoPessoa());
+        entidade.setEmail(cliente.getEmail());
+        entidade.setTelefone(cliente.getTelefone());
+        entidade.setCelular(cliente.getCelular());
+        entidade.setEndereco(cliente.getEndereco());
+        entidade.setCidade(cliente.getCidade());
+        entidade.setEstado(cliente.getEstado());
+        entidade.setCep(cliente.getCep());
+        entidade.setProfissao(cliente.getProfissao());
+        entidade.setEmpresaTrabalho(cliente.getEmpresaTrabalho());
+        entidade.setObservacoes(cliente.getObservacoes());
+        entidade.setAtivo(cliente.isAtivo());
+        entidade.setCriadoEm(cliente.getCriadoEm());
+        entidade.setAtualizadoEm(cliente.getAtualizadoEm());
+        return entidade;
+    }
+
+    public static Cliente paraDominio(ClienteEntity entidade) {
+        return new Cliente(
+                entidade.getId(),
+                entidade.getNome(),
+                entidade.getCpfOuCnpj(),
+                entidade.getTipoPessoa(),
+                entidade.getEmail(),
+                entidade.getTelefone(),
+                entidade.getCelular(),
+                entidade.getEndereco(),
+                entidade.getCidade(),
+                entidade.getEstado(),
+                entidade.getCep(),
+                entidade.getProfissao(),
+                entidade.getEmpresaTrabalho(),
+                entidade.getObservacoes(),
+                entidade.isAtivo(),
+                entidade.getCriadoEm(),
+                entidade.getAtualizadoEm());
+    }
+
+    // --- Parte contraria ---
+
+    public static ParteContrariaEntity paraEntidade(ParteContraria parteContraria) {
+        ParteContrariaEntity entidade = new ParteContrariaEntity();
+        entidade.setId(parteContraria.getId());
+        entidade.setNome(parteContraria.getNome());
+        entidade.setCpfOuCnpj(parteContraria.getCpfOuCnpj());
+        entidade.setTipoPessoa(parteContraria.getTipoPessoa());
+        entidade.setEmail(parteContraria.getEmail());
+        entidade.setTelefone(parteContraria.getTelefone());
+        entidade.setEndereco(parteContraria.getEndereco());
+        entidade.setCidade(parteContraria.getCidade());
+        entidade.setEstado(parteContraria.getEstado());
+        entidade.setCep(parteContraria.getCep());
+        entidade.setObservacoes(parteContraria.getObservacoes());
+        entidade.setAtiva(parteContraria.isAtiva());
+        entidade.setCriadaEm(parteContraria.getCriadaEm());
+        entidade.setAtualizadaEm(parteContraria.getAtualizadaEm());
+        return entidade;
+    }
+
+    public static ParteContraria paraDominio(ParteContrariaEntity entidade) {
+        return new ParteContraria(
+                entidade.getId(),
+                entidade.getNome(),
+                entidade.getCpfOuCnpj(),
+                entidade.getTipoPessoa(),
+                entidade.getEmail(),
+                entidade.getTelefone(),
+                entidade.getEndereco(),
+                entidade.getCidade(),
+                entidade.getEstado(),
+                entidade.getCep(),
+                entidade.getObservacoes(),
+                entidade.isAtiva(),
+                entidade.getCriadaEm(),
+                entidade.getAtualizadaEm());
     }
 
     // --- Arquivo anexado ---

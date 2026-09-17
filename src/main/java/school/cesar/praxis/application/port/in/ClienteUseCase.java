@@ -2,7 +2,7 @@ package school.cesar.praxis.application.port.in;
 
 import school.cesar.praxis.application.dto.ClienteResponse;
 import school.cesar.praxis.application.dto.CriarClienteRequest;
-import school.cesar.praxis.domain.cliente.TipoPessoa;
+import school.cesar.praxis.domain.compartilhado.TipoPessoa;
 
 import java.util.List;
 

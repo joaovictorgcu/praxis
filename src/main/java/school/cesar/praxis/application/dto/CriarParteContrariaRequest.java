@@ -1,6 +1,6 @@
 package school.cesar.praxis.application.dto;
 
-import school.cesar.praxis.domain.partecontraria.TipoPessoa;
+import school.cesar.praxis.domain.compartilhado.TipoPessoa;
 
 /**
  * DTO para criar/atualizar uma parte contrária.

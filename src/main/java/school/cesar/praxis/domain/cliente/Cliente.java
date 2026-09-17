@@ -1,6 +1,7 @@
 package school.cesar.praxis.domain.cliente;
 
-import jakarta.persistence.*;
+import school.cesar.praxis.domain.compartilhado.TipoPessoa;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -11,61 +12,41 @@ import java.util.Objects;
  * - Manter os dados do cliente
  * - Validar regras de negócio
  */
-@Entity
-@Table(name = "clientes")
+
 public class Cliente {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String nome;
 
-    @Column(nullable = false, unique = true)
     private String cpfOuCnpj;
 
-    @Column(name = "tipo_pessoa", nullable = false)
-    @Enumerated(EnumType.STRING)
     private TipoPessoa tipoPessoa;
 
-    @Column
     private String email;
 
-    @Column
     private String telefone;
 
-    @Column
     private String celular;
 
-    @Column
     private String endereco;
 
-    @Column
     private String cidade;
 
-    @Column
     private String estado;
 
-    @Column
     private String cep;
 
-    @Column
     private String profissao;
 
-    @Column
     private String empresaTrabalho;
 
-    @Column(length = 500)
     private String observacoes;
 
-    @Column(nullable = false)
     private boolean ativo = true;
 
-    @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 
-    @Column(name = "atualizado_em")
     private LocalDateTime atualizadoEm;
 
     // Construtores
@@ -81,6 +62,30 @@ public class Cliente {
         this.tipoPessoa = tipoPessoa;
         this.criadoEm = LocalDateTime.now();
         this.ativo = true;
+    }
+
+    /** Construtor de restauracao: usado pelo mapper para reidratar um cliente ja persistido. */
+    public Cliente(Long id, String nome, String cpfOuCnpj, TipoPessoa tipoPessoa, String email,
+                String telefone, String celular, String endereco, String cidade, String estado,
+                String cep, String profissao, String empresaTrabalho, String observacoes,
+                boolean ativo, LocalDateTime criadoEm, LocalDateTime atualizadoEm) {
+        this.id = id;
+        this.nome = nome;
+        this.cpfOuCnpj = cpfOuCnpj;
+        this.tipoPessoa = tipoPessoa;
+        this.email = email;
+        this.telefone = telefone;
+        this.celular = celular;
+        this.endereco = endereco;
+        this.cidade = cidade;
+        this.estado = estado;
+        this.cep = cep;
+        this.profissao = profissao;
+        this.empresaTrabalho = empresaTrabalho;
+        this.observacoes = observacoes;
+        this.ativo = ativo;
+        this.criadoEm = criadoEm;
+        this.atualizadoEm = atualizadoEm;
     }
 
     // Métodos de negócio
