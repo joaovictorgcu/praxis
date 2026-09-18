@@ -21,6 +21,7 @@ import java.util.NoSuchElementException;
  * vale e o dominio; aqui so ha traducao do comando e orquestracao.
  */
 @Service
+@Transactional(readOnly = true)
 public class FeriadoAppService implements FeriadosUseCases.CadastrarFeriado,
         FeriadosUseCases.ListarFeriados,
         FeriadosUseCases.RemoverFeriado,
@@ -41,7 +42,6 @@ public class FeriadoAppService implements FeriadosUseCases.CadastrarFeriado,
             throw new IllegalArgumentException("data do feriado e obrigatoria");
         }
 
-        // A escolha da Strategy e a unica decisao desta camada.
         RegraRecorrencia recorrencia = comando.repeteTodoAno()
                 ? RecorrenciaAnualFixa.de(comando.data())
                 : new DataUnica(comando.data());

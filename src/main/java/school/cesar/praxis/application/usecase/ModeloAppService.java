@@ -17,6 +17,7 @@ import java.util.NoSuchElementException;
  * ficam no dominio; aqui so ha traducao do comando e orquestracao.
  */
 @Service
+@Transactional(readOnly = true)
 public class ModeloAppService implements ModelosUseCases.CadastrarModelo,
         ModelosUseCases.ListarModelos,
         ModelosUseCases.RemoverModelo {
