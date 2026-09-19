@@ -5,244 +5,167 @@ import org.springframework.transaction.annotation.Transactional;
 import school.cesar.praxis.application.dto.AudienciaResponse;
 import school.cesar.praxis.application.dto.CriarAudienciaRequest;
 import school.cesar.praxis.application.port.in.AgendaDeAudienciasUseCase;
+import school.cesar.praxis.application.port.out.AudienciaRepositorio;
+import school.cesar.praxis.domain.agenda.AgendaDeAudiencias;
 import school.cesar.praxis.domain.agenda.Audiencia;
-import school.cesar.praxis.domain.agenda.ConflitoDEAudienciaException;
 import school.cesar.praxis.domain.agenda.HorarioInvalidoException;
-import school.cesar.praxis.infrastructure.persistence.AudienciaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
-/**
- * Service de Aplicação para a Agenda de Audiências.
- * Implementa os casos de uso definidos no port.
- * Responsabilidades:
- * - Orquestrar operações entre camadas
- * - Validar regras de negócio
- * - Coordenar transações
- */
 @Service
 @Transactional
 public class AgendaDeAudienciasAppService implements AgendaDeAudienciasUseCase {
 
-    private final AudienciaRepository audienciaRepository;
+    private final AudienciaRepositorio audiencias;
 
-    public AgendaDeAudienciasAppService(AudienciaRepository audienciaRepository) {
-        this.audienciaRepository = audienciaRepository;
+    public AgendaDeAudienciasAppService(AudienciaRepositorio audiencias) {
+        this.audiencias = audiencias;
     }
 
     @Override
     public AudienciaResponse criarAudiencia(CriarAudienciaRequest request) {
-        // Criar nova audiência com dados do request
-        Audiencia novaAudiencia = new Audiencia(
-            request.getNumeroProcesso(),
-            request.getNomeParteAutora(),
-            request.getDataHoraInicio(),
-            request.getDataHoraFim(),
-            request.getSala()
-        );
-        novaAudiencia.setObservacoes(request.getObservacoes());
-
-        // Verificar conflitos de horário
-        verificarConflitosDeHorario(novaAudiencia);
-
-        // Persistir no banco
-        Audiencia audienciaSalva = audienciaRepository.save(novaAudiencia);
-
-        return converterParaResponse(audienciaSalva);
+        garantirHorarioValido(request.getDataHoraInicio(), request.getDataHoraFim());
+        Audiencia nova = new Audiencia(
+                request.getNumeroProcesso(),
+                request.getNomeParteAutora(),
+                request.getDataHoraInicio(),
+                request.getDataHoraFim(),
+                request.getSala());
+        nova.setObservacoes(request.getObservacoes());
+        AgendaDeAudiencias.de(audiencias.porSalaAtivas(nova.getSala())).garantirSemConflito(nova);
+        return converterParaResponse(audiencias.salvar(nova));
     }
 
     @Override
     @Transactional(readOnly = true)
     public AudienciaResponse consultarAudiencia(Long id) {
-        Audiencia audiencia = audienciaRepository.findById(id)
-            .filter(Audiencia::isAtiva)
-            .orElse(null);
-        
-        return audiencia != null ? converterParaResponse(audiencia) : null;
+        return audiencias.porId(id)
+                .filter(Audiencia::isAtiva)
+                .map(this::converterParaResponse)
+                .orElse(null);
     }
 
     @Override
     @Transactional(readOnly = true)
     public AudienciaResponse consultarAudienciaPorProcesso(String numeroProcesso) {
-        Audiencia audiencia = audienciaRepository.findByNumeroProcessoAndAtivaTrue(numeroProcesso)
-            .orElse(null);
-        
-        return audiencia != null ? converterParaResponse(audiencia) : null;
+        return audiencias.porNumeroProcessoAtiva(numeroProcesso)
+                .map(this::converterParaResponse)
+                .orElse(null);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AudienciaResponse> listarAudiencias() {
-        return audienciaRepository.findByAtivaTrue()
-            .stream()
-            .map(this::converterParaResponse)
-            .collect(Collectors.toList());
+        return audiencias.listarAtivas().stream().map(this::converterParaResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AudienciaResponse> listarTodasAsAudiencias() {
-        return audienciaRepository.findAll()
-            .stream()
-            .map(this::converterParaResponse)
-            .collect(Collectors.toList());
+        return audiencias.listarTodas().stream().map(this::converterParaResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AudienciaResponse> listarAudienciasPorSala(String sala) {
-        return audienciaRepository.findBySalaAndAtivaTrueOrderByDataHoraInicio(sala)
-            .stream()
-            .map(this::converterParaResponse)
-            .collect(Collectors.toList());
+        return audiencias.porSalaAtivas(sala).stream().map(this::converterParaResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AudienciaResponse> listarAudienciasPorPeriodo(LocalDateTime dataInicio, LocalDateTime dataFim) {
-        return audienciaRepository.encontrarPorPeriodo(dataInicio, dataFim)
-            .stream()
-            .map(this::converterParaResponse)
-            .collect(Collectors.toList());
+        return audiencias.porPeriodoAtivas(dataInicio, dataFim).stream()
+                .map(this::converterParaResponse).toList();
     }
 
     @Override
     public AudienciaResponse editarAudiencia(Long id, CriarAudienciaRequest request) {
-        Audiencia audiencia = audienciaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Audiência não encontrada com ID: " + id));
+        Audiencia audiencia = audiencias.porId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Audiência não encontrada com ID: " + id));
 
-        // Edição parcial: campo ausente na requisição mantém o valor atual.
-        // O número do processo não muda em edição.
         String nomeParteAutora = request.getNomeParteAutora() != null
-            ? request.getNomeParteAutora() : audiencia.getNomeParteAutora();
+                ? request.getNomeParteAutora() : audiencia.getNomeParteAutora();
         LocalDateTime dataHoraInicio = request.getDataHoraInicio() != null
-            ? request.getDataHoraInicio() : audiencia.getDataHoraInicio();
+                ? request.getDataHoraInicio() : audiencia.getDataHoraInicio();
         LocalDateTime dataHoraFim = request.getDataHoraFim() != null
-            ? request.getDataHoraFim() : audiencia.getDataHoraFim();
+                ? request.getDataHoraFim() : audiencia.getDataHoraFim();
         String sala = request.getSala() != null ? request.getSala() : audiencia.getSala();
         String observacoes = request.getObservacoes() != null
-            ? request.getObservacoes() : audiencia.getObservacoes();
+                ? request.getObservacoes() : audiencia.getObservacoes();
 
-        // Verificar se há conflitos (excluindo a própria audiência)
-        List<Audiencia> conflitos = audienciaRepository.encontrarConflitosDeHorario(
-            sala,
-            dataHoraInicio,
-            dataHoraFim,
-            id // Exclui a própria audiência
-        );
-
-        if (!conflitos.isEmpty()) {
-            StringBuilder mensagem = new StringBuilder();
-            mensagem.append("Conflito detectado ao editar audiência. ");
-            mensagem.append("Audiências em conflito: ");
-            conflitos.forEach(c -> mensagem.append(c.getNumeroProcesso()).append(" "));
-            throw new ConflitoDEAudienciaException(mensagem.toString());
-        }
-
-        // Atualizar a audiência
-        audiencia.atualizar(
-            nomeParteAutora,
-            dataHoraInicio,
-            dataHoraFim,
-            sala,
-            observacoes
-        );
-
-        Audiencia audienciaAtualizada = audienciaRepository.save(audiencia);
-        return converterParaResponse(audienciaAtualizada);
+        garantirHorarioValido(dataHoraInicio, dataHoraFim);
+        audiencia.atualizar(nomeParteAutora, dataHoraInicio, dataHoraFim, sala, observacoes);
+        AgendaDeAudiencias.de(audiencias.porSalaAtivas(sala)).garantirSemConflito(audiencia);
+        return converterParaResponse(audiencias.salvar(audiencia));
     }
 
     @Override
     public void deletarAudiencia(Long id) {
-        Audiencia audiencia = audienciaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Audiência não encontrada com ID: " + id));
-        
+        Audiencia audiencia = audiencias.porId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Audiência não encontrada com ID: " + id));
         audiencia.desativar();
-        audienciaRepository.save(audiencia);
+        audiencias.salvar(audiencia);
     }
 
     @Override
     public void reativarAudiencia(Long id) {
-        Audiencia audiencia = audienciaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Audiência não encontrada com ID: " + id));
-        
+        Audiencia audiencia = audiencias.porId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Audiência não encontrada com ID: " + id));
         if (audiencia.isAtiva()) {
             throw new IllegalArgumentException("Audiência já está ativa");
         }
-        
         audiencia.reativar();
-        audienciaRepository.save(audiencia);
+        audiencias.salvar(audiencia);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AudienciaResponse> detectarConflitos(CriarAudienciaRequest request) {
-        // Com parametro nulo a JPQL compara com NULL e devolve lista vazia: a tela
-        // diria "horario livre" para uma consulta invalida.
         if (request.getSala() == null || request.getSala().isBlank()
-            || request.getDataHoraInicio() == null || request.getDataHoraFim() == null) {
+                || request.getDataHoraInicio() == null || request.getDataHoraFim() == null) {
             throw new IllegalArgumentException("Sala, início e fim são obrigatórios para detectar conflitos");
         }
-        if (!request.getDataHoraFim().isAfter(request.getDataHoraInicio())) {
-            throw new HorarioInvalidoException("O fim da audiência deve ser posterior ao início");
-        }
-        List<Audiencia> conflitos = audienciaRepository.encontrarConflitosDeHorario(
-            request.getSala(),
-            request.getDataHoraInicio(),
-            request.getDataHoraFim(),
-            0L // ID fictício já que é uma nova audiência
-        );
-
-        return conflitos.stream()
-            .map(this::converterParaResponse)
-            .collect(Collectors.toList());
+        garantirHorarioValido(request.getDataHoraInicio(), request.getDataHoraFim());
+        Audiencia sonda = new Audiencia(
+                null,
+                request.getNumeroProcesso(),
+                request.getNomeParteAutora(),
+                request.getDataHoraInicio(),
+                request.getDataHoraFim(),
+                request.getSala(),
+                request.getObservacoes(),
+                true,
+                request.getDataHoraInicio(),
+                null);
+        return AgendaDeAudiencias.de(audiencias.porSalaAtivas(request.getSala()))
+                .encontrarConflitos(sonda)
+                .stream()
+                .map(this::converterParaResponse)
+                .toList();
     }
 
-    // Métodos auxiliares
-
-    /**
-     * Verifica se há conflitos de horário para uma audiência
-     * @throws ConflitoDEAudienciaException Se houver conflito
-     */
-    private void verificarConflitosDeHorario(Audiencia novaAudiencia) {
-        List<Audiencia> conflitos = audienciaRepository.encontrarConflitosDeHorario(
-            novaAudiencia.getSala(),
-            novaAudiencia.getDataHoraInicio(),
-            novaAudiencia.getDataHoraFim(),
-            0L // Não há ID ainda
-        );
-
-        if (!conflitos.isEmpty()) {
-            StringBuilder mensagem = new StringBuilder();
-            mensagem.append("Conflito de horário detectado para a audiência do processo ")
-                   .append(novaAudiencia.getNumeroProcesso())
-                   .append(" na sala ").append(novaAudiencia.getSala())
-                   .append(" entre ").append(novaAudiencia.getDataHoraInicio())
-                   .append(" e ").append(novaAudiencia.getDataHoraFim()).append(". ");
-            mensagem.append("Audiências em conflito: ");
-            conflitos.forEach(a -> mensagem.append(a.getNumeroProcesso()).append(" "));
-            
-            throw new ConflitoDEAudienciaException(mensagem.toString());
+    private static void garantirHorarioValido(LocalDateTime inicio, LocalDateTime fim) {
+        if (inicio == null || fim == null) {
+            throw new IllegalArgumentException("Data e hora de início e fim não podem ser nulas");
+        }
+        if (!fim.isAfter(inicio)) {
+            throw new HorarioInvalidoException(
+                    "A hora final da audiência deve ser posterior à hora inicial");
         }
     }
 
-    /**
-     * Converte entidade Audiencia para DTO AudienciaResponse
-     */
     private AudienciaResponse converterParaResponse(Audiencia audiencia) {
         return new AudienciaResponse(
-            audiencia.getId(),
-            audiencia.getNumeroProcesso(),
-            audiencia.getNomeParteAutora(),
-            audiencia.getDataHoraInicio(),
-            audiencia.getDataHoraFim(),
-            audiencia.getSala(),
-            audiencia.getObservacoes(),
-            audiencia.isAtiva(),
-            audiencia.getCriadaEm(),
-            audiencia.getAtualizadaEm()
-        );
+                audiencia.getId(),
+                audiencia.getNumeroProcesso(),
+                audiencia.getNomeParteAutora(),
+                audiencia.getDataHoraInicio(),
+                audiencia.getDataHoraFim(),
+                audiencia.getSala(),
+                audiencia.getObservacoes(),
+                audiencia.isAtiva(),
+                audiencia.getCriadaEm(),
+                audiencia.getAtualizadaEm());
     }
 }

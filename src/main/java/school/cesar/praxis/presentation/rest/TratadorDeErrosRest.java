@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import school.cesar.praxis.domain.agenda.ConflitoDEAudienciaException;
+import school.cesar.praxis.domain.agenda.HorarioInvalidoException;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -25,6 +27,16 @@ import java.util.NoSuchElementException;
  */
 @RestControllerAdvice(basePackages = "school.cesar.praxis.presentation.rest")
 public class TratadorDeErrosRest {
+
+    @ExceptionHandler(ConflitoDEAudienciaException.class)
+    public ResponseEntity<Map<String, String>> conflitoDeAudiencia(ConflitoDEAudienciaException falha) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("erro", falha.getMessage()));
+    }
+
+    @ExceptionHandler(HorarioInvalidoException.class)
+    public ResponseEntity<Map<String, String>> horarioInvalido(HorarioInvalidoException falha) {
+        return ResponseEntity.badRequest().body(Map.of("erro", falha.getMessage()));
+    }
 
     /** Invariante de dominio violada pela requisicao. */
     @ExceptionHandler(IllegalArgumentException.class)

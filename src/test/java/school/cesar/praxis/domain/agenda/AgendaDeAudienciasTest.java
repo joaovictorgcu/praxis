@@ -153,7 +153,7 @@ class AgendaDeAudienciasTest {
     void editarAudienciaValida() {
         audiencia1.atribuirId(1L);
         agenda.adicionarAudiencia(audiencia1);
-        
+
         Audiencia audienciaEditada = new Audiencia(
             "Proc. 001/2024", // Mesmo número de processo
             "João Silva Editado",
@@ -162,7 +162,7 @@ class AgendaDeAudienciasTest {
             "Sala 2"
         );
         audienciaEditada.atribuirId(1L);
-        
+
         agenda.atualizar(audienciaEditada);
         Audiencia encontrada = agenda.encontrarPorId(1L);
         assertEquals("João Silva Editado", encontrada.getNomeParteAutora());
@@ -175,24 +175,103 @@ class AgendaDeAudienciasTest {
         audiencia1.atribuirId(1L);
         agenda.adicionarAudiencia(audiencia1);
         assertEquals(1, agenda.quantidadeDeAudiencias());
-        
+
         agenda.remover(1L);
         assertEquals(0, agenda.quantidadeDeAudiencias());
     }
 
     @Test
-    @DisplayName("Deve validar que horário inicial é antes do horário final")
-    void validarHorarios() {
-        assertThrows(HorarioInvalidoException.class,
-            () -> new Audiencia(
+    @DisplayName("construtor de restauracao nao valida horario invertido")
+    void restauracaoNaoValidaHorario() {
+        Audiencia invertida = new Audiencia(
+                9L,
                 "Proc. 006/2024",
                 "Paula Gomes",
                 LocalDateTime.of(2024, 9, 15, 15, 0),
                 LocalDateTime.of(2024, 9, 15, 14, 0),
-                "Sala 1"
-            ),
-            "Deve lançar exceção quando horário final é anterior ao inicial"
-        );
+                "Sala 1",
+                null,
+                true,
+                LocalDateTime.of(2024, 9, 15, 9, 0),
+                null);
+        assertEquals(9L, invertida.getId());
+        assertEquals(LocalDateTime.of(2024, 9, 15, 15, 0), invertida.getDataHoraInicio());
+        assertEquals(LocalDateTime.of(2024, 9, 15, 14, 0), invertida.getDataHoraFim());
+    }
+
+    @Test
+    @DisplayName("de(List) monta a agenda sem copiar a lista original")
+    void deMontaAgenda() {
+        audiencia1.atribuirId(1L);
+        AgendaDeAudiencias montada = AgendaDeAudiencias.de(List.of(audiencia1));
+        assertEquals(1, montada.quantidadeDeAudiencias());
+        assertSame(audiencia1, montada.encontrarPorId(1L));
+    }
+
+    @Test
+    @DisplayName("restaurar(List) aceita a colecao persistida, inclusive inativa")
+    void restaurarMantemInativa() {
+        audiencia1.atribuirId(1L);
+        audiencia1.desativar();
+        AgendaDeAudiencias restaurada = AgendaDeAudiencias.restaurar(List.of(audiencia1));
+        assertEquals(0, restaurada.quantidadeDeAudiencias());
+        restaurada.reativar(1L);
+        assertEquals(1, restaurada.quantidadeDeAudiencias());
+    }
+
+    @Test
+    @DisplayName("garantirSemConflito lanca ConflitoDEAudienciaException")
+    void garantirSemConflitoLanca() {
+        audiencia1.atribuirId(1L);
+        AgendaDeAudiencias agendaComUma = AgendaDeAudiencias.de(List.of(audiencia1));
+        Audiencia sobreposta = new Audiencia(
+                "Proc. 003/2024",
+                "Pedro Costa",
+                LocalDateTime.of(2024, 9, 15, 10, 30),
+                LocalDateTime.of(2024, 9, 15, 11, 30),
+                "Sala 1");
+        assertThrows(ConflitoDEAudienciaException.class,
+                () -> agendaComUma.garantirSemConflito(sobreposta));
+    }
+
+    @Test
+    @DisplayName("detectar conflito aceita numeroProcesso e nomeParteAutora nulos")
+    void conflitoComProcessoEParteNulos() {
+        audiencia1.atribuirId(1L);
+        AgendaDeAudiencias montada = AgendaDeAudiencias.de(List.of(audiencia1));
+        Audiencia sonda = new Audiencia(
+                null,
+                null,
+                null,
+                LocalDateTime.of(2024, 9, 15, 10, 30),
+                LocalDateTime.of(2024, 9, 15, 11, 30),
+                "Sala 1",
+                null,
+                true,
+                LocalDateTime.of(2024, 9, 15, 9, 0),
+                null);
+        List<Audiencia> conflitos = montada.encontrarConflitos(sonda);
+        assertEquals(1, conflitos.size());
+        assertEquals("Proc. 001/2024", conflitos.get(0).getNumeroProcesso());
+    }
+
+    @Test
+    @DisplayName("edicao na mesma sala exclui o proprio id")
+    void edicaoExcluiProprioId() {
+        audiencia1.atribuirId(1L);
+        AgendaDeAudiencias montada = AgendaDeAudiencias.de(List.of(audiencia1));
+        Audiencia mesma = new Audiencia(
+                1L,
+                "Proc. 001/2024",
+                "João Silva",
+                LocalDateTime.of(2024, 9, 15, 10, 0),
+                LocalDateTime.of(2024, 9, 15, 11, 0),
+                "Sala 1",
+                null,
+                true,
+                LocalDateTime.of(2024, 9, 15, 9, 0),
+                null);
+        assertDoesNotThrow(() -> montada.garantirSemConflito(mesma));
     }
 
     @Test

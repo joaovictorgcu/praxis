@@ -134,6 +134,15 @@ curl 'localhost:8080/api/anexos/1?oab=PE54321'   # -> 200, o arquivo
 curl 'localhost:8080/api/anexos/1?oab=PE99999'   # -> 403, barrado pelo Proxy
 ```
 
-Falha de domínio vira status HTTP correto (`TratadorDeErrosRest`): invariante violada pela requisição é `400` (inclusive data ou enum mal formados), agregado inexistente é `404`, segredo de justiça é `403`, transição de estado inválida (aprovar rascunho, cumprir prazo já cumprido) e violação de unicidade no banco são `409` — nunca `500`.
+Falha de dominio vira status HTTP correto (`TratadorDeErrosRest`): invariante
+violada pela requisicao e `400` (inclusive data ou enum mal formados e
+`HorarioInvalidoException`), agregado inexistente e `404` (`NoSuchElementException`
+e o `notFound()` do GET por id de audiencia/cliente/parte), segredo de justica
+e `403`, transicao de estado invalida e conflito de horario de audiencia
+(`ConflitoDEAudienciaException`) e `409` — nunca `500`. O corpo e sempre
+`{"erro": "..."}`. Os controllers de `/api/audiencias`, `/api/clientes` e
+`/api/partes-contrarias` nao capturam exception. DELETE de audiencia inexistente
+segue o tratador (`400` por `IllegalArgumentException`); so o GET `/{id}`
+continua `404` vazio.
 
 ---

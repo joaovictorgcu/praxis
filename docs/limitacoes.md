@@ -9,7 +9,7 @@ Limites conhecidos, ditos abertamente - todos com um ponto de troca identificado
 - H2 em memória: os dados se perdem no shutdown. Trocar para PostgreSQL altera apenas `application.properties` (ou usa o perfil `prod` acima).
 - A autenticação é de sessão HTTP, própria (sem Spring Security), e vale só para o painel: o `GET` da API REST segue aberto, recebendo a OAB de leitura na requisição. Não há recuperação de senha por e-mail: quem esquece pede ao chefe para recadastrar.
 - O freio de força bruta do login é em memória, por instância.
-- `AgendaDeAudiencias` (domínio) não é usada pelo serviço de audiências, que consulta o repositório diretamente; a classe ficou como modelo de referência e as regras vigentes são as da JPQL.
+- A deteccao de conflito de audiencia agora e do agregado `AgendaDeAudiencias`; o repositorio so entrega as candidatas da sala. A JPQL `encontrarConflitosDeHorario` saiu.
 - O papel é binário (advogado/chefe); não há vínculo entre usuário e processo além da OAB, então qualquer advogado logado vê a agenda inteira do escritório.
 - Cliente, parte contrária e audiência continuam sem tela de cadastro: a administração mostra os três, inclusive os desativados, mas criar, editar e desativar segue só pela API REST.
 - A administração carrega tudo de uma vez, sem paginação nem filtro: cabe no volume de um escritório, não em base grande. Paginar afeta só `PanoramaAppService` e o template.

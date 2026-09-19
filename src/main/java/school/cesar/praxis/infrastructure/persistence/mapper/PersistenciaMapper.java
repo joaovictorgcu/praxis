@@ -9,6 +9,7 @@ import school.cesar.praxis.domain.feriado.DataUnica;
 import school.cesar.praxis.domain.feriado.Feriado;
 import school.cesar.praxis.domain.feriado.RecorrenciaAnualFixa;
 import school.cesar.praxis.domain.feriado.RegraRecorrencia;
+import school.cesar.praxis.domain.agenda.Audiencia;
 import school.cesar.praxis.domain.anexo.ArquivoAnexo;
 import school.cesar.praxis.domain.honorario.BaseCalculo;
 import school.cesar.praxis.domain.honorario.ContratoHonorario;
@@ -21,6 +22,7 @@ import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
 import school.cesar.praxis.domain.usuario.Usuario;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.AudienciaEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ArquivoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ClienteEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ContratoHonorarioEntity;
@@ -336,6 +338,37 @@ public final class PersistenciaMapper {
                 entidade.getCidade(),
                 entidade.getEstado(),
                 entidade.getCep(),
+                entidade.getObservacoes(),
+                entidade.isAtiva(),
+                entidade.getCriadaEm(),
+                entidade.getAtualizadaEm());
+    }
+
+    // --- Audiencia ---
+
+    public static AudienciaEntity paraEntidade(Audiencia audiencia) {
+        AudienciaEntity entidade = new AudienciaEntity();
+        entidade.setId(audiencia.getId());
+        entidade.setNumeroProcesso(audiencia.getNumeroProcesso());
+        entidade.setNomeParteAutora(audiencia.getNomeParteAutora());
+        entidade.setDataHoraInicio(audiencia.getDataHoraInicio());
+        entidade.setDataHoraFim(audiencia.getDataHoraFim());
+        entidade.setSala(audiencia.getSala());
+        entidade.setObservacoes(audiencia.getObservacoes());
+        entidade.setAtiva(audiencia.isAtiva());
+        entidade.setCriadaEm(audiencia.getCriadaEm());
+        entidade.setAtualizadaEm(audiencia.getAtualizadaEm());
+        return entidade;
+    }
+
+    public static Audiencia paraDominio(AudienciaEntity entidade) {
+        return new Audiencia(
+                entidade.getId(),
+                entidade.getNumeroProcesso(),
+                entidade.getNomeParteAutora(),
+                entidade.getDataHoraInicio(),
+                entidade.getDataHoraFim(),
+                entidade.getSala(),
                 entidade.getObservacoes(),
                 entidade.isAtiva(),
                 entidade.getCriadaEm(),

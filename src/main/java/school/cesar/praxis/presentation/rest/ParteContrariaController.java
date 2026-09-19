@@ -10,10 +10,6 @@ import school.cesar.praxis.domain.compartilhado.TipoPessoa;
 
 import java.util.List;
 
-/**
- * Controller REST para Partes Contrárias.
- * Endpoints para CRUD completo de partes contrárias.
- */
 @RestController
 @RequestMapping("/api/partes-contrarias")
 public class ParteContrariaController {
@@ -24,27 +20,15 @@ public class ParteContrariaController {
         this.parteContrariaUseCase = parteContrariaUseCase;
     }
 
-    /**
-     * POST /api/partes-contrarias
-     * Criar uma nova parte contrária
-     */
     @PostMapping
-    public ResponseEntity<?> criarParteContraria(@RequestBody CriarParteContrariaRequest request) {
-        try {
-            ParteContrariaResponse response = parteContrariaUseCase.criarParteContraria(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                .body(new AudienciaController.ErrorResponse("DADOS_INVALIDOS", e.getMessage()));
-        }
+    public ResponseEntity<ParteContrariaResponse> criarParteContraria(
+            @RequestBody CriarParteContrariaRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(parteContrariaUseCase.criarParteContraria(request));
     }
 
-    /**
-     * GET /api/partes-contrarias/{id}
-     * Consultar parte contrária por ID
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<?> consultarParteContraria(@PathVariable Long id) {
+    public ResponseEntity<ParteContrariaResponse> consultarParteContraria(@PathVariable Long id) {
         ParteContrariaResponse parteContraria = parteContrariaUseCase.consultarParteContraria(id);
         if (parteContraria == null) {
             return ResponseEntity.notFound().build();
@@ -52,12 +36,8 @@ public class ParteContrariaController {
         return ResponseEntity.ok(parteContraria);
     }
 
-    /**
-     * GET /api/partes-contrarias/cpf-cnpj/{cpfOuCnpj}
-     * Consultar parte contrária por CPF/CNPJ
-     */
     @GetMapping("/cpf-cnpj/{cpfOuCnpj}")
-    public ResponseEntity<?> consultarPorCpfOuCnpj(@PathVariable String cpfOuCnpj) {
+    public ResponseEntity<ParteContrariaResponse> consultarPorCpfOuCnpj(@PathVariable String cpfOuCnpj) {
         ParteContrariaResponse parteContraria = parteContrariaUseCase.consultarPorCpfOuCnpj(cpfOuCnpj);
         if (parteContraria == null) {
             return ResponseEntity.notFound().build();
@@ -65,87 +45,37 @@ public class ParteContrariaController {
         return ResponseEntity.ok(parteContraria);
     }
 
-    /**
-     * GET /api/partes-contrarias
-     * Listar todas as partes contrárias ativas
-     */
     @GetMapping
     public ResponseEntity<List<ParteContrariaResponse>> listarPartesContrarias() {
-        List<ParteContrariaResponse> partes = parteContrariaUseCase.listarPartesContrarias();
-        return ResponseEntity.ok(partes);
+        return ResponseEntity.ok(parteContrariaUseCase.listarPartesContrarias());
     }
 
-    /**
-     * GET /api/partes-contrarias/tipo/{tipo}
-     * Listar partes contrárias por tipo (FISICA ou JURIDICA)
-     */
     @GetMapping("/tipo/{tipo}")
-    public ResponseEntity<?> listarPorTipo(@PathVariable String tipo) {
-        try {
-            TipoPessoa tipoPessoa = TipoPessoa.valueOf(tipo.toUpperCase());
-            List<ParteContrariaResponse> partes = parteContrariaUseCase.listarPorTipo(tipoPessoa);
-            return ResponseEntity.ok(partes);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                .body(new AudienciaController.ErrorResponse("TIPO_INVALIDO", 
-                    "Tipo deve ser FISICA ou JURIDICA"));
-        }
+    public ResponseEntity<List<ParteContrariaResponse>> listarPorTipo(@PathVariable String tipo) {
+        return ResponseEntity.ok(parteContrariaUseCase.listarPorTipo(TipoPessoa.de(tipo)));
     }
 
-    /**
-     * GET /api/partes-contrarias/cidade/{cidade}
-     * Listar partes contrárias por cidade
-     */
     @GetMapping("/cidade/{cidade}")
     public ResponseEntity<List<ParteContrariaResponse>> listarPorCidade(@PathVariable String cidade) {
-        List<ParteContrariaResponse> partes = parteContrariaUseCase.listarPorCidade(cidade);
-        return ResponseEntity.ok(partes);
+        return ResponseEntity.ok(parteContrariaUseCase.listarPorCidade(cidade));
     }
 
-    /**
-     * PUT /api/partes-contrarias/{id}
-     * Editar uma parte contrária
-     */
     @PutMapping("/{id}")
-    public ResponseEntity<?> editarParteContraria(
-        @PathVariable Long id,
-        @RequestBody CriarParteContrariaRequest request
-    ) {
-        try {
-            ParteContrariaResponse response = parteContrariaUseCase.editarParteContraria(id, request);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                .body(new AudienciaController.ErrorResponse("ERRO", e.getMessage()));
-        }
+    public ResponseEntity<ParteContrariaResponse> editarParteContraria(
+            @PathVariable Long id,
+            @RequestBody CriarParteContrariaRequest request) {
+        return ResponseEntity.ok(parteContrariaUseCase.editarParteContraria(id, request));
     }
 
-    /**
-     * DELETE /api/partes-contrarias/{id}
-     * Deletar (desativar) uma parte contrária
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletarParteContraria(@PathVariable Long id) {
-        try {
-            parteContrariaUseCase.deletarParteContraria(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> deletarParteContraria(@PathVariable Long id) {
+        parteContrariaUseCase.deletarParteContraria(id);
+        return ResponseEntity.noContent().build();
     }
 
-    /**
-     * POST /api/partes-contrarias/{id}/reativar
-     * Reativar uma parte contrária
-     */
     @PostMapping("/{id}/reativar")
-    public ResponseEntity<?> reativarParteContraria(@PathVariable Long id) {
-        try {
-            parteContrariaUseCase.reativarParteContraria(id);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                .body(new AudienciaController.ErrorResponse("ERRO", e.getMessage()));
-        }
+    public ResponseEntity<Void> reativarParteContraria(@PathVariable Long id) {
+        parteContrariaUseCase.reativarParteContraria(id);
+        return ResponseEntity.ok().build();
     }
 }

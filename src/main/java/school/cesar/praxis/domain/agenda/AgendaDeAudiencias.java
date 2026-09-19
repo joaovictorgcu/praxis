@@ -18,6 +18,25 @@ public class AgendaDeAudiencias {
 
     private final List<Audiencia> audiencias = new ArrayList<>();
 
+    public static AgendaDeAudiencias de(List<Audiencia> candidatas) {
+        return restaurar(candidatas == null ? List.of() : candidatas);
+    }
+
+    public static AgendaDeAudiencias restaurar(List<Audiencia> audiencias) {
+        AgendaDeAudiencias agenda = new AgendaDeAudiencias();
+        if (audiencias != null) {
+            agenda.audiencias.addAll(audiencias);
+        }
+        return agenda;
+    }
+
+    public void garantirSemConflito(Audiencia candidata) {
+        if (temConflito(candidata)) {
+            throw new ConflitoDEAudienciaException(
+                    montarMensagemConflito(candidata, encontrarConflitos(candidata)));
+        }
+    }
+
     // Operações de consulta
 
     /**
@@ -96,13 +115,7 @@ public class AgendaDeAudiencias {
     public boolean temConflito(Audiencia novaAudiencia) {
         return audiencias.stream()
             .filter(Audiencia::isAtiva)
-            .filter(a -> {
-                // Exclui a mesma audiência (se tiver ID) ou a mesma referência de processo
-                if (a.getId() != null && novaAudiencia.getId() != null) {
-                    return !a.getId().equals(novaAudiencia.getId());
-                }
-                return !a.getNumeroProcesso().equals(novaAudiencia.getNumeroProcesso());
-            })
+            .filter(a -> naoEAMesma(a, novaAudiencia))
             .anyMatch(novaAudiencia::temConflitoCom);
     }
 
@@ -112,15 +125,24 @@ public class AgendaDeAudiencias {
     public List<Audiencia> encontrarConflitos(Audiencia novaAudiencia) {
         return audiencias.stream()
             .filter(Audiencia::isAtiva)
-            .filter(a -> {
-                // Exclui a mesma audiência (se tiver ID) ou a mesma referência de processo
-                if (a.getId() != null && novaAudiencia.getId() != null) {
-                    return !a.getId().equals(novaAudiencia.getId());
-                }
-                return !a.getNumeroProcesso().equals(novaAudiencia.getNumeroProcesso());
-            })
+            .filter(a -> naoEAMesma(a, novaAudiencia))
             .filter(novaAudiencia::temConflitoCom)
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Na edicao, o mesmo ID nao conflita consigo. Em detectarConflitos o
+     * numeroProcesso e o nomeParteAutora podem vir nulos: nesse caso a sonda
+     * compara com todas as candidatas da sala, sem NPE.
+     */
+    private static boolean naoEAMesma(Audiencia existente, Audiencia candidata) {
+        if (candidata.getId() != null && existente.getId() != null) {
+            return !existente.getId().equals(candidata.getId());
+        }
+        if (candidata.getNumeroProcesso() == null || existente.getNumeroProcesso() == null) {
+            return true;
+        }
+        return !existente.getNumeroProcesso().equals(candidata.getNumeroProcesso());
     }
 
     // Operações de escrita

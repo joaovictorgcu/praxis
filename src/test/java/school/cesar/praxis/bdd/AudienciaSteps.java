@@ -10,7 +10,7 @@ import school.cesar.praxis.application.dto.AudienciaResponse;
 import school.cesar.praxis.application.dto.CriarAudienciaRequest;
 import school.cesar.praxis.application.port.in.AgendaDeAudienciasUseCase;
 import school.cesar.praxis.domain.agenda.ConflitoDEAudienciaException;
-import school.cesar.praxis.infrastructure.persistence.AudienciaRepository;
+import school.cesar.praxis.infrastructure.persistence.repository.AudienciaJpaRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -28,7 +28,7 @@ public class AudienciaSteps {
     @Autowired
     private AgendaDeAudienciasUseCase agendaUseCase;
     @Autowired
-    private AudienciaRepository audiencias;
+    private AudienciaJpaRepository audiencias;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
