@@ -55,4 +55,13 @@ class DistribuicaoHttpTest {
                 .content(jsonPayload))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @DisplayName("API: POST /api/distribuicao - Deve retornar 401 sem autenticacao")
+    void deveRetornar401QuandoNaoAutenticado() throws Exception {
+        mvc.perform(post("/api/distribuicao")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
 }
