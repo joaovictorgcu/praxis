@@ -1,16 +1,23 @@
 package school.cesar.praxis.presentation.web.seguranca;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.CacheControl;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.ContentVersionStrategy;
+import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
+import org.springframework.web.servlet.resource.VersionResourceResolver;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -31,6 +38,29 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registro) {
         registro.addRedirectViewController("/", "/painel");
+    }
+
+    @Bean
+    public ResourceUrlEncodingFilter resourceUrlEncodingFilter() {
+        return new ResourceUrlEncodingFilter();
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registro) {
+        VersionResourceResolver resolucaoVersao = new VersionResourceResolver()
+                .addVersionStrategy(new ContentVersionStrategy(), "/css/**", "/js/**");
+
+        registro.addResourceHandler("/css/**")
+                .addResourceLocations("classpath:/static/css/")
+                .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic())
+                .resourceChain(true)
+                .addResolver(resolucaoVersao);
+
+        registro.addResourceHandler("/js/**")
+                .addResourceLocations("classpath:/static/js/")
+                .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic())
+                .resourceChain(true)
+                .addResolver(resolucaoVersao);
     }
 
     @Override

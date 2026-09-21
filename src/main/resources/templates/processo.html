@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title th:text="'Praxis - processo ' + ${processo.numero.valor()}">Praxis - processo</title>
   <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
-  <link rel="stylesheet" th:href="@{/css/praxis.css}">
-  <script th:src="@{/js/praxis.js}" defer></script>
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
 </head>
 <body class="app">
 <header th:replace="~{fragmentos :: cabecalho('processos')}"></header>
