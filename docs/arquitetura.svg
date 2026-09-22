@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1080" viewBox="0 0 1280 1080" role="img" aria-labelledby="titulo descricao" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title id="titulo">Arquitetura do praxis</title>
+  <desc id="descricao">Quatro camadas concentricas em arquitetura limpa: presentation (web Thymeleaf e REST), application (portas de entrada, casos de uso e portas de saida), domain (agregados, servicos e padroes, sem Spring nem JPA) e infrastructure (adaptadores JPA, notificacao, seguranca e agendador), sobre H2 em desenvolvimento e PostgreSQL com Flyway em producao.</desc>
+
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="seta-clara" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="1080" fill="#ffffff"/>
+
+  <text x="640" y="44" text-anchor="middle" font-size="26" font-weight="700" fill="#0f172a">praxis &#183; arquitetura limpa</text>
+  <text x="640" y="70" text-anchor="middle" font-size="15" fill="#64748b">as setas de dependência apontam sempre para dentro &#8212; o domínio não conhece ninguém</text>
+
+  <!-- entradas -->
+  <g>
+    <rect x="140" y="96" width="460" height="62" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="370" y="123" text-anchor="middle" font-size="16" font-weight="600" fill="#0f172a">Advogado &#183; Chefe</text>
+    <text x="370" y="144" text-anchor="middle" font-size="13" fill="#64748b">navegador &#8212; sessão HTTP, papel e OAB</text>
+
+    <rect x="680" y="96" width="460" height="62" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="910" y="123" text-anchor="middle" font-size="16" font-weight="600" fill="#0f172a">Agendador</text>
+    <text x="910" y="144" text-anchor="middle" font-size="13" fill="#64748b">varredura diária de prazos em risco</text>
+  </g>
+
+  <path d="M370 158 L370 190" stroke="#64748b" stroke-width="2" marker-end="url(#seta)"/>
+  <path d="M910 158 L910 370" stroke="#64748b" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#seta)"/>
+
+  <!-- presentation -->
+  <g>
+    <rect x="110" y="190" width="1060" height="170" rx="14" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="134" y="220" font-size="15" font-weight="700" fill="#4338ca" letter-spacing="0.5">presentation</text>
+    <text x="1146" y="220" text-anchor="end" font-size="13" fill="#6366f1">só traduz HTTP em caso de uso</text>
+
+    <rect x="140" y="236" width="320" height="100" rx="10" fill="#ffffff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="300" y="266" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">web &#183; Thymeleaf</text>
+    <text x="300" y="289" text-anchor="middle" font-size="13" fill="#475569">/painel/** e login</text>
+    <text x="300" y="310" text-anchor="middle" font-size="13" fill="#475569">telas sem JavaScript inline</text>
+
+    <rect x="480" y="236" width="320" height="100" rx="10" fill="#ffffff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="640" y="266" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">REST</text>
+    <text x="640" y="289" text-anchor="middle" font-size="13" fill="#475569">/api/** &#183; JSON</text>
+    <text x="640" y="310" text-anchor="middle" font-size="13" fill="#475569">erro de domínio vira 4xx</text>
+
+    <rect x="820" y="236" width="320" height="100" rx="10" fill="#ffffff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="980" y="266" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">guardas</text>
+    <text x="980" y="289" text-anchor="middle" font-size="13" fill="#475569">sessão &#183; @SomenteChefe &#183; CSRF</text>
+    <text x="980" y="310" text-anchor="middle" font-size="13" fill="#475569">cabeçalhos de segurança &#183; CSP</text>
+  </g>
+
+  <path d="M640 360 L640 396" stroke="#64748b" stroke-width="2" marker-end="url(#seta)"/>
+
+  <!-- application -->
+  <g>
+    <rect x="110" y="396" width="1060" height="170" rx="14" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5"/>
+    <text x="134" y="426" font-size="15" font-weight="700" fill="#047857" letter-spacing="0.5">application</text>
+    <text x="1146" y="426" text-anchor="end" font-size="13" fill="#059669">orquestra o domínio &#8212; não decide regra</text>
+
+    <rect x="140" y="442" width="320" height="100" rx="10" fill="#ffffff" stroke="#a7f3d0" stroke-width="1.5"/>
+    <text x="300" y="472" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">port/in</text>
+    <text x="300" y="495" text-anchor="middle" font-size="13" fill="#475569">contratos dos casos de uso</text>
+    <text x="300" y="516" text-anchor="middle" font-size="13" fill="#475569">+ DTOs de entrada e saída</text>
+
+    <rect x="480" y="442" width="320" height="100" rx="10" fill="#ffffff" stroke="#a7f3d0" stroke-width="1.5"/>
+    <text x="640" y="472" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">usecase</text>
+    <text x="640" y="495" text-anchor="middle" font-size="13" fill="#475569">abrir prazo, gerar peça, aprovar,</text>
+    <text x="640" y="516" text-anchor="middle" font-size="13" fill="#475569">distribuir, juntar anexo, cobrar</text>
+
+    <rect x="820" y="442" width="320" height="100" rx="10" fill="#ffffff" stroke="#a7f3d0" stroke-width="1.5"/>
+    <text x="980" y="472" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">port/out</text>
+    <text x="980" y="495" text-anchor="middle" font-size="13" fill="#475569">repositórios, notificador,</text>
+    <text x="980" y="516" text-anchor="middle" font-size="13" fill="#475569">relógio, codificador de senha</text>
+  </g>
+
+  <path d="M640 566 L640 602" stroke="#64748b" stroke-width="2" marker-end="url(#seta)"/>
+
+  <!-- domain -->
+  <g>
+    <rect x="110" y="602" width="1060" height="210" rx="14" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+    <text x="134" y="632" font-size="15" font-weight="700" fill="#c2410c" letter-spacing="0.5">domain</text>
+    <text x="1146" y="632" text-anchor="end" font-size="13" font-weight="600" fill="#ea580c">Java puro &#8212; nada aqui importa Spring ou JPA</text>
+
+    <rect x="140" y="648" width="320" height="140" rx="10" fill="#ffffff" stroke="#fed7aa" stroke-width="1.5"/>
+    <text x="300" y="678" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">agregados</text>
+    <text x="300" y="701" text-anchor="middle" font-size="13" fill="#475569">Processo &#183; Prazo &#183; DocumentoGerado</text>
+    <text x="300" y="722" text-anchor="middle" font-size="13" fill="#475569">ModeloDocumento &#183; ArquivoAnexo</text>
+    <text x="300" y="743" text-anchor="middle" font-size="13" fill="#475569">Feriado &#183; Honorario &#183; Cliente</text>
+    <text x="300" y="764" text-anchor="middle" font-size="13" fill="#475569">Audiencia &#183; Usuario</text>
+
+    <rect x="480" y="648" width="320" height="140" rx="10" fill="#ffffff" stroke="#fed7aa" stroke-width="1.5"/>
+    <text x="640" y="678" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">serviços e eventos</text>
+    <text x="640" y="701" text-anchor="middle" font-size="13" fill="#475569">MotorDePrazos &#8212; art. 219 do CPC</text>
+    <text x="640" y="722" text-anchor="middle" font-size="13" fill="#475569">CalendarioForense &#183; Distribuicao</text>
+    <text x="640" y="743" text-anchor="middle" font-size="13" fill="#475569">EventoProcesso &#8594; responsável</text>
+    <text x="640" y="764" text-anchor="middle" font-size="13" fill="#475569">VOs: NumeroCnj, AlertaPrazo...</text>
+
+    <rect x="820" y="648" width="320" height="140" rx="10" fill="#ffffff" stroke="#fed7aa" stroke-width="1.5"/>
+    <text x="980" y="678" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">nove padrões GoF</text>
+    <text x="980" y="701" text-anchor="middle" font-size="13" fill="#475569">Strategy &#183; Composite &#183; Interpreter</text>
+    <text x="980" y="722" text-anchor="middle" font-size="13" fill="#475569">Template Method &#183; Observer</text>
+    <text x="980" y="743" text-anchor="middle" font-size="13" fill="#475569">Decorator &#183; Proxy &#183; Iterator</text>
+    <text x="980" y="764" text-anchor="middle" font-size="13" fill="#475569">Chain of Responsibility</text>
+  </g>
+
+  <!-- infrastructure -->
+  <g>
+    <rect x="110" y="848" width="1060" height="152" rx="14" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="134" y="878" font-size="15" font-weight="700" fill="#334155" letter-spacing="0.5">infrastructure</text>
+    <text x="1146" y="878" text-anchor="end" font-size="13" fill="#64748b">implementa as portas de saída</text>
+
+    <rect x="140" y="894" width="235" height="86" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="257" y="922" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">persistence</text>
+    <text x="257" y="943" text-anchor="middle" font-size="12.5" fill="#475569">entity JPA &#183; repository</text>
+    <text x="257" y="962" text-anchor="middle" font-size="12.5" fill="#475569">mapper &#183; adapter</text>
+
+    <rect x="395" y="894" width="235" height="86" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="512" y="922" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">notificacao</text>
+    <text x="512" y="943" text-anchor="middle" font-size="12.5" fill="#475569">painel, e-mail e auditoria</text>
+    <text x="512" y="962" text-anchor="middle" font-size="12.5" fill="#475569">empilhados por Decorator</text>
+
+    <rect x="650" y="894" width="235" height="86" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="767" y="922" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">seguranca</text>
+    <text x="767" y="943" text-anchor="middle" font-size="12.5" fill="#475569">PBKDF2-HMAC-SHA256</text>
+    <text x="767" y="962" text-anchor="middle" font-size="12.5" fill="#475569">sal por usuário</text>
+
+    <rect x="905" y="894" width="235" height="86" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="1022" y="922" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">config &#183; scheduler</text>
+    <text x="1022" y="943" text-anchor="middle" font-size="12.5" fill="#475569">liga o domínio sem anotar</text>
+    <text x="1022" y="962" text-anchor="middle" font-size="12.5" fill="#475569">e roda a varredura</text>
+  </g>
+
+  <!-- banco -->
+  <rect x="380" y="1022" width="520" height="44" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="640" y="1050" text-anchor="middle" font-size="14" fill="#334155">H2 em memória (dev e teste) &#160;&#183;&#160; PostgreSQL + Flyway (prod)</text>
+  <path d="M257 980 L257 1002 L640 1002 L640 1020" stroke="#94a3b8" stroke-width="1.8" fill="none" marker-end="url(#seta-clara)"/>
+
+  <!-- gutter esquerda: fluxo -->
+  <path d="M64 200 L64 950" stroke="#94a3b8" stroke-width="2" marker-end="url(#seta-clara)"/>
+  <text x="48" y="560" text-anchor="middle" font-size="13" fill="#64748b" transform="rotate(-90 48 560)">caminho de uma requisição</text>
+
+  <!-- gutter direita: inversao de dependencia -->
+  <path d="M1216 930 L1216 500" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#seta-clara)"/>
+  <text x="1236" y="715" text-anchor="middle" font-size="13" fill="#64748b" transform="rotate(90 1236 715)">infraestrutura depende das portas, nunca o contrário</text>
+</svg>
