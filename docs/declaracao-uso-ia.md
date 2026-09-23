@@ -286,39 +286,69 @@ A utilização da Inteligência Artificial serviu como ferramenta de apoio duran
 
 Declaração de Uso de Inteligência Artificial — Praxis, Luis Eduardo Bérard
 
-Durante o desenvolvimento do projeto Praxis, utilizei ferramentas de Inteligência Artificial como apoio ao longo do desenvolvimento das funcionalidades pelas quais fiquei responsável: Distribuição Automática de Processos e Fluxo de Aprovação de Documentos.
+1. to pensando em fazer uma funcionalidade de distribuição automática de processos no praxis, você acha que é uma história boa e interessante pro projeto?
 
-A IA foi utilizada principalmente para tirar dúvidas, discutir ideias, verificar se as funcionalidades faziam sentido para o sistema e ajudar a identificar possíveis problemas durante a implementação. Alguns dos prompts utilizados foram:
+2. a ideia é distribuir automaticamente os processos entre os advogados, você acha que essa funcionalidade tem uma complexidade boa pra um projeto desse nível?
 
-> "Estou pensando em fazer uma funcionalidade de distribuição automática de processos no Praxis. Você acha que é uma história boa e interessante para o projeto?"
+3. também pensei em fazer um fluxo de aprovação de documentos, onde o documento pode ser enviado pra aprovação, aprovado ou rejeitado, você acha essa história interessante?
 
-> "A ideia é distribuir automaticamente os processos entre os advogados. Você acha que essa funcionalidade tem uma complexidade boa para um projeto desse nível?"
+4. se você fosse avaliar esse projeto como professor, consideraria distribuição automática de processos e fluxo de aprovação de documentos como funcionalidades relevantes e de alta complexidade?
 
-> "Também pensei em fazer um fluxo de aprovação de documentos, onde o documento pode ser enviado para aprovação, aprovado ou rejeitado. Você acha essa história interessante?"
+5. quero desenvolver essas duas histórias no praxis, você acha que elas demonstram uma boa quantidade de lógica e regras de negócio?
 
-> "Se você fosse avaliar esse projeto como professor, consideraria distribuição automática de processos e fluxo de aprovação de documentos como funcionalidades relevantes e de alta complexidade?"
+6. to implementando a distribuição automática de processos, pode me ajudar a pensar numa lógica pra distribuir os processos de forma equilibrada entre os advogados?
 
-> "Quero desenvolver essas duas histórias no Praxis. Você acha que elas demonstram uma boa quantidade de lógica e regras de negócio?"
+7. estou com um problema nessa parte do código da distribuição de processos, pode me ajudar a entender onde está o erro?
 
-A IA considerou as duas ideias relevantes para o contexto do Praxis, principalmente por envolverem regras de negócio e não serem apenas funcionalidades simples de cadastro.
+8. a lógica que fiz pra distribuir os processos tá correta? quero que você verifique sem mudar o código inteiro.
 
-Durante a implementação, também utilizei a IA para tirar dúvidas e revisar a lógica que estava desenvolvendo. Alguns exemplos de prompts foram:
+9. to fazendo um fluxo de aprovação de documentos, como posso organizar os estados de um documento, tipo aguardando aprovação, aprovado e rejeitado?
 
-> "Estou implementando a distribuição automática de processos. Pode me ajudar a pensar em uma lógica para distribuir os processos de forma equilibrada entre os advogados?"
+10. analisa essa parte do meu código e vê se a lógica do fluxo de aprovação tá funcionando corretamente.
 
-> "Estou com um problema nessa parte do código da distribuição de processos. Pode me ajudar a entender onde está o erro?"
+11. um documento que já foi aprovado não deveria poder voltar pra aguardando aprovação, minha implementação tá respeitando essa regra?
 
-> "A lógica que fiz para distribuir os processos está correta? Quero que você verifique sem mudar o código inteiro."
+12. to com dúvida em um conceito de spring boot que apareceu enquanto eu implementava a distribuição de processos, pode me explicar?
 
-> "Estou fazendo um fluxo de aprovação de documentos. Como posso organizar os estados de um documento, como aguardando aprovação, aprovado e rejeitado?"
+13. quero discutir uma forma de implementar essa regra de aprovação sem precisar alterar desnecessariamente a estrutura que já existe no projeto.
 
-> "Analise essa parte do meu código e veja se a lógica do fluxo de aprovação está funcionando corretamente."
+14. depois que um processo é distribuído, faz sentido ele poder ser redistribuído manualmente? o que você acha da regra que pensei pra isso?
 
-> "Um documento que já foi aprovado não deveria poder voltar para aguardando aprovação. Minha implementação está respeitando essa regra?"
+15. revisa a lógica de balanceamento que fiz pra distribuição de processos e me diz se tem algum caso que eu não tratei.
 
-Também utilizei a IA para entender melhor conceitos de Java e Spring Boot que apareciam durante o desenvolvimento e para discutir possíveis formas de implementar determinadas regras sem precisar alterar desnecessariamente a estrutura que já existia no projeto.
+16. no fluxo de aprovação, quero rejeitar um documento com um motivo obrigatório, minha validação pra isso tá fazendo sentido?
 
-A utilização da IA serviu, portanto, como uma ferramenta de apoio e consulta durante o desenvolvimento, principalmente para esclarecer dúvidas, validar ideias, analisar erros e discutir soluções. A implementação das funcionalidades, as adaptações necessárias ao projeto, as decisões tomadas durante o desenvolvimento e os testes foram realizados por mim.
+17. tem algum problema em eu deixar o estado do documento como um enum simples em vez de criar uma classe própria pra isso?
+
+18. me ajuda a entender esse erro de compilação relacionado ao meu serviço de aprovação de documentos.
+
+19. revisa se essas duas funcionalidades que implementei fazem sentido dentro da arquitetura que o restante do praxis já segue.
+
+20. faz uma simulação de banca comigo sobre distribuição de processos e fluxo de aprovação de documentos, pergunta uma coisa por vez e espera minha resposta.
+
+21. no meu fluxo de aprovação, um chefe pode aprovar um documento que outro advogado enviou? me ajuda a pensar se essa regra faz sentido pro contexto do praxis.
+
+22. quero adicionar um histórico de quem aprovou ou rejeitou cada documento, como você organizaria isso sem duplicar informação que já existe no sistema?
+
+23. tô tentando decidir se a distribuição automática deveria considerar a quantidade de processos que cada advogado já tem ou só distribuir em ordem, o que acha melhor pra esse projeto?
+
+24. revisa esse teste que fiz pra garantir que um documento rejeitado não pode ser considerado aprovado depois, ele tá cobrindo o cenário certo?
+
+25. me ajuda a entender a diferença entre colocar essa validação de estado do documento no serviço ou dentro da própria classe do documento.
+
+26. depois de rejeitar um documento, deveria ser possível reenviar ele pra aprovação de novo? gostaria de pensar contigo se essa regra faz sentido.
+
+27. tenho um caso onde a distribuição automática pode falhar se não tiver nenhum advogado disponível, como eu deveria tratar isso na minha implementação?
+
+28. revisa se meu código de distribuição de processos tá seguindo o mesmo padrão que o resto do projeto usa pra separar regra de negócio do controller.
+
+29. quero garantir que só quem tem permissão de chefe possa forçar uma redistribuição manual de um processo, como você sugere eu verificar isso?
+
+30. me explica se faz sentido eu criar um evento quando um documento é aprovado, pra caso outra parte do sistema precise reagir a isso no futuro.
+
+31. analisa se os nomes que escolhi pros estados do fluxo de aprovação fazem sentido e se comunicam bem a regra de negócio.
+
+32. faz mais uma simulação de banca comigo, mas agora focando só no fluxo de aprovação de documentos, pergunta uma coisa por vez.
 
 - Luis Eduardo Bérard
 
