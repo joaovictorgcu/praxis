@@ -40,7 +40,7 @@ public class ContratoHonorarioAppService implements HonorariosUseCases.Cadastrar
         NumeroCnj numero = NumeroCnj.de(comando.numeroProcesso());
         processos.porNumero(numero)
                 .orElseThrow(() -> new NoSuchElementException(
-                        "processo nao encontrado: " + comando.numeroProcesso()));
+                        "processo não encontrado: " + comando.numeroProcesso()));
 
         CalculoHonorarioStrategy calculo = motor.estrategiaPara(comando.modalidade());
 
@@ -72,7 +72,7 @@ public class ContratoHonorarioAppService implements HonorariosUseCases.Cadastrar
     public HonorariosUseCases.ItemContrato executar(Long id) {
         return contratos.porId(id)
                 .map(ContratoHonorarioAppService::paraItem)
-                .orElseThrow(() -> new NoSuchElementException("contrato de honorario nao encontrado: " + id));
+                .orElseThrow(() -> new NoSuchElementException("contrato de honorário não encontrado: " + id));
     }
 
     private static BigDecimal nvl(BigDecimal valor) {

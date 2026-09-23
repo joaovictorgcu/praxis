@@ -33,7 +33,7 @@ public class DocumentoRepositorioJpa implements DocumentoRepositorio {
     public DocumentoGerado carregar(Long documentoId) {
         return jpa.findById(documentoId)
                 .map(PersistenciaMapper::paraDominio)
-                .orElseThrow(() -> new NoSuchElementException("documento nao encontrado: " + documentoId));
+                .orElseThrow(() -> new NoSuchElementException("documento não encontrado: " + documentoId));
     }
 
     @Override

@@ -41,7 +41,7 @@ public class ModelosIniciais implements SmartInitializingSingleton {
 
         modelos.salvar(new ModeloDocumento(
                 CodigoModelo.de("COBRANCA_ALUGUEL"),
-                "Cobranca de aluguel",
+                "Cobrança de aluguel",
                 TipoDocumento.PETICAO_INICIAL,
                 null,
                 new TextoModelo("""

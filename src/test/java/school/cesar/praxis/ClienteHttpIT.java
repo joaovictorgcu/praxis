@@ -23,7 +23,7 @@ class ClienteHttpIT {
     @Autowired private MockMvc mvc;
 
     private MockHttpSession advComum() {
-        return ApoioDeTesteWeb.sessaoDe(99L, "Advogado Sem Permissao", "PE00000", Papel.ADVOGADO);
+        return ApoioDeTesteWeb.sessaoDe(99L, "Advogado Sem Permissão", "PE00000", Papel.ADVOGADO);
     }
 
     @Test

@@ -51,10 +51,10 @@ public class UsuarioAppService implements
         Usuario novo = Usuario.novo(comando.nome(), comando.email(), comando.oab(),
                 comando.papel(), comando.senha(), codificador, comando.senhaProvisoria());
         if (usuarios.porEmail(novo.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("ja existe usuario com o e-mail " + novo.getEmail());
+            throw new IllegalArgumentException("já existe usuário com o e-mail " + novo.getEmail());
         }
         if (usuarios.porOab(novo.getOab()).isPresent()) {
-            throw new IllegalArgumentException("ja existe usuario com a OAB " + novo.getOab());
+            throw new IllegalArgumentException("já existe usuário com a OAB " + novo.getOab());
         }
         return usuarios.salvar(novo);
     }
@@ -69,9 +69,9 @@ public class UsuarioAppService implements
     @Transactional
     public Usuario executar(UsuariosUseCases.TrocarSenha.Comando comando) {
         Usuario usuario = usuarios.porId(comando.usuarioId())
-                .orElseThrow(() -> new NoSuchElementException("usuario nao encontrado: " + comando.usuarioId()));
+                .orElseThrow(() -> new NoSuchElementException("usuário não encontrado: " + comando.usuarioId()));
         if (!usuario.senhaConfere(comando.senhaAtual(), codificador)) {
-            throw new IllegalArgumentException("senha atual nao confere");
+            throw new IllegalArgumentException("senha atual não confere");
         }
         if (comando.novaSenha() != null && comando.novaSenha().equals(comando.senhaAtual())) {
             throw new IllegalArgumentException("a nova senha deve ser diferente da atual");
@@ -83,14 +83,14 @@ public class UsuarioAppService implements
     @Transactional
     public void executar(UsuariosUseCases.RemoverUsuario.Comando comando) {
         if (comando.usuarioId().equals(comando.solicitanteId())) {
-            throw new IllegalArgumentException("nao e possivel remover o proprio usuario");
+            throw new IllegalArgumentException("não é possível remover o próprio usuário");
         }
         Usuario alvo = usuarios.porId(comando.usuarioId())
-                .orElseThrow(() -> new NoSuchElementException("usuario nao encontrado: " + comando.usuarioId()));
+                .orElseThrow(() -> new NoSuchElementException("usuário não encontrado: " + comando.usuarioId()));
         if (alvo.isChefe()) {
             long chefes = usuarios.listar().stream().filter(Usuario::isChefe).count();
             if (chefes <= 1) {
-                throw new IllegalArgumentException("o escritorio precisa de ao menos um chefe");
+                throw new IllegalArgumentException("o escritório precisa de ao menos um chefe");
             }
         }
         usuarios.remover(alvo.getId());

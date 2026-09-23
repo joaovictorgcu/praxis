@@ -17,13 +17,13 @@
   <section class="cartao">
     <h2>Cadastrar Processo</h2>
     <p class="apoio">
-      O responsavel e escolhido entre os usuarios do escritorio: a OAB dele e a que fica
-      habilitada nos autos. Processo em <strong>segredo de justica</strong> so tem peca e anexo
+      O responsável é escolhido entre os usuários do escritório: a OAB dele é a que fica
+      habilitada nos autos. Processo em <strong>segredo de justiça</strong> só tem peça e anexo
       lidos por OAB habilitada (CPC art. 189).
     </p>
     <form th:action="@{/painel/processos}" method="post" class="formulario">
       <input type="hidden" name="_csrf" th:value="${csrf}">
-      <label>Numero CNJ
+      <label>Número CNJ
         <input type="text" name="numeroCnj" required placeholder="0001234-56.2026.8.17.0001"
                pattern="\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}"
                title="Formato NNNNNNN-DD.AAAA.J.TR.OOOO">
@@ -34,7 +34,7 @@
       <label>Comarca
         <input type="text" name="comarca" required placeholder="Recife">
       </label>
-      <label>Advogado responsavel
+      <label>Advogado Responsável
         <select name="responsavelOab" required>
           <option th:each="adv : ${advogados}" th:value="${adv.oab}"
                   th:selected="${usuario != null and adv.oab == usuario.oab()}"
@@ -43,10 +43,10 @@
       </label>
       <label class="marcador">
         <input type="checkbox" name="segredoJustica" value="true">
-        Segredo de justica
+        Segredo de Justiça
       </label>
       <div>
-        <button type="submit">Cadastrar processo</button>
+        <button type="submit">Cadastrar Processo</button>
       </div>
     </form>
   </section>
@@ -55,7 +55,7 @@
     <div class="cartao-cabecalho">
       <h2>Processos do Escritório</h2>
       <form th:action="@{/painel/processos}" method="get" class="linha" style="margin:0">
-        <input type="search" name="busca" th:value="${busca}" placeholder="CNJ, cliente ou responsavel">
+        <input type="search" name="busca" th:value="${busca}" placeholder="CNJ, cliente ou responsável">
         <button type="submit" class="secundario">Buscar</button>
       </form>
     </div>
@@ -80,7 +80,7 @@
           <td>
             <span th:text="${p.responsavel.nome()}">-</span>
             <span class="apoio" th:text="'OAB ' + ${p.responsavel.oab()}">-</span>
-            <span th:if="${usuario != null and p.responsavel.oab() == usuario.oab()}" class="etiqueta azul">voce</span>
+            <span th:if="${usuario != null and p.responsavel.oab() == usuario.oab()}" class="etiqueta azul">você</span>
           </td>
           <td><span th:replace="~{fragmentos :: sigilo(${p.segredoJustica})}"></span></td>
           <td th:text="${p.quantidadeAndamentos()}">0</td>

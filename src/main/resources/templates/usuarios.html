@@ -18,9 +18,9 @@
     <h2>Cadastrar Usuário</h2>
     <p class="apoio">
       <strong>Advogado</strong> conduz os autos: cadastra processo, registra andamento, abre prazo,
-      gera peca e envia para revisao. <strong>Chefe</strong> faz tudo isso e ainda aprova ou rejeita peca,
-      habilita OAB em autos sigilosos e administra feriados, modelos e usuarios.
-      A senha informada aqui e provisoria: peca ao usuario para troca-la em <em>Minha conta</em>.
+      gera peça e envia para revisão. <strong>Chefe</strong> faz tudo isso e ainda aprova ou rejeita peça,
+      habilita OAB em autos sigilosos e administra feriados, modelos e usuários.
+      A senha informada aqui é provisória: peça ao usuário para trocá-la em <em>Minha Conta</em>.
     </p>
     <form th:action="@{/painel/usuarios}" method="post" class="formulario" autocomplete="off">
       <input type="hidden" name="_csrf" th:value="${csrf}">
@@ -38,7 +38,7 @@
           <option th:each="p : ${papeis}" th:value="${p}" th:text="${p.rotulo()}">Papel</option>
         </select>
       </label>
-      <label>Senha provisoria (minimo 6)
+      <label>Senha Provisória (mínimo 6)
         <input type="password" name="senha" required minlength="6" autocomplete="new-password">
       </label>
       <div>
@@ -64,8 +64,8 @@
         <tr th:each="u : ${usuarios}">
           <td>
             <span th:text="${u.nome}">-</span>
-            <span th:if="${u.id == usuario.id()}" class="etiqueta azul">voce</span>
-            <span th:if="${u.senhaProvisoria}" class="etiqueta ambar" title="Ainda nao trocou a senha provisoria">senha provisoria</span>
+            <span th:if="${u.id == usuario.id()}" class="etiqueta azul">você</span>
+            <span th:if="${u.senhaProvisoria}" class="etiqueta ambar" title="Ainda não trocou a senha provisória">senha provisória</span>
           </td>
           <td th:text="${u.email}">-</td>
           <td th:text="${u.oab}">-</td>
@@ -75,7 +75,7 @@
           <td class="acoes">
             <form th:if="${u.id != usuario.id()}"
                   th:action="@{'/painel/usuarios/' + ${u.id} + '/remover'}" method="post"
-                  th:attr="data-confirmar='Remover ' + ${u.nome} + ' do escritorio?'">
+                  th:attr="data-confirmar='Remover ' + ${u.nome} + ' do escritório?'">
       <input type="hidden" name="_csrf" th:value="${csrf}">
               <button type="submit" class="perigo pequeno">Remover</button>
             </form>

@@ -43,16 +43,16 @@ public class Prazo {
             throw new IllegalArgumentException("prazo exige processo");
         }
         if (descricao == null || descricao.isBlank()) {
-            throw new IllegalArgumentException("descricao do prazo e obrigatoria");
+            throw new IllegalArgumentException("descrição do prazo é obrigatória");
         }
         if (intimacao == null) {
-            throw new IllegalArgumentException("data de intimacao e obrigatoria");
+            throw new IllegalArgumentException("data de intimação é obrigatória");
         }
         if (quantidadeDias <= 0) {
             throw new IllegalArgumentException("prazo deve ter ao menos 1 dia");
         }
         if (responsavel == null) {
-            throw new IllegalArgumentException("prazo exige advogado responsavel");
+            throw new IllegalArgumentException("prazo exige advogado responsável");
         }
         this.id = null;
         this.numeroProcesso = numeroProcesso;
@@ -123,7 +123,7 @@ public class Prazo {
 
     public void cumprir(LocalDate quando) {
         if (cumprido) {
-            throw new IllegalStateException("prazo ja cumprido em " + cumpridoEm);
+            throw new IllegalStateException("prazo já cumprido em " + cumpridoEm);
         }
         this.cumprido = true;
         this.cumpridoEm = quando;

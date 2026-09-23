@@ -14,10 +14,10 @@ public class PeticaoInicial extends GeradorDocumento {
     @Override
     protected String pedidos(DadosDocumento dados) {
         return "DOS PEDIDOS\n"
-                + "a) a citacao da parte re para, querendo, apresentar contestacao;\n"
+                + "a) a citação da parte ré para, querendo, apresentar contestação;\n"
                 + "b) a procedencia integral dos pedidos, com "
-                + dados.campo("pedidoPrincipal", "a condenacao da re na obrigacao discutida") + ";\n"
-                + "c) a condenacao da re em custas processuais e honorarios sucumbenciais;\n"
+                + dados.campo("pedidoPrincipal", "a condenação da ré na obrigação discutida") + ";\n"
+                + "c) a condenação da ré em custas processuais e honorários sucumbenciais;\n"
                 + "d) a producao de todas as provas em direito admitidas.";
     }
 

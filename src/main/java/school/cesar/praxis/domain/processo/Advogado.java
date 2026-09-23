@@ -8,13 +8,13 @@ public record Advogado(String nome, String email, String oab) {
 
     public Advogado {
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("nome do advogado e obrigatorio");
+            throw new IllegalArgumentException("nome do advogado é obrigatório");
         }
         if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("e-mail do advogado invalido: " + email);
+            throw new IllegalArgumentException("e-mail do advogado inválido: " + email);
         }
         if (oab == null || oab.isBlank()) {
-            throw new IllegalArgumentException("OAB e obrigatoria");
+            throw new IllegalArgumentException("OAB é obrigatória");
         }
     }
 }

@@ -22,9 +22,9 @@ public class ComandoAprovarDocumento implements ComandoDocumento {
     @Override
     public void desfazer() {
         if (statusAnterior == null) {
-            throw new IllegalStateException("comando ainda nao foi executado");
+            throw new IllegalStateException("comando ainda não foi executado");
         }
-        documento.restaurarStatus(statusAnterior, oabAprovador, "desfeito: aprovacao revertida");
+        documento.restaurarStatus(statusAnterior, oabAprovador, "desfeito: aprovação revertida");
     }
 
     @Override

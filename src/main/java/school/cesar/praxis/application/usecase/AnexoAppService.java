@@ -51,7 +51,7 @@ public class AnexoAppService implements AnexosUseCases.AnexarArquivo,
         NumeroCnj numero = NumeroCnj.de(comando.numeroProcesso());
         Processo processo = processos.porNumero(numero)
                 .orElseThrow(() -> new NoSuchElementException(
-                        "processo nao encontrado: " + comando.numeroProcesso()));
+                        "processo não encontrado: " + comando.numeroProcesso()));
 
         Set<String> habilitadas = new LinkedHashSet<>();
         habilitadas.add(processo.getResponsavel().oab());

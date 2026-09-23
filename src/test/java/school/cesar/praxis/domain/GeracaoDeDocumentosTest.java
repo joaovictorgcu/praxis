@@ -23,8 +23,8 @@ class GeracaoDeDocumentosTest {
     private final DadosDocumento dados = new DadosDocumento(
             "0001234-56.2026.8.17.0001", "Construtora Alfa Ltda.", "Recife", ana,
             Map.of("fatos", "inadimplemento contratual",
-                    "fundamentos", "art. 475 do Codigo Civil",
-                    "poderesEspeciais", "receber citacao"));
+                    "fundamentos", "art. 475 do Código Civil",
+                    "poderesEspeciais", "receber citação"));
 
     @Test
     @DisplayName("Template Method: as pecas compartilham o esqueleto e divergem no corpo")
@@ -34,7 +34,7 @@ class GeracaoDeDocumentosTest {
 
         for (String peca : List.of(inicial, contestacao)) {
             assertTrue(peca.contains("PROCESSO N. 0001234-56.2026.8.17.0001"));
-            assertTrue(peca.contains("EXCELENTISSIMO"));
+            assertTrue(peca.contains("EXCELENTÍSSIMO"));
             assertTrue(peca.contains("Construtora Alfa Ltda."));
             assertTrue(peca.contains("DOS PEDIDOS"));
             assertTrue(peca.contains("OAB PE12345"));
@@ -51,10 +51,10 @@ class GeracaoDeDocumentosTest {
     void procuracaoSobrescreveHooks() {
         String procuracao = new Procuracao().gerar(dados);
 
-        assertTrue(procuracao.startsWith("PROCURACAO AD JUDICIA ET EXTRA"));
-        assertFalse(procuracao.contains("EXCELENTISSIMO"));
+        assertTrue(procuracao.startsWith("PROCURAÇÃO AD JUDICIA ET EXTRA"));
+        assertFalse(procuracao.contains("EXCELENTÍSSIMO"));
         assertTrue(procuracao.contains("OUTORGADO: Ana Souza"));
-        assertTrue(procuracao.contains("receber citacao"));
+        assertTrue(procuracao.contains("receber citação"));
         assertTrue(procuracao.contains("Outorgante"));
     }
 
@@ -63,11 +63,11 @@ class GeracaoDeDocumentosTest {
     void proxySegredoDeJustica() {
         DocumentoGerado sigiloso = new DocumentoGerado(1L,
                 NumeroCnj.de("0007654-32.2026.8.17.0002"), TipoDocumento.PETICAO_INICIAL,
-                "conteudo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true, Set.of("PE54321"));
+                "conteúdo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true, Set.of("PE54321"));
 
         AcessoDocumento real = id -> sigiloso;
 
-        assertEquals("conteudo sigiloso", new DocumentoProxy(real, "PE54321").carregar(1L).getConteudo());
+        assertEquals("conteúdo sigiloso", new DocumentoProxy(real, "PE54321").carregar(1L).getConteudo());
         assertThrows(DocumentoProxy.AcessoNegadoException.class,
                 () -> new DocumentoProxy(real, "PE99999").carregar(1L));
         assertThrows(DocumentoProxy.AcessoNegadoException.class,
@@ -79,10 +79,10 @@ class GeracaoDeDocumentosTest {
     void documentoPublico() {
         DocumentoGerado publico = new DocumentoGerado(2L,
                 NumeroCnj.de("0001234-56.2026.8.17.0001"), TipoDocumento.PROCURACAO,
-                "conteudo publico", LocalDate.of(2026, 9, 8), "PE12345", false, Set.of("PE12345"));
+                "conteúdo público", LocalDate.of(2026, 9, 8), "PE12345", false, Set.of("PE12345"));
 
         AcessoDocumento real = id -> publico;
-        assertEquals("conteudo publico", new DocumentoProxy(real, "PE99999").carregar(2L).getConteudo());
+        assertEquals("conteúdo público", new DocumentoProxy(real, "PE99999").carregar(2L).getConteudo());
         assertEquals("procuracao-0001234-56-2026-8-17-0001.txt", publico.nomeArquivo());
     }
 
@@ -91,7 +91,7 @@ class GeracaoDeDocumentosTest {
     void habilitarOabDaAcesso() {
         DocumentoGerado sigiloso = new DocumentoGerado(3L,
                 NumeroCnj.de("0007654-32.2026.8.17.0002"), TipoDocumento.PETICAO_INICIAL,
-                "conteudo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true, Set.of("PE54321"));
+                "conteúdo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true, Set.of("PE54321"));
 
         assertFalse(sigiloso.podeSerLidoPor("PE99999"));
         sigiloso.habilitarOab("PE99999");
@@ -103,7 +103,7 @@ class GeracaoDeDocumentosTest {
     void revogarOabTiraAcesso() {
         DocumentoGerado sigiloso = new DocumentoGerado(4L,
                 NumeroCnj.de("0007654-32.2026.8.17.0002"), TipoDocumento.PETICAO_INICIAL,
-                "conteudo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true,
+                "conteúdo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true,
                 new java.util.LinkedHashSet<>(Set.of("PE54321", "PE99999")));
 
         sigiloso.revogarOab("PE99999");
@@ -117,7 +117,7 @@ class GeracaoDeDocumentosTest {
     void naoRevogaUltimaOabDeSigiloso() {
         DocumentoGerado sigiloso = new DocumentoGerado(5L,
                 NumeroCnj.de("0007654-32.2026.8.17.0002"), TipoDocumento.PETICAO_INICIAL,
-                "conteudo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true, Set.of("PE54321"));
+                "conteúdo sigiloso", LocalDate.of(2026, 9, 8), "PE54321", true, Set.of("PE54321"));
 
         assertThrows(IllegalArgumentException.class, () -> sigiloso.revogarOab("PE54321"));
         assertTrue(sigiloso.podeSerLidoPor("PE54321"));
@@ -139,7 +139,7 @@ class GeracaoDeDocumentosTest {
         };
 
         new AdvogadoResponsavel(comAuditoria).notificar(new EventoProcesso.DocumentoGerado(
-                "0001234-56.2026.8.17.0001", ana, "Peticao inicial"));
+                "0001234-56.2026.8.17.0001", ana, "Petição inicial"));
 
         assertEquals(1, painel.size());
         assertEquals(1, auditoria.size());

@@ -67,7 +67,7 @@ public class FeriadosIniciais implements SmartInitializingSingleton {
         feriados.salvar(new Feriado("Revolucao Pernambucana",
                 new RecorrenciaAnualFixa(MonthDay.of(3, 6)),
                 Abrangencia.estadual("PE")));
-        feriados.salvar(new Feriado("Nossa Senhora da Conceicao",
+        feriados.salvar(new Feriado("Nossa Senhora da Conceição",
                 new RecorrenciaAnualFixa(MonthDay.of(12, 8)),
                 Abrangencia.comarcal("Recife")));
     }

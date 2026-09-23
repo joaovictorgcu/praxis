@@ -101,7 +101,7 @@ public class PainelWebController {
             try {
                 limite = LocalDate.parse(ate);
             } catch (DateTimeParseException invalida) {
-                model.addAttribute("erro", "data invalida: " + ate + " (use AAAA-MM-DD)");
+                model.addAttribute("erro", "data inválida: " + ate + " (use AAAA-MM-DD)");
             }
         }
         var itens = agenda.executar(limite);
@@ -191,7 +191,7 @@ public class PainelWebController {
                     numeroProcesso, tipo, campos, usuario.oab(), vazioComoNulo(codigoModelo)));
             model.addAttribute("previa", documento.getConteudo());
             model.addAttribute("documentoGerado", documento.getId());
-            model.addAttribute("mensagem", "Peca #" + documento.getId() + " gerada como rascunho.");
+            model.addAttribute("mensagem", "Peça #" + documento.getId() + " gerada como rascunho.");
         } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException falha) {
             model.addAttribute("erro", falha.getMessage());
         }
@@ -216,7 +216,7 @@ public class PainelWebController {
             model.addAttribute("erro", negado.getMessage());
             model.addAttribute("documentos", listar.executar(null));
         } catch (NoSuchElementException | IllegalArgumentException falha) {
-            model.addAttribute("erro", "documento nao encontrado: " + id);
+            model.addAttribute("erro", "documento não encontrado: " + id);
             model.addAttribute("documentos", listar.executar(null));
         }
         return comOpcoesDoFormulario(model);
@@ -227,7 +227,7 @@ public class PainelWebController {
     @PostMapping("/documentos/{id}/enviar-revisao")
     public String enviarParaRevisao(@PathVariable Long id, RedirectAttributes flash) {
         return executarERedirecionar(flash, "/painel/documentos/" + id,
-                "Peca #" + id + " enviada para revisao do chefe.",
+                "Peça #" + id + " enviada para revisão do chefe.",
                 () -> enviarParaRevisao.executar(new DocumentosUseCases.EnviarDocumentoParaRevisao.Comando(id)));
     }
 
@@ -238,7 +238,7 @@ public class PainelWebController {
                           UsuarioLogado usuario,
                           RedirectAttributes flash) {
         return executarERedirecionar(flash, "/painel/documentos/" + id,
-                "Peca #" + id + " aprovada.",
+                "Peça #" + id + " aprovada.",
                 () -> aprovar.executar(new DocumentosUseCases.AprovarDocumento.Comando(
                         id, usuario.oab(), vazioComoNulo(comentario) == null ? "de acordo" : comentario)));
     }
@@ -250,7 +250,7 @@ public class PainelWebController {
                            UsuarioLogado usuario,
                            RedirectAttributes flash) {
         return executarERedirecionar(flash, "/painel/documentos/" + id,
-                "Peca #" + id + " rejeitada.",
+                "Peça #" + id + " rejeitada.",
                 () -> rejeitar.executar(new DocumentosUseCases.RejeitarDocumento.Comando(id, usuario.oab(), motivo)));
     }
 
@@ -258,14 +258,14 @@ public class PainelWebController {
     @PostMapping("/documentos/{id}/desfazer")
     public String desfazer(@PathVariable Long id, RedirectAttributes flash) {
         return executarERedirecionar(flash, "/painel/documentos/" + id,
-                "Ultima decisao sobre a peca #" + id + " desfeita.",
+                "Última decisão sobre a peça #" + id + " desfeita.",
                 () -> desfazer.executar(new DocumentosUseCases.DesfazerDecisaoDocumento.Comando(id)));
     }
 
     @PostMapping("/documentos/{id}/protocolar")
     public String protocolar(@PathVariable Long id, RedirectAttributes flash) {
         return executarERedirecionar(flash, "/painel/documentos/" + id,
-                "Peca #" + id + " protocolada.",
+                "Peça #" + id + " protocolada.",
                 () -> protocolar.executar(new DocumentosUseCases.ProtocolarDocumento.Comando(id)));
     }
 
@@ -274,7 +274,7 @@ public class PainelWebController {
     @PostMapping("/documentos/{id}/oabs")
     public String habilitarOab(@PathVariable Long id, @RequestParam String oab, RedirectAttributes flash) {
         return executarERedirecionar(flash, "/painel/documentos/" + id,
-                "OAB " + oab + " habilitada na peca #" + id + ".",
+                "OAB " + oab + " habilitada na peça #" + id + ".",
                 () -> habilitarOab.executar(new DocumentosUseCases.HabilitarOab.Comando(id, oab)));
     }
 

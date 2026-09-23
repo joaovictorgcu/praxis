@@ -111,7 +111,7 @@ class SegurancaHttpTest {
                 .andExpect(redirectedUrl("/painel/conta?provisoria"));
         mvc.perform(get("/painel/conta").session(sessao))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Sua senha e provisoria")));
+                .andExpect(content().string(containsString("Sua senha é provisória")));
 
         String token = (String) sessao.getAttribute(CsrfInterceptor.CHAVE_SESSAO);
         mvc.perform(post("/painel/conta/senha").session(sessao).param("_csrf", token)

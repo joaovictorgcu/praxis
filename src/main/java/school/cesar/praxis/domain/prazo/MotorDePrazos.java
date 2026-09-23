@@ -45,7 +45,7 @@ public class MotorDePrazos {
     public ContagemPrazoStrategy estrategiaPara(RegimeContagem regime) {
         ContagemPrazoStrategy estrategia = estrategias.get(regime);
         if (estrategia == null) {
-            throw new IllegalArgumentException("sem estrategia de contagem para o regime " + regime);
+            throw new IllegalArgumentException("sem estratégia de contagem para o regime " + regime);
         }
         return estrategia;
     }

@@ -67,11 +67,11 @@ class ImplantacaoHttpTest {
                 .andReturn();
 
         HttpSession sessao = resultado.getRequest().getSession(false);
-        assertNotNull(sessao, "login deveria abrir sessao");
+        assertNotNull(sessao, "login deveria abrir sessão");
         UsuarioLogado logado = (UsuarioLogado) sessao.getAttribute(UsuarioLogado.CHAVE_SESSAO);
         assertNotNull(logado);
         assertTrue(logado.chefe(), "o administrador e chefe");
-        assertFalse(logado.senhaProvisoria(), "a demonstracao nao cai na troca de senha");
+        assertFalse(logado.senhaProvisoria(), "a demonstracao não cai na troca de senha");
     }
 
     @Test
@@ -88,11 +88,11 @@ class ImplantacaoHttpTest {
         var emAberto = agenda.executar(LocalDate.now().plusMonths(3));
 
         assertTrue(emAberto.size() >= 8,
-                "a carteira de demonstracao tem varios prazos em aberto, e nao so os do nucleo");
+                "a carteira de demonstracao tem varios prazos em aberto, e não só os do nucleo");
         assertTrue(emAberto.stream().anyMatch(PrazosUseCases.ConsultarAgenda.ItemAgenda::vencido),
                 "um prazo vencido em aberto, para a agenda mostrar o alerta de prazo perdido");
         assertTrue(emAberto.stream().anyMatch(PrazosUseCases.ConsultarAgenda.ItemAgenda::fatal),
-                "prazos fatais, que sao os que disparam alerta");
+                "prazos fatais, que são os que disparam alerta");
         assertTrue(emAberto.stream().map(PrazosUseCases.ConsultarAgenda.ItemAgenda::numeroProcesso)
                         .distinct().count() >= 5,
                 "prazos espalhados por varios processos");

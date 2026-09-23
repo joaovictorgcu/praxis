@@ -17,8 +17,8 @@
   <section class="cartao">
     <h2>Juntar Arquivo aos Autos</h2>
     <p class="apoio">
-      O anexo herda o <strong>segredo de justica</strong> do processo no momento da juntada, e a
-      leitura passa pelo mesmo Proxy das pecas geradas: OAB nao habilitada recebe 403.
+      O anexo herda o <strong>segredo de justiça</strong> do processo no momento da juntada, e a
+      leitura passa pelo mesmo Proxy das peças geradas: OAB não habilitada recebe 403.
       A juntada fica registrada com a sua OAB (<strong th:text="${usuario.oab()}">OAB</strong>).
     </p>
     <p class="apoio">
@@ -41,11 +41,11 @@
       <label>Arquivo
         <input type="file" name="arquivo" required accept=".pdf,.jpg,.jpeg,.png,.txt">
       </label>
-      <label>Descricao (opcional)
-        <input type="text" name="descricao" placeholder="Procuracao assinada pelo cliente">
+      <label>Descrição (opcional)
+        <input type="text" name="descricao" placeholder="Procuração assinada pelo cliente">
       </label>
       <div>
-        <button type="submit">Juntar aos autos</button>
+        <button type="submit">Juntar aos Autos</button>
       </div>
     </form>
   </section>
@@ -88,7 +88,7 @@
           <td th:text="${anexo.anexadoPorOab()} ?: '-'">-</td>
           <td>
             <span th:if="${anexo.segredoJustica()}" class="etiqueta vermelha">segredo</span>
-            <span th:unless="${anexo.segredoJustica()}" class="etiqueta cinza">publico</span>
+            <span th:unless="${anexo.segredoJustica()}" class="etiqueta cinza">público</span>
           </td>
           <td class="acoes">
             <a class="botao secundario pequeno"

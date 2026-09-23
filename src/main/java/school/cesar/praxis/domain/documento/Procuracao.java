@@ -8,27 +8,27 @@ public class Procuracao extends GeradorDocumento {
 
     @Override
     protected String cabecalho(DadosDocumento dados) {
-        return "PROCURACAO AD JUDICIA ET EXTRA";
+        return "PROCURAÇÃO AD JUDICIA ET EXTRA";
     }
 
     @Override
     protected String enderecamento(DadosDocumento dados) {
-        return "Processo de referencia: " + dados.numeroProcesso()
+        return "Processo de referência: " + dados.numeroProcesso()
                 + " - Comarca de " + dados.comarca() + ".";
     }
 
     @Override
     protected String qualificacao(DadosDocumento dados) {
         return "OUTORGANTE: " + dados.cliente() + ", "
-                + dados.campo("qualificacaoOutorgante", "qualificacao a preencher") + ".";
+                + dados.campo("qualificacaoOutorgante", "qualificação a preencher") + ".";
     }
 
     @Override
     protected String corpo(DadosDocumento dados) {
         return "OUTORGADO: " + dados.advogado().nome() + ", inscrito na OAB sob o n. "
                 + dados.advogado().oab() + ".\n\n"
-                + "PODERES: os da clausula ad judicia et extra, para o foro em geral, "
-                + "podendo propor acoes, contestar, recorrer, transigir, receber e dar quitacao, "
+                + "PODERES: os da cláusula ad judicia et extra, para o foro em geral, "
+                + "podendo propor ações, contestar, recorrer, transigir, receber e dar quitação, "
                 + "substabelecer com ou sem reserva de iguais poderes.";
     }
 

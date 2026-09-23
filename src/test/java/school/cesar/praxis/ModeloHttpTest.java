@@ -66,7 +66,7 @@ class ModeloHttpTest {
                                 }"""))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.codigo").value("HTTP_COBRANCA"))
-                .andExpect(jsonPath("$.rotuloTipo").value("Peticao inicial"))
+                .andExpect(jsonPath("$.rotuloTipo").value("Petição inicial"))
                 // "cliente" vem dos autos, entao so "valorDivida" e cobrado do usuario.
                 .andExpect(jsonPath("$.camposEsperados", contains("valorDivida")));
 
@@ -92,7 +92,7 @@ class ModeloHttpTest {
                                   "tipo": "PECA_AVULSA",
                                   "titulo": "Instrumento particular de acordo",
                                   "corpo": "Acordo de {{valorAcordo}} com {{cliente}}.",
-                                  "pedidos": "CLAUSULAS a) quitacao reciproca.",
+                                  "pedidos": "CLÁUSULAS a) quitação reciproca.",
                                   "enderecaAoJuizo": false
                                 }"""))
                 .andExpect(status().isOk());

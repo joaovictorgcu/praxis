@@ -86,7 +86,7 @@ public class ProcessoWebController {
                     .filter(u -> u.getOab().equalsIgnoreCase(responsavelOab))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "responsavel com OAB " + responsavelOab + " nao e usuario do sistema"));
+                            "responsável com OAB " + responsavelOab + " não é usuário do sistema"));
             Processo processo = cadastrar.executar(new ProcessosUseCases.CadastrarProcesso.Comando(
                     numeroCnj.trim(), cliente, comarca, Boolean.TRUE.equals(segredoJustica),
                     responsavel.getNome(), responsavel.getEmail(), responsavel.getOab()));
@@ -96,7 +96,7 @@ public class ProcessoWebController {
             flash.addFlashAttribute("erro", falha.getMessage());
             return "redirect:/painel/processos";
         } catch (org.springframework.dao.DataIntegrityViolationException duplicado) {
-            flash.addFlashAttribute("erro", "ja existe processo com o numero " + numeroCnj);
+            flash.addFlashAttribute("erro", "já existe processo com o número " + numeroCnj);
             return "redirect:/painel/processos";
         }
     }
@@ -159,7 +159,7 @@ public class ProcessoWebController {
             acao.get();
             flash.addFlashAttribute("mensagem", sucesso);
         } catch (DateTimeParseException data) {
-            flash.addFlashAttribute("erro", "data invalida: " + data.getParsedString());
+            flash.addFlashAttribute("erro", "data inválida: " + data.getParsedString());
         } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException falha) {
             flash.addFlashAttribute("erro", falha.getMessage());
         }

@@ -7,7 +7,7 @@ public record DataUnica(LocalDate data) implements RegraRecorrencia {
 
     public DataUnica {
         if (data == null) {
-            throw new IllegalArgumentException("data do feriado e obrigatoria");
+            throw new IllegalArgumentException("data do feriado é obrigatória");
         }
     }
 

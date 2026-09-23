@@ -26,13 +26,13 @@ public class ProxyDeAcesso<T extends ConteudoRestrito> implements AcessoRestrito
     @Override
     public final T carregar(Long id) {
         if (oabSolicitante == null || oabSolicitante.isBlank()) {
-            throw new AcessoNegadoException("solicitante nao identificado por OAB");
+            throw new AcessoNegadoException("solicitante não identificado por OAB");
         }
         T conteudo = real.carregar(id);
         if (!conteudo.podeSerLidoPor(oabSolicitante)) {
             throw new AcessoNegadoException(
-                    substantivo + " " + id + " esta em segredo de justica e a OAB "
-                            + oabSolicitante + " nao esta habilitada nos autos");
+                    substantivo + " " + id + " está em segredo de justiça e a OAB "
+                            + oabSolicitante + " não está habilitada nos autos");
         }
         return conteudo;
     }

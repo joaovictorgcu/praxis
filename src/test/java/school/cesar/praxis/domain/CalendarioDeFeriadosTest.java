@@ -92,7 +92,7 @@ class CalendarioDeFeriadosTest {
         CalendarioForense comFeriadoDoRecife = calendarioCom(new Feriado(
                 "Aniversario do Recife", new DataUnica(quinta), Abrangencia.comarcal("Recife")));
 
-        assertTrue(comFeriadoDeOlinda.isDiaUtil(quinta), "feriado de outra comarca nao suspende");
+        assertTrue(comFeriadoDeOlinda.isDiaUtil(quinta), "feriado de outra comarca não suspende");
         assertFalse(comFeriadoDoRecife.isDiaUtil(quinta), "feriado da comarca do foro suspende");
     }
 

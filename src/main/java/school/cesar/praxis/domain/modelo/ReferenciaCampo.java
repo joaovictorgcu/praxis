@@ -11,7 +11,7 @@ public record ReferenciaCampo(String nome) implements ExpressaoTexto {
 
     public ReferenciaCampo {
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("referencia sem nome de campo");
+            throw new IllegalArgumentException("referência sem nome de campo");
         }
     }
 

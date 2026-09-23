@@ -4,13 +4,13 @@ public class EmRevisao implements StatusDocumento {
 
     @Override
     public StatusDocumento enviarParaRevisao(DocumentoGerado documento) {
-        return transicaoInvalida("reenviar para revisao");
+        return transicaoInvalida("reenviar para revisão");
     }
 
     @Override
     public StatusDocumento aprovar(DocumentoGerado documento, String oabAprovador, String comentario) {
         if (oabAprovador == null || oabAprovador.isBlank()) {
-            throw new IllegalArgumentException("aprovacao exige OAB do responsavel");
+            throw new IllegalArgumentException("aprovação exige OAB do responsável");
         }
         return new Aprovado();
     }
@@ -18,7 +18,7 @@ public class EmRevisao implements StatusDocumento {
     @Override
     public StatusDocumento rejeitar(DocumentoGerado documento, String oabAprovador, String motivo) {
         if (motivo == null || motivo.isBlank()) {
-            throw new IllegalArgumentException("rejeicao exige motivo");
+            throw new IllegalArgumentException("rejeição exige motivo");
         }
         return new Rejeitado();
     }

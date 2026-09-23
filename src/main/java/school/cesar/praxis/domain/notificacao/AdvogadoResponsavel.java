@@ -32,7 +32,7 @@ public class AdvogadoResponsavel implements ObservadorProcesso {
             corpo = andamento.data() + ": " + andamento.descricao();
         } else if (evento instanceof EventoProcesso.DocumentoGerado documento) {
             assunto = "Documento gerado - processo " + documento.numeroProcesso();
-            corpo = "Peca " + documento.tipoDocumento() + " gerada e anexada aos autos.";
+            corpo = "Peça " + documento.tipoDocumento() + " gerada e anexada aos autos.";
         } else if (evento instanceof EventoProcesso.ArquivoAnexado anexo) {
             assunto = "Arquivo juntado - processo " + anexo.numeroProcesso();
             corpo = "O arquivo \"" + anexo.nomeArquivo() + "\" foi juntado aos autos.";

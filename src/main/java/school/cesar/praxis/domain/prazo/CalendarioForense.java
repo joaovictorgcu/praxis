@@ -21,7 +21,7 @@ public class CalendarioForense {
 
     public CalendarioForense(List<RegraDiaNaoUtil> regras) {
         if (regras == null || regras.isEmpty()) {
-            throw new IllegalArgumentException("calendario exige ao menos uma regra");
+            throw new IllegalArgumentException("calendário exige ao menos uma regra");
         }
         this.regras = List.copyOf(regras);
     }

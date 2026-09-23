@@ -16,7 +16,7 @@ public final class NumeroCnj {
 
     public NumeroCnj(String valor) {
         if (valor == null || !FORMATO.matcher(valor).matches()) {
-            throw new IllegalArgumentException("Numero CNJ invalido: " + valor);
+            throw new IllegalArgumentException("Número CNJ inválido: " + valor);
         }
         this.valor = valor;
     }

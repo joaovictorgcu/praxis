@@ -7,6 +7,6 @@ package school.cesar.praxis.domain.usuario;
 public class CredenciaisInvalidasException extends RuntimeException {
 
     public CredenciaisInvalidasException() {
-        super("e-mail ou senha invalidos");
+        super("e-mail ou senha inválidos");
     }
 }

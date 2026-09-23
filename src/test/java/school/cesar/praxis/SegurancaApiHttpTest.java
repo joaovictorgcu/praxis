@@ -57,7 +57,7 @@ class SegurancaApiHttpTest {
                         .content("""
                                 {
                                   "codigo": "SEM_SESSAO",
-                                  "nome": "Nao deveria entrar",
+                                  "nome": "Não deveria entrar",
                                   "tipo": "PECA_AVULSA",
                                   "corpo": "corpo",
                                   "pedidos": "pedidos",
@@ -71,7 +71,7 @@ class SegurancaApiHttpTest {
         mvc.perform(post("/api/feriados")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"descricao":"Sem sessao","data":"2026-11-20",
+                                {"descricao":"Sem sessão","data":"2026-11-20",
                                  "repeteTodoAno":false,"nivel":"NACIONAL"}"""))
                 .andExpect(status().isUnauthorized());
 
@@ -164,7 +164,7 @@ class SegurancaApiHttpTest {
         mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE12345"))
                         .param("oab", "PE12345"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string(containsString("segredo de justica")));
+                .andExpect(content().string(containsString("segredo de justiça")));
 
         // O caso que importa: Ana logada informando a OAB de Bruno, que esta
         // habilitada nos autos. Sem a conciliacao, o ?oab= seria campo livre e
@@ -172,7 +172,7 @@ class SegurancaApiHttpTest {
         mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE12345"))
                         .param("oab", "PE54321"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string(containsString("nao e a da sessao")));
+                .andExpect(content().string(containsString("não é a da sessão")));
 
         // Bruno, o responsavel, le os proprios autos.
         mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE54321"))

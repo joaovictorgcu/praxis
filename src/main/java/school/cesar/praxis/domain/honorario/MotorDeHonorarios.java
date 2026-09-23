@@ -17,7 +17,7 @@ public class MotorDeHonorarios {
     public CalculoHonorarioStrategy estrategiaPara(String modalidade) {
         CalculoHonorarioStrategy estrategia = estrategias.get(modalidade);
         if (estrategia == null) {
-            throw new IllegalArgumentException("modalidade de honorario desconhecida: " + modalidade);
+            throw new IllegalArgumentException("modalidade de honorário desconhecida: " + modalidade);
         }
         return estrategia;
     }

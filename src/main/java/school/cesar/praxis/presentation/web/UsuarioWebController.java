@@ -71,7 +71,7 @@ public class UsuarioWebController {
     public String remover(@PathVariable Long id, UsuarioLogado usuario, RedirectAttributes flash) {
         try {
             remover.executar(new UsuariosUseCases.RemoverUsuario.Comando(id, usuario.id()));
-            flash.addFlashAttribute("mensagem", "Usuario removido.");
+            flash.addFlashAttribute("mensagem", "Usuário removido.");
         } catch (IllegalArgumentException | NoSuchElementException falha) {
             flash.addFlashAttribute("erro", falha.getMessage());
         }
@@ -93,7 +93,7 @@ public class UsuarioWebController {
                               HttpSession sessao,
                               RedirectAttributes flash) {
         if (!novaSenha.equals(confirmacao)) {
-            flash.addFlashAttribute("erro", "a confirmacao nao coincide com a nova senha");
+            flash.addFlashAttribute("erro", "a confirmação não coincide com a nova senha");
             return "redirect:/painel/conta";
         }
         try {

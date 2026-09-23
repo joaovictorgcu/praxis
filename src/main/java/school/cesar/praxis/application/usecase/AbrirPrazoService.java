@@ -38,7 +38,7 @@ public class AbrirPrazoService implements PrazosUseCases.AbrirPrazo {
         NumeroCnj numero = NumeroCnj.de(comando.numeroProcesso());
         Processo processo = processos.porNumero(numero)
                 .orElseThrow(() -> new NoSuchElementException(
-                        "processo nao encontrado: " + comando.numeroProcesso()));
+                        "processo não encontrado: " + comando.numeroProcesso()));
 
         ContagemPrazoStrategy contagem = motor.estrategiaPara(comando.regime());
 

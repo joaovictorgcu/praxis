@@ -33,7 +33,7 @@ public class ArquivoRepositorioJpa implements ArquivoRepositorio {
     public ArquivoAnexo carregar(Long anexoId) {
         return jpa.findById(anexoId)
                 .map(PersistenciaMapper::paraDominio)
-                .orElseThrow(() -> new NoSuchElementException("anexo nao encontrado: " + anexoId));
+                .orElseThrow(() -> new NoSuchElementException("anexo não encontrado: " + anexoId));
     }
 
     @Override

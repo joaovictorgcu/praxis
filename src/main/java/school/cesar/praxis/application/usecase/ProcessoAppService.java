@@ -81,6 +81,6 @@ public class ProcessoAppService implements ProcessosUseCases.CadastrarProcesso,
 
     private Processo carregar(String numeroCnj) {
         return processos.porNumero(NumeroCnj.de(numeroCnj))
-                .orElseThrow(() -> new NoSuchElementException("processo nao encontrado: " + numeroCnj));
+                .orElseThrow(() -> new NoSuchElementException("processo não encontrado: " + numeroCnj));
     }
 }

@@ -19,9 +19,9 @@ Funcionalidade: Acesso ao painel por advogados e chefes
   Cenario: senha errada e e-mail desconhecido recebem a mesma recusa
     Dado o usuario "Bruno Carvalho" com e-mail "bruno@bdd.adv.br", OAB "PE90003", papel "ADVOGADO" e senha "bruno123"
     Quando eu entro com e-mail "bruno@bdd.adv.br" e senha "outra"
-    Entao o acesso deve ser negado com "e-mail ou senha invalidos"
+    Entao o acesso deve ser negado com "e-mail ou senha inválidos"
     Quando eu entro com e-mail "ninguem@bdd.adv.br" e senha "bruno123"
-    Entao o acesso deve ser negado com "e-mail ou senha invalidos"
+    Entao o acesso deve ser negado com "e-mail ou senha inválidos"
 
   Cenario: a senha nao fica guardada em texto
     Dado o usuario "Davi Lima" com e-mail "davi@bdd.adv.br", OAB "PE90004", papel "ADVOGADO" e senha "davi1234"

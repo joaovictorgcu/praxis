@@ -19,16 +19,16 @@ public class ContratoHonorario {
                              BaseCalculo baseCalculo,
                              CalculoHonorarioStrategy calculo) {
         if (numeroProcesso == null) {
-            throw new IllegalArgumentException("contrato de honorario exige processo");
+            throw new IllegalArgumentException("contrato de honorário exige processo");
         }
         if (celebradoEm == null) {
-            throw new IllegalArgumentException("data de celebracao e obrigatoria");
+            throw new IllegalArgumentException("data de celebração é obrigatória");
         }
         if (baseCalculo == null) {
-            throw new IllegalArgumentException("base de calculo e obrigatoria");
+            throw new IllegalArgumentException("base de cálculo é obrigatória");
         }
         if (calculo == null) {
-            throw new IllegalArgumentException("estrategia de calculo e obrigatoria");
+            throw new IllegalArgumentException("estratégia de cálculo é obrigatória");
         }
         this.id = null;
         this.numeroProcesso = numeroProcesso;

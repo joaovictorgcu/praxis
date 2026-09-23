@@ -13,16 +13,16 @@ public record DadosDocumento(String numeroProcesso,
 
     public DadosDocumento {
         if (numeroProcesso == null || numeroProcesso.isBlank()) {
-            throw new IllegalArgumentException("numero do processo e obrigatorio");
+            throw new IllegalArgumentException("número do processo é obrigatório");
         }
         if (cliente == null || cliente.isBlank()) {
-            throw new IllegalArgumentException("cliente e obrigatorio");
+            throw new IllegalArgumentException("cliente é obrigatório");
         }
         if (comarca == null || comarca.isBlank()) {
-            throw new IllegalArgumentException("comarca e obrigatoria");
+            throw new IllegalArgumentException("comarca é obrigatória");
         }
         if (advogado == null) {
-            throw new IllegalArgumentException("advogado subscritor e obrigatorio");
+            throw new IllegalArgumentException("advogado subscritor é obrigatório");
         }
         campos = campos == null ? Map.of() : Map.copyOf(campos);
     }

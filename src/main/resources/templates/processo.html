@@ -20,7 +20,7 @@
         Processo <span th:text="${processo.numero.valor()}">CNJ</span>
         <span th:replace="~{fragmentos :: sigilo(${processo.segredoJustica})}"></span>
       </h2>
-      <a class="botao secundario pequeno" th:href="@{/painel/processos}">Todos os processos</a>
+      <a class="botao secundario pequeno" th:href="@{/painel/processos}">Todos os Processos</a>
     </div>
     <dl class="ficha">
       <div><dt>Cliente</dt><dd th:text="${processo.cliente}">-</dd></div>
@@ -39,19 +39,19 @@
       </div>
     </dl>
     <p th:if="${processo.segredoJustica and !podeLer}" class="mensagem erro" role="alert">
-      Autos em segredo de justica: sua OAB nao esta habilitada; peca e anexo deste processo
-      serao recusados pelo Proxy. Peca ao chefe para habilitar a OAB na peca.
+      Autos em segredo de justiça: sua OAB não está habilitada; peça e anexo deste processo
+      serão recusados pelo Proxy. Peça ao chefe para habilitar a OAB na peça.
     </p>
     <div class="fluxo">
-      <a class="botao pequeno" th:href="@{/painel/documentos(processo=${processo.numero.valor()})}">Gerar peca</a>
-      <a class="botao secundario pequeno" th:href="@{/painel/anexos(processo=${processo.numero.valor()})}">Juntar arquivo</a>
+      <a class="botao pequeno" th:href="@{/painel/documentos(processo=${processo.numero.valor()})}">Gerar Peça</a>
+      <a class="botao secundario pequeno" th:href="@{/painel/anexos(processo=${processo.numero.valor()})}">Juntar Arquivo</a>
     </div>
   </section>
 
   <div class="duas-colunas">
     <section class="cartao">
       <h2>Registrar Andamento</h2>
-      <p class="apoio">Intimacao e citacao iniciam contagem de prazo; o responsavel e avisado (Observer).</p>
+      <p class="apoio">Intimação e citação iniciam contagem de prazo; o responsável é avisado (Observer).</p>
       <form th:action="@{'/painel/processos/' + ${processo.numero.valor()} + '/andamentos'}" method="post" class="empilhado">
       <input type="hidden" name="_csrf" th:value="${csrf}">
         <label>Data
@@ -59,11 +59,11 @@
         </label>
         <label>Tipo
           <select name="tipo">
-            <option th:each="t : ${tiposAndamento}" th:value="${t}" th:text="${#strings.capitalize(#strings.toLowerCase(t))}">Tipo</option>
+            <option th:each="t : ${tiposAndamento}" th:value="${t}" th:text="${@rotulos.titulo(t)}">Tipo</option>
           </select>
         </label>
-        <label>Descricao
-          <input type="text" name="descricao" required placeholder="Intimacao para contestar">
+        <label>Descrição
+          <input type="text" name="descricao" required placeholder="Intimação para contestar">
         </label>
         <div><button type="submit">Registrar</button></div>
       </form>
@@ -72,16 +72,16 @@
     <section class="cartao">
       <h2>Abrir Prazo</h2>
       <p class="apoio">
-        Vencimento calculado pelo motor: termo inicial no primeiro dia util apos a intimacao,
+        Vencimento calculado pelo motor: termo inicial no primeiro dia útil após a intimação,
         feriados do foro e recesso forense (CPC arts. 219, 220 e 224). Fica congelado na abertura.
       </p>
       <form th:action="@{'/painel/processos/' + ${processo.numero.valor()} + '/prazos'}" method="post" class="empilhado">
       <input type="hidden" name="_csrf" th:value="${csrf}">
-        <label>Descricao
-          <input type="text" name="descricao" required placeholder="Contestacao">
+        <label>Descrição
+          <input type="text" name="descricao" required placeholder="Contestação">
         </label>
         <div class="linha" style="margin:0">
-          <label>Intimacao em
+          <label>Intimação em
             <input type="date" name="intimacao" th:value="${hoje}" required>
           </label>
           <label>Dias
@@ -90,15 +90,15 @@
           <label>Regime
             <select name="regime">
               <option th:each="r : ${regimes}" th:value="${r}"
-                      th:text="${r.name() == 'DIAS_UTEIS'} ? 'Dias uteis' : 'Dias corridos'">Regime</option>
+                      th:text="${r.name() == 'DIAS_UTEIS'} ? 'Dias Úteis' : 'Dias Corridos'">Regime</option>
             </select>
           </label>
         </div>
         <label class="marcador">
           <input type="checkbox" name="fatal" value="true" checked>
-          Prazo fatal (gera alertas escalonados)
+          Prazo Fatal (gera alertas escalonados)
         </label>
-        <div><button type="submit">Abrir prazo</button></div>
+        <div><button type="submit">Abrir Prazo</button></div>
       </form>
     </section>
   </div>
@@ -109,8 +109,8 @@
       <li th:each="a : ${andamentos}">
         <time th:text="${#temporals.format(a.data, 'dd/MM/yyyy')}">data</time>
         <span class="etiqueta" th:classappend="${a.iniciaContagemDePrazo()} ? 'ambar' : 'cinza'"
-              th:text="${#strings.toLowerCase(a.tipo)}">tipo</span>
-        <span th:text="${a.descricao}">descricao</span>
+              th:text="${@rotulos.de(a.tipo)}">tipo</span>
+        <span th:text="${a.descricao}">descrição</span>
       </li>
       <li th:if="${processo.quantidadeAndamentos() == 0}" class="vazio">Nenhum andamento registrado.</li>
     </ol>
@@ -159,7 +159,7 @@
           </td>
         </tr>
         <tr th:if="${#lists.isEmpty(prazos)}">
-          <td colspan="6" class="vazio">Nenhum prazo lancado.</td>
+          <td colspan="6" class="vazio">Nenhum prazo lançado.</td>
         </tr>
         </tbody>
       </table>
@@ -181,7 +181,7 @@
               <a class="botao secundario pequeno" th:href="@{'/painel/documentos/' + ${d.id()}}">Abrir</a>
             </td>
           </tr>
-          <tr th:if="${#lists.isEmpty(documentos)}"><td colspan="4" class="vazio">Nenhuma peca.</td></tr>
+          <tr th:if="${#lists.isEmpty(documentos)}"><td colspan="4" class="vazio">Nenhuma peça.</td></tr>
           </tbody>
         </table>
       </div>

@@ -15,11 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Testes de unidade da anexacao de arquivos - dominio puro, sem Spring. */
 class AnexoDeArquivoTest {
 
-    private static final byte[] CONTEUDO = "conteudo do arquivo".getBytes();
+    private static final byte[] CONTEUDO = "conteúdo do arquivo".getBytes();
 
     private ArquivoAnexo anexo(String nome, TipoArquivo tipo, boolean segredo) {
         return new ArquivoAnexo(1L, NumeroCnj.de("0001234-56.2026.8.17.0001"), nome, tipo,
-                CONTEUDO, "Procuracao assinada", LocalDate.of(2026, 9, 9), "PE12345",
+                CONTEUDO, "Procuração assinada", LocalDate.of(2026, 9, 9), "PE12345",
                 segredo, Set.of("PE12345"));
     }
 

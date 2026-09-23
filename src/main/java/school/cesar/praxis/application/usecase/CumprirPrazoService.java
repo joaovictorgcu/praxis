@@ -25,7 +25,7 @@ public class CumprirPrazoService implements PrazosUseCases.CumprirPrazo {
     @Transactional
     public Prazo executar(Long prazoId) {
         Prazo prazo = prazos.porId(prazoId)
-                .orElseThrow(() -> new NoSuchElementException("prazo nao encontrado: " + prazoId));
+                .orElseThrow(() -> new NoSuchElementException("prazo não encontrado: " + prazoId));
         prazo.cumprir(relogio.hoje());
         return prazos.salvar(prazo);
     }

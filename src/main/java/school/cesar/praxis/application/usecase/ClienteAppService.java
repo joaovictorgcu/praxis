@@ -106,7 +106,7 @@ public class ClienteAppService implements ClienteUseCase {
     @Override
     public ClienteResponse editarCliente(Long id, CriarClienteRequest request) {
         Cliente cliente = clienteRepositorio.porId(id)
-            .orElseThrow(() -> new NoSuchElementException("Cliente nao encontrado com ID: " + id));
+            .orElseThrow(() -> new NoSuchElementException("Cliente não encontrado com ID: " + id));
 
         cliente.atualizar(
             request.getNome(),
@@ -129,7 +129,7 @@ public class ClienteAppService implements ClienteUseCase {
     @Override
     public void deletarCliente(Long id) {
         Cliente cliente = clienteRepositorio.porId(id)
-            .orElseThrow(() -> new NoSuchElementException("Cliente nao encontrado com ID: " + id));
+            .orElseThrow(() -> new NoSuchElementException("Cliente não encontrado com ID: " + id));
         cliente.desativar();
         clienteRepositorio.salvar(cliente);
     }
@@ -137,10 +137,10 @@ public class ClienteAppService implements ClienteUseCase {
     @Override
     public void reativarCliente(Long id) {
         Cliente cliente = clienteRepositorio.porId(id)
-            .orElseThrow(() -> new NoSuchElementException("Cliente nao encontrado com ID: " + id));
+            .orElseThrow(() -> new NoSuchElementException("Cliente não encontrado com ID: " + id));
 
         if (cliente.isAtivo()) {
-            throw new IllegalStateException("Cliente ja esta ativo");
+            throw new IllegalStateException("Cliente já está ativo");
         }
 
         cliente.reativar();

@@ -22,13 +22,13 @@ public class Feriado {
                    RegraRecorrencia recorrencia,
                    Abrangencia abrangencia) {
         if (descricao == null || descricao.isBlank()) {
-            throw new IllegalArgumentException("descricao do feriado e obrigatoria");
+            throw new IllegalArgumentException("descrição do feriado é obrigatória");
         }
         if (recorrencia == null) {
-            throw new IllegalArgumentException("regra de recorrencia e obrigatoria");
+            throw new IllegalArgumentException("regra de recorrência é obrigatória");
         }
         if (abrangencia == null) {
-            throw new IllegalArgumentException("abrangencia do feriado e obrigatoria");
+            throw new IllegalArgumentException("abrangência do feriado é obrigatória");
         }
         this.id = id;
         this.descricao = descricao.trim();

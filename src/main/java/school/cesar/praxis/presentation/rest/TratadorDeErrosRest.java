@@ -57,14 +57,14 @@ public class TratadorDeErrosRest {
     @ExceptionHandler({DateTimeParseException.class, MethodArgumentTypeMismatchException.class,
             HttpMessageNotReadableException.class})
     public ResponseEntity<Map<String, String>> parametroInvalido(Exception falha) {
-        return ResponseEntity.badRequest().body(Map.of("erro", "parametro invalido: " + falha.getMessage()));
+        return ResponseEntity.badRequest().body(Map.of("erro", "parâmetro inválido: " + falha.getMessage()));
     }
 
     /** Constraint do banco (numero de processo, CPF, OAB duplicados). */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, String>> duplicado(DataIntegrityViolationException falha) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(Map.of("erro", "registro duplicado ou referencia invalida"));
+                .body(Map.of("erro", "registro duplicado ou referência inválida"));
     }
 
     @ExceptionHandler(NoSuchElementException.class)

@@ -16,7 +16,7 @@ class AgendaConcorrenciaExperimentoTest {
         var sincronizada = experimento.executarSincronizada(20, "Sala 01");
 
         assertTrue(baseline.houveViolacao(), "Baseline deve demonstrar violacao da regra de conflito");
-        assertTrue(baseline.getAceitas() > 1, "Baseline deve aceitar mais de uma audiencia conflitante");
+        assertTrue(baseline.getAceitas() > 1, "Baseline deve aceitar mais de uma audiência conflitante");
 
         assertFalse(sincronizada.houveViolacao(), "Versao sincronizada deve impedir violacao");
         assertEquals(1, sincronizada.getAceitas(), "Apenas uma tentativa deve ser aceita");
@@ -24,6 +24,6 @@ class AgendaConcorrenciaExperimentoTest {
 
         var cincoRodadas = experimento.executarCincoRodadas(20, "Sala 01");
         assertEquals(5, cincoRodadas.size(), "O experimento deve registrar 5 rodadas");
-        assertTrue(cincoRodadas.stream().allMatch(r -> r.getAceitas() == 1), "Cada rodada sincronizada deve aceitar somente 1 audiencia");
+        assertTrue(cincoRodadas.stream().allMatch(r -> r.getAceitas() == 1), "Cada rodada sincronizada deve aceitar somente 1 audiência");
     }
 }

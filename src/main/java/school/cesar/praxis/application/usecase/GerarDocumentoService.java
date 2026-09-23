@@ -65,7 +65,7 @@ public class GerarDocumentoService implements DocumentosUseCases.GerarDocumento 
         NumeroCnj numero = NumeroCnj.de(comando.numeroProcesso());
         Processo processo = processos.porNumero(numero)
                 .orElseThrow(() -> new NoSuchElementException(
-                        "processo nao encontrado: " + comando.numeroProcesso()));
+                        "processo não encontrado: " + comando.numeroProcesso()));
 
         GeradorDocumento gerador = escolherGerador(comando);
 
@@ -116,14 +116,14 @@ public class GerarDocumentoService implements DocumentosUseCases.GerarDocumento 
             CodigoModelo codigo = CodigoModelo.de(comando.codigoModelo());
             return new GeradorPorModelo(modelos.porCodigo(codigo)
                     .orElseThrow(() -> new NoSuchElementException(
-                            "modelo nao encontrado: " + codigo)));
+                            "modelo não encontrado: " + codigo)));
         }
 
         GeradorDocumento compilado = geradores.get(comando.tipo());
         if (compilado == null) {
             throw new IllegalArgumentException(
-                    "a peca " + comando.tipo() + " nao tem gerador compilado;"
-                            + " informe o codigo de um modelo cadastrado");
+                    "a peça " + comando.tipo() + " não tem gerador compilado;"
+                            + " informe o código de um modelo cadastrado");
         }
         return compilado;
     }

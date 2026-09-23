@@ -36,16 +36,16 @@ public class Processo implements Iterable<Andamento> {
                     boolean segredoJustica,
                     Advogado responsavel) {
         if (numero == null) {
-            throw new IllegalArgumentException("numero CNJ e obrigatorio");
+            throw new IllegalArgumentException("número CNJ é obrigatório");
         }
         if (cliente == null || cliente.isBlank()) {
-            throw new IllegalArgumentException("cliente e obrigatorio");
+            throw new IllegalArgumentException("cliente é obrigatório");
         }
         if (comarca == null || comarca.isBlank()) {
-            throw new IllegalArgumentException("comarca e obrigatoria");
+            throw new IllegalArgumentException("comarca é obrigatória");
         }
         if (responsavel == null) {
-            throw new IllegalArgumentException("advogado responsavel e obrigatorio");
+            throw new IllegalArgumentException("advogado responsável é obrigatório");
         }
         this.id = id;
         this.numero = numero;
@@ -80,7 +80,7 @@ public class Processo implements Iterable<Andamento> {
     /** Registra andamento e avisa os observadores (Observer). */
     public void registrarAndamento(Andamento andamento) {
         if (andamento == null) {
-            throw new IllegalArgumentException("andamento e obrigatorio");
+            throw new IllegalArgumentException("andamento é obrigatório");
         }
         andamentos.add(andamento);
         publicar(new EventoProcesso.AndamentoRegistrado(

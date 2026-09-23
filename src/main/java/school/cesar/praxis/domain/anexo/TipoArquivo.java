@@ -32,7 +32,7 @@ public enum TipoArquivo {
                 return tipo;
             }
         }
-        throw new IllegalArgumentException("tipo de arquivo nao aceito na juntada: " + mime);
+        throw new IllegalArgumentException("tipo de arquivo não aceito na juntada: " + mime);
     }
 
     public String mime() {

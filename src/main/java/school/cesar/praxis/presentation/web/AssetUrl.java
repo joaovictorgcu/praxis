@@ -25,7 +25,7 @@ public class AssetUrl {
             String hash = hash(bytes);
             return path.replaceFirst("\\.[^.]+$", "-" + hash + "$0");
         } catch (IOException e) {
-            throw new IllegalStateException("Nao foi possivel calcular o hash do asset " + path, e);
+            throw new IllegalStateException("Não foi possível calcular o hash do asset " + path, e);
         }
     }
 
@@ -39,7 +39,7 @@ public class AssetUrl {
             }
             return builder.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("MD5 indisponivel", e);
+            throw new IllegalStateException("MD5 indisponível", e);
         }
     }
 }

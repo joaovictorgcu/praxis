@@ -34,19 +34,19 @@ public class SessaoApiInterceptor implements HandlerInterceptor {
         UsuarioLogado usuario = UsuarioLogado.da(requisicao.getSession(false));
         if (usuario == null) {
             return recusar(resposta, HttpServletResponse.SC_UNAUTHORIZED,
-                    "faca login no painel antes de chamar esta operacao");
+                    "faça login no painel antes de chamar esta operação");
         }
         if (!CsrfInterceptor.tokenValido(requisicao)) {
             return recusar(resposta, HttpServletResponse.SC_FORBIDDEN,
-                    "token CSRF ausente ou invalido");
+                    "token CSRF ausente ou inválido");
         }
         if (usuario.senhaProvisoria()) {
             return recusar(resposta, HttpServletResponse.SC_FORBIDDEN,
-                    "troque a senha provisoria antes de usar a API");
+                    "troque a senha provisória antes de usar a API");
         }
         if (SessaoInterceptor.exigeChefe(handler) && !usuario.chefe()) {
             return recusar(resposta, HttpServletResponse.SC_FORBIDDEN,
-                    "acao reservada ao chefe do escritorio");
+                    "ação reservada ao chefe do escritório");
         }
         return true;
     }

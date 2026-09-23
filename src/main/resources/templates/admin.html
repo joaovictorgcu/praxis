@@ -17,75 +17,75 @@
   <section class="resumo" aria-label="Volume de cada cadastro">
     <a href="#usuarios" th:classappend="${panorama.usuariosComSenhaProvisoria() > 0} ? 'atencao'">
       <span class="numero" th:text="${#lists.size(panorama.usuarios())}">0</span>
-      <span class="rotulo">usuarios</span>
+      <span class="rotulo">Usuários</span>
     </a>
     <a href="#processos">
       <span class="numero" th:text="${#lists.size(panorama.processos())}">0</span>
-      <span class="rotulo">processos</span>
+      <span class="rotulo">Processos</span>
     </a>
     <a href="#prazos" th:classappend="${panorama.prazosVencidos() > 0} ? 'alerta'">
       <span class="numero" th:text="${#lists.size(panorama.prazos())}">0</span>
-      <span class="rotulo">prazos abertos e cumpridos</span>
+      <span class="rotulo">Prazos Abertos e Cumpridos</span>
     </a>
     <a href="#documentos" th:classappend="${panorama.documentosEmRevisao() > 0} ? 'atencao'">
       <span class="numero" th:text="${#lists.size(panorama.documentos())}">0</span>
-      <span class="rotulo">pecas geradas</span>
+      <span class="rotulo">Peças Geradas</span>
     </a>
     <a href="#anexos">
       <span class="numero" th:text="${#lists.size(panorama.anexos())}">0</span>
-      <span class="rotulo">anexos</span>
+      <span class="rotulo">Anexos</span>
     </a>
     <a href="#clientes">
       <span class="numero" th:text="${#lists.size(panorama.clientes())}">0</span>
-      <span class="rotulo">clientes</span>
+      <span class="rotulo">Clientes</span>
     </a>
     <a href="#partes">
       <span class="numero" th:text="${#lists.size(panorama.partesContrarias())}">0</span>
-      <span class="rotulo">partes contrarias</span>
+      <span class="rotulo">Partes Contrárias</span>
     </a>
     <a href="#audiencias">
       <span class="numero" th:text="${#lists.size(panorama.audiencias())}">0</span>
-      <span class="rotulo">audiencias</span>
+      <span class="rotulo">Audiências</span>
     </a>
     <a href="#contratos">
       <span class="numero" th:text="${#lists.size(panorama.contratos())}">0</span>
-      <span class="rotulo">contratos de honorario</span>
+      <span class="rotulo">Contratos de Honorário</span>
     </a>
     <a href="#modelos">
       <span class="numero" th:text="${#lists.size(panorama.modelos())}">0</span>
-      <span class="rotulo">modelos de peca</span>
+      <span class="rotulo">Modelos de Peça</span>
     </a>
     <a href="#feriados">
       <span class="numero" th:text="${#lists.size(panorama.feriados())}">0</span>
-      <span class="rotulo">feriados</span>
+      <span class="rotulo">Feriados</span>
     </a>
     <a href="#avisos">
       <span class="numero" th:text="${#lists.size(avisos)}">0</span>
-      <span class="rotulo">avisos emitidos nesta instancia</span>
+      <span class="rotulo">Avisos Emitidos nesta Instância</span>
     </a>
   </section>
 
   <section class="cartao">
     <h2>O Que Exige Atenção</h2>
-    <p class="apoio" th:text="'Retrato de ' + ${#temporals.format(hoje, 'dd/MM/yyyy')} + '. Esta tela so le: para alterar, use o atalho do cadastro correspondente.'">
+    <p class="apoio" th:text="'Retrato de ' + ${#temporals.format(hoje, 'dd/MM/yyyy')} + '. Esta tela só lê: para alterar, use o atalho do cadastro correspondente.'">
       Retrato de hoje.
     </p>
     <ul class="historico">
       <li>
         <strong th:text="${panorama.prazosVencidos()}">0</strong> prazo(s) vencido(s) ainda em aberto &middot;
         <strong th:text="${panorama.prazosEmAberto()}">0</strong> em aberto no total
-        <span><a th:href="@{/painel}">ver agenda</a></span>
+        <span><a th:href="@{/painel}">Ver Agenda</a></span>
       </li>
       <li>
-        <strong th:text="${panorama.documentosEmRevisao()}">0</strong> peca(s) aguardando revisao do chefe
-        <span><a th:href="@{/painel/documentos}">ver fila</a></span>
+        <strong th:text="${panorama.documentosEmRevisao()}">0</strong> peça(s) aguardando revisão do chefe
+        <span><a th:href="@{/painel/documentos}">Ver Fila</a></span>
       </li>
       <li>
-        <strong th:text="${panorama.usuariosComSenhaProvisoria()}">0</strong> usuario(s) ainda com senha provisoria
-        <span><a th:href="@{/painel/usuarios}">ver usuarios</a></span>
+        <strong th:text="${panorama.usuariosComSenhaProvisoria()}">0</strong> usuário(s) ainda com senha provisória
+        <span><a th:href="@{/painel/usuarios}">Ver Usuários</a></span>
       </li>
       <li>
-        <strong th:text="${panorama.processosEmSegredo()}">0</strong> processo(s) em segredo de justica &middot;
+        <strong th:text="${panorama.processosEmSegredo()}">0</strong> processo(s) em segredo de justiça &middot;
         <strong th:text="${panorama.andamentos()}">0</strong> andamento(s) registrado(s)
       </li>
     </ul>
@@ -93,7 +93,7 @@
 
   <section class="cartao">
     <h2>Atalhos de Administração</h2>
-    <p class="apoio">Cada cadastro tem sua tela, com as regras e a confirmacao de remocao.</p>
+    <p class="apoio">Cada cadastro tem sua tela, com as regras e a confirmação de remoção.</p>
     <div class="linha">
       <a th:each="atalho : ${atalhos}" class="botao secundario"
          th:href="@{${atalho.caminho()}}" th:title="${atalho.descricao()}"
@@ -159,11 +159,11 @@
           <td><span class="papel" th:classappend="${u.chefe} ? 'chefe'" th:text="${u.papel.rotulo()}">Papel</span></td>
           <td>
             <span class="etiqueta" th:classappend="${u.senhaProvisoria} ? 'ambar' : 'verde'"
-                  th:text="${u.senhaProvisoria} ? 'provisoria' : 'definitiva'">estado</span>
+                  th:text="${u.senhaProvisoria} ? 'provisória' : 'definitiva'">estado</span>
           </td>
         </tr>
         <tr th:if="${#lists.isEmpty(panorama.usuarios())}">
-          <td colspan="6" class="vazio">nenhum usuario cadastrado</td>
+          <td colspan="6" class="vazio">nenhum usuário cadastrado</td>
         </tr>
         </tbody>
       </table>
@@ -201,7 +201,7 @@
 
   <section class="cartao" id="prazos">
     <h2>Prazos</h2>
-    <p class="apoio">Inclui os ja cumpridos - a agenda do painel mostra so o que ainda exige acao.</p>
+    <p class="apoio">Inclui os já cumpridos - a agenda do painel mostra só o que ainda exige ação.</p>
     <div class="tabela">
       <table>
         <thead>
@@ -227,7 +227,7 @@
           </td>
         </tr>
         <tr th:if="${#lists.isEmpty(panorama.prazos())}">
-          <td colspan="7" class="vazio">nenhum prazo aberto ate hoje</td>
+          <td colspan="7" class="vazio">nenhum prazo aberto até hoje</td>
         </tr>
         </tbody>
       </table>
@@ -246,14 +246,14 @@
         <tr th:each="d : ${panorama.documentos()}">
           <td><a th:href="@{'/painel/documentos/' + ${d.id}}" th:text="${d.id}">1</a></td>
           <td th:text="${d.numeroProcesso}">-</td>
-          <td th:text="${d.tipo}">-</td>
+          <td th:text="${d.tipo.rotulo()}">-</td>
           <td th:text="${d.geradoEm}">-</td>
           <td th:text="${d.geradoPorOab}">-</td>
           <td><span th:replace="~{fragmentos :: status(${d.status})}"></span></td>
           <td><span th:replace="~{fragmentos :: sigilo(${d.segredoJustica})}"></span></td>
         </tr>
         <tr th:if="${#lists.isEmpty(panorama.documentos())}">
-          <td colspan="7" class="vazio">nenhuma peca gerada</td>
+          <td colspan="7" class="vazio">nenhuma peça gerada</td>
         </tr>
         </tbody>
       </table>
@@ -274,7 +274,7 @@
           <td th:text="${a.numeroProcesso}">-</td>
           <td>
             <span th:text="${a.nome}">-</span>
-            <span class="apoio" th:if="${a.descricao}" th:text="${a.descricao}">descricao</span>
+            <span class="apoio" th:if="${a.descricao}" th:text="${a.descricao}">descrição</span>
           </td>
           <td th:text="${a.rotuloTipo}">-</td>
           <td th:text="${#numbers.formatInteger(a.tamanhoBytes, 0, 'POINT')} + ' B'">0 B</td>
@@ -292,7 +292,7 @@
 
   <section class="cartao" id="clientes">
     <h2>Clientes</h2>
-    <p class="apoio">Inclui os desativados. Cadastro e edicao pela API REST <code>/api/clientes</code>.</p>
+    <p class="apoio">Inclui os desativados. Cadastro e edição pela API REST <code>/api/clientes</code>.</p>
     <div class="tabela">
       <table>
         <thead>
@@ -304,7 +304,7 @@
           <td th:text="${c.id}">1</td>
           <td th:text="${c.nome}">-</td>
           <td th:text="${c.cpfOuCnpj}">-</td>
-          <td th:text="${c.tipoPessoa}">-</td>
+          <td th:text="${c.tipoPessoa?.descricao}">-</td>
           <td>
             <span th:text="${c.email}">-</span>
             <span class="apoio" th:text="${c.celular} ?: ${c.telefone}">-</span>
@@ -325,7 +325,7 @@
 
   <section class="cartao" id="partes">
     <h2>Partes Contrárias</h2>
-    <p class="apoio">Inclui as desativadas. Cadastro e edicao pela API REST <code>/api/partes-contrarias</code>.</p>
+    <p class="apoio">Inclui as desativadas. Cadastro e edição pela API REST <code>/api/partes-contrarias</code>.</p>
     <div class="tabela">
       <table>
         <thead>
@@ -337,7 +337,7 @@
           <td th:text="${pc.id}">1</td>
           <td th:text="${pc.nome}">-</td>
           <td th:text="${pc.cpfOuCnpj}">-</td>
-          <td th:text="${pc.tipoPessoa}">-</td>
+          <td th:text="${pc.tipoPessoa?.descricao}">-</td>
           <td>
             <span th:text="${pc.email}">-</span>
             <span class="apoio" th:text="${pc.telefone}">-</span>
@@ -349,7 +349,7 @@
           </td>
         </tr>
         <tr th:if="${#lists.isEmpty(panorama.partesContrarias())}">
-          <td colspan="7" class="vazio">nenhuma parte contraria cadastrada</td>
+          <td colspan="7" class="vazio">nenhuma parte contrária cadastrada</td>
         </tr>
         </tbody>
       </table>
@@ -379,7 +379,7 @@
           </td>
         </tr>
         <tr th:if="${#lists.isEmpty(panorama.audiencias())}">
-          <td colspan="7" class="vazio">nenhuma audiencia agendada</td>
+          <td colspan="7" class="vazio">nenhuma audiência agendada</td>
         </tr>
         </tbody>
       </table>
@@ -397,7 +397,7 @@
         <tr th:each="ct : ${panorama.contratos()}">
           <td th:text="${ct.id}">1</td>
           <td th:text="${ct.numeroProcesso}">-</td>
-          <td th:text="${ct.modalidade}">-</td>
+          <td th:text="${@rotulos.titulo(ct.modalidade)}">-</td>
           <td th:text="${#temporals.format(ct.celebradoEm, 'dd/MM/yyyy')}">-</td>
           <td th:text="'R$ ' + ${#numbers.formatDecimal(ct.valorContratado, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
         </tr>
@@ -458,15 +458,15 @@
 
   <section class="cartao" id="avisos">
     <h2>Avisos Emitidos</h2>
-    <p class="apoio">Fila do notificador de painel desta instancia: some quando a aplicacao reinicia.</p>
+    <p class="apoio">Fila do notificador de painel desta instância: some quando a aplicação reinicia.</p>
     <ul class="avisos">
       <li th:each="aviso : ${avisos}">
         <strong th:text="${aviso.assunto()}">assunto</strong>
-        <span th:text="${aviso.destinatario()}">destinatario</span>
+        <span th:text="${aviso.destinatario()}">destinatário</span>
         <span th:if="${aviso.numeroProcesso()}" th:text="${aviso.numeroProcesso()}">processo</span>
         <p th:text="${aviso.corpo()}">corpo</p>
       </li>
-      <li th:if="${#lists.isEmpty(avisos)}" class="vazio">nenhum aviso emitido desde o ultimo reinicio</li>
+      <li th:if="${#lists.isEmpty(avisos)}" class="vazio">nenhum aviso emitido desde o último reinício</li>
     </ul>
   </section>
 </main>

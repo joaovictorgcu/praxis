@@ -8,10 +8,10 @@ public record Jurisdicao(String uf, String comarca) {
 
     public Jurisdicao {
         if (uf == null || uf.isBlank()) {
-            throw new IllegalArgumentException("uf do foro e obrigatoria");
+            throw new IllegalArgumentException("uf do foro é obrigatória");
         }
         if (comarca == null || comarca.isBlank()) {
-            throw new IllegalArgumentException("comarca do foro e obrigatoria");
+            throw new IllegalArgumentException("comarca do foro é obrigatória");
         }
         uf = uf.trim().toUpperCase();
         comarca = comarca.trim();

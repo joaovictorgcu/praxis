@@ -13,13 +13,13 @@ public record RecorrenciaAnualFixa(MonthDay diaEMes) implements RegraRecorrencia
 
     public RecorrenciaAnualFixa {
         if (diaEMes == null) {
-            throw new IllegalArgumentException("dia e mes do feriado sao obrigatorios");
+            throw new IllegalArgumentException("dia e mês do feriado são obrigatórios");
         }
     }
 
     public static RecorrenciaAnualFixa de(LocalDate referencia) {
         if (referencia == null) {
-            throw new IllegalArgumentException("data de referencia e obrigatoria");
+            throw new IllegalArgumentException("data de referência é obrigatória");
         }
         return new RecorrenciaAnualFixa(MonthDay.from(referencia));
     }

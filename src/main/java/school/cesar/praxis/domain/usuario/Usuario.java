@@ -29,19 +29,19 @@ public class Usuario {
     public Usuario(Long id, String nome, String email, String oab, Papel papel,
                    String senhaCodificada, boolean senhaProvisoria) {
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("nome do usuario e obrigatorio");
+            throw new IllegalArgumentException("nome do usuário é obrigatório");
         }
         if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("e-mail do usuario invalido: " + email);
+            throw new IllegalArgumentException("e-mail do usuário inválido: " + email);
         }
         if (oab == null || oab.isBlank()) {
-            throw new IllegalArgumentException("OAB e obrigatoria");
+            throw new IllegalArgumentException("OAB é obrigatória");
         }
         if (papel == null) {
-            throw new IllegalArgumentException("papel do usuario e obrigatorio");
+            throw new IllegalArgumentException("papel do usuário é obrigatório");
         }
         if (senhaCodificada == null || senhaCodificada.isBlank()) {
-            throw new IllegalArgumentException("usuario sem senha");
+            throw new IllegalArgumentException("usuário sem senha");
         }
         this.id = id;
         this.nome = nome.trim();

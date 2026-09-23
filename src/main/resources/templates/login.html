@@ -11,21 +11,21 @@
 <body class="entrada">
 <header class="topo-entrada">
   <img class="marca-topo" th:src="@{/favicon.svg}" width="96" height="96"
-       alt="Praxis - gestao para escritorios de advocacia">
+       alt="Praxis - gestão para escritórios de advocacia">
 </header>
 
 <main id="conteudo" tabindex="-1" class="cartao-login">
   <h1>Praxis</h1>
-  <p class="apoio">Gestao de processos, prazos e pecas do escritorio.</p>
+  <p class="apoio">Gestão de processos, prazos e peças do escritório.</p>
 
   <p th:if="${mensagem}" class="mensagem sucesso" role="status" th:text="${mensagem}">ok</p>
   <p th:if="${erro}" class="mensagem erro" role="alert" th:text="${erro}">erro</p>
 
   <form th:action="@{/login}" method="post" class="empilhado">
     <input type="hidden" name="proximo" th:value="${proximo}">
-    <label>Usuario ou e-mail
+    <label>Usuário ou E-mail
       <input type="text" name="email" th:value="${email}" required autofocus
-             autocomplete="username" placeholder="admin ou voce@praxis.adv.br">
+             autocomplete="username" placeholder="admin ou nome@praxis.adv.br">
     </label>
     <label>Senha
       <input type="password" name="senha" required autocomplete="current-password">
@@ -34,8 +34,8 @@
   </form>
 
   <p class="dica">
-    Advogado entra para conduzir os autos; chefe (socio) tambem aprova pecas e
-    administra feriados e modelos. Sem conta? Peca ao chefe do escritorio.
+    Advogado entra para conduzir os autos; chefe (sócio) também aprova peças e
+    administra feriados e modelos. Sem conta? Peça ao chefe do escritório.
   </p>
 </main>
 </body>

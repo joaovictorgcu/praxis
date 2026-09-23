@@ -33,7 +33,7 @@ public class ModeloAppService implements ModelosUseCases.CadastrarModelo,
     public ModelosUseCases.ItemModelo executar(Comando comando) {
         CodigoModelo codigo = CodigoModelo.de(comando.codigo());
         if (modelos.porCodigo(codigo).isPresent()) {
-            throw new IllegalArgumentException("ja existe modelo com o codigo " + codigo);
+            throw new IllegalArgumentException("já existe modelo com o código " + codigo);
         }
 
         ModeloDocumento salvo = modelos.salvar(new ModeloDocumento(
@@ -60,7 +60,7 @@ public class ModeloAppService implements ModelosUseCases.CadastrarModelo,
     @Transactional
     public void executar(Long id) {
         if (modelos.porId(id).isEmpty()) {
-            throw new NoSuchElementException("modelo nao encontrado: " + id);
+            throw new NoSuchElementException("modelo não encontrado: " + id);
         }
         modelos.remover(id);
     }

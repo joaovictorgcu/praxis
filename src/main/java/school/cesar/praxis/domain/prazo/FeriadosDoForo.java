@@ -21,10 +21,10 @@ public class FeriadosDoForo implements RegraDiaNaoUtil {
 
     public FeriadosDoForo(FonteDeFeriados fonte, Jurisdicao foro) {
         if (fonte == null) {
-            throw new IllegalArgumentException("fonte de feriados e obrigatoria");
+            throw new IllegalArgumentException("fonte de feriados é obrigatória");
         }
         if (foro == null) {
-            throw new IllegalArgumentException("foro e obrigatorio");
+            throw new IllegalArgumentException("foro é obrigatório");
         }
         this.fonte = fonte;
         this.foro = foro;

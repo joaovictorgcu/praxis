@@ -88,13 +88,13 @@ class LoginHttpTest {
                         .param("email", "ana.souza@praxis.adv.br")
                         .param("senha", "errada!"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("e-mail ou senha invalidos")));
+                .andExpect(content().string(containsString("e-mail ou senha inválidos")));
 
         mvc.perform(post("/login")
                         .param("email", "ninguem@praxis.adv.br")
                         .param("senha", "praxis123"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("e-mail ou senha invalidos")));
+                .andExpect(content().string(containsString("e-mail ou senha inválidos")));
     }
 
     @Test
@@ -122,7 +122,7 @@ class LoginHttpTest {
                         .session(sessaoDe("Carla", "PE00001", Papel.CHEFE)))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/painel/documentos/999"))
-                .andExpect(flash().attribute("erro", containsString("nao encontrado")));
+                .andExpect(flash().attribute("erro", containsString("não encontrado")));
     }
 
     @Test
@@ -172,17 +172,17 @@ class LoginHttpTest {
                 .andExpect(content().string(containsString("gerada como rascunho")))
                 .andReturn().getResponse().getContentAsString();
 
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("Peca #(\\d+) gerada").matcher(pagina);
-        assertTrue(m.find(), "id da peca nao apareceu na tela");
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("Peça #(\\d+) gerada").matcher(pagina);
+        assertTrue(m.find(), "id da peça não apareceu na tela");
         String id = m.group(1);
 
         mvc.perform(post("/painel/documentos/" + id + "/enviar-revisao").session(ana))
                 .andExpect(redirectedUrl("/painel/documentos/" + id))
-                .andExpect(flash().attribute("mensagem", containsString("revisao")));
+                .andExpect(flash().attribute("mensagem", containsString("revisão")));
 
         mvc.perform(get("/painel/documentos/" + id).session(ana))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Aguardando revisao do chefe")));
+                .andExpect(content().string(containsString("Aguardando revisão do chefe")));
 
         mvc.perform(post("/painel/documentos/" + id + "/aprovar").param("comentario", "de acordo").session(carla))
                 .andExpect(flash().attribute("mensagem", containsString("aprovada")));

@@ -21,7 +21,7 @@
 
   <aside class="menu-lateral">
     <!-- Primeiro tabulavel da pagina: pula o menu inteiro (WCAG 2.4.1). -->
-    <a class="pular" href="#conteudo">Ir para o conteudo</a>
+    <a class="pular" href="#conteudo">Ir para o conteúdo</a>
 
     <!--
       Sprite dos icones: um <symbol> por icone, referenciado por <use>. Fica
@@ -94,7 +94,7 @@
 
     <p class="menu-titulo">Escritório</p>
 
-    <nav aria-label="Secoes do painel">
+    <nav aria-label="Seções do painel">
       <a th:href="@{/painel}" th:classappend="${ativo == 'painel'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'painel'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-agenda"/></svg>
@@ -171,7 +171,7 @@
             th:text="${usuario.rotuloPapel()}">Advogado</span>
       <form th:action="@{/sair}" method="post">
         <input type="hidden" name="_csrf" th:value="${csrf}">
-        <button type="submit" title="Encerrar sessao">Sair</button>
+        <button type="submit" title="Encerrar sessão">Sair</button>
       </form>
     </div>
   </header>
@@ -189,12 +189,12 @@
       th:classappend="${nome == 'APROVADO' or nome == 'PROTOCOLADO'} ? 'verde'
                       : (${nome == 'EM_REVISAO'} ? 'ambar'
                       : (${nome == 'REJEITADO'} ? 'vermelha' : 'azul'))"
-      th:text="${#strings.replace(#strings.toLowerCase(nome), '_', ' ')}">rascunho</span>
+      th:text="${@rotulos.de(nome)}">rascunho</span>
 
 <!-- Etiqueta de sigilo dos autos. -->
 <span th:fragment="sigilo(segredo)" th:remove="tag">
   <span th:if="${segredo}" class="etiqueta vermelha">segredo</span>
-  <span th:unless="${segredo}" class="etiqueta cinza">publico</span>
+  <span th:unless="${segredo}" class="etiqueta cinza">público</span>
 </span>
 
 </body>

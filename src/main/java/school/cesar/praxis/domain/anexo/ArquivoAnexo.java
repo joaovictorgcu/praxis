@@ -53,7 +53,7 @@ public class ArquivoAnexo implements ConteudoRestrito {
             throw new IllegalArgumentException("anexo exige tipo de arquivo");
         }
         if (conteudo == null || conteudo.length == 0) {
-            throw new IllegalArgumentException("anexo sem conteudo");
+            throw new IllegalArgumentException("anexo sem conteúdo");
         }
         if (conteudo.length > TAMANHO_MAXIMO_BYTES) {
             throw new IllegalArgumentException("anexo excede o limite de "
@@ -84,7 +84,7 @@ public class ArquivoAnexo implements ConteudoRestrito {
         String limpo = informado.trim().replace('\\', '/');
         limpo = limpo.substring(limpo.lastIndexOf('/') + 1);
         if (limpo.isBlank()) {
-            throw new IllegalArgumentException("nome de arquivo invalido: " + informado);
+            throw new IllegalArgumentException("nome de arquivo inválido: " + informado);
         }
         if (limpo.length() > 200) {
             limpo = limpo.substring(0, 200);

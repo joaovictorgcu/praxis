@@ -42,7 +42,7 @@ public class GeradorPorModelo extends GeradorDocumento {
     protected String enderecamento(DadosDocumento dados) {
         return modelo.isEnderecaAoJuizo()
                 ? super.enderecamento(dados)
-                : "Processo de referencia: " + dados.numeroProcesso()
+                : "Processo de referência: " + dados.numeroProcesso()
                         + " - Comarca de " + dados.comarca() + ".";
     }
 
@@ -50,7 +50,7 @@ public class GeradorPorModelo extends GeradorDocumento {
     protected String qualificacao(DadosDocumento dados) {
         return modelo.isEnderecaAoJuizo()
                 ? super.qualificacao(dados)
-                : dados.cliente() + ", qualificado nos autos do processo em referencia,"
+                : dados.cliente() + ", qualificado nos autos do processo em referência,"
                         + " firma o presente instrumento.";
     }
 

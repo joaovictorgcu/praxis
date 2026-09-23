@@ -15,10 +15,10 @@ public class Andamento {
 
     public Andamento(Long id, LocalDate data, String descricao, TipoAndamento tipo) {
         if (data == null) {
-            throw new IllegalArgumentException("data do andamento e obrigatoria");
+            throw new IllegalArgumentException("data do andamento é obrigatória");
         }
         if (descricao == null || descricao.isBlank()) {
-            throw new IllegalArgumentException("descricao do andamento e obrigatoria");
+            throw new IllegalArgumentException("descrição do andamento é obrigatória");
         }
         this.id = id;
         this.data = data;

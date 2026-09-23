@@ -44,7 +44,7 @@ public class DocumentoGerado implements ConteudoRestrito {
             throw new IllegalArgumentException("documento exige processo");
         }
         if (conteudo == null || conteudo.isBlank()) {
-            throw new IllegalArgumentException("documento sem conteudo");
+            throw new IllegalArgumentException("documento sem conteúdo");
         }
         this.id = id;
         this.numeroProcesso = numeroProcesso;
@@ -102,11 +102,11 @@ public class DocumentoGerado implements ConteudoRestrito {
     public void desfazerUltimaDecisao() {
         String atual = status.nome();
         if (!"APROVADO".equals(atual) && !"REJEITADO".equals(atual)) {
-            throw new IllegalStateException("nao ha decisao para desfazer em um documento " + atual);
+            throw new IllegalStateException("não há decisão para desfazer em um documento " + atual);
         }
         RegistroAprovacao ultima = historico.isEmpty() ? null : historico.get(historico.size() - 1);
         String oab = ultima == null ? null : ultima.getResponsavelOab();
-        transicionar(new EmRevisao(), oab, "desfeito: decisao revertida");
+        transicionar(new EmRevisao(), oab, "desfeito: decisão revertida");
     }
 
     public void restaurarStatus(StatusDocumento statusAnterior, String responsavelOab, String comentario) {
@@ -141,7 +141,7 @@ public class DocumentoGerado implements ConteudoRestrito {
 
     public void habilitarOab(String oab) {
         if (oab == null || oab.isBlank()) {
-            throw new IllegalArgumentException("OAB e obrigatoria");
+            throw new IllegalArgumentException("OAB é obrigatória");
         }
         oabsHabilitadas.add(oab);
     }
@@ -149,7 +149,7 @@ public class DocumentoGerado implements ConteudoRestrito {
     public void revogarOab(String oab) {
         if (segredoJustica && oabsHabilitadas.size() == 1 && oabsHabilitadas.contains(oab)) {
             throw new IllegalArgumentException(
-                    "documento em segredo de justica exige ao menos uma OAB habilitada");
+                    "documento em segredo de justiça exige ao menos uma OAB habilitada");
         }
         oabsHabilitadas.remove(oab);
     }

@@ -83,7 +83,7 @@ public class LoginWebController {
         if (sessao != null) {
             sessao.invalidate();
         }
-        flash.addFlashAttribute("mensagem", "Sessao encerrada.");
+        flash.addFlashAttribute("mensagem", "Sessão encerrada.");
         return "redirect:/login";
     }
 

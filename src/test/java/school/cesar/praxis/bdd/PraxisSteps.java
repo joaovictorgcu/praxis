@@ -220,7 +220,7 @@ public class PraxisSteps {
         assertTrue(painel.getEntregues().stream()
                         .anyMatch(notificacao -> notificacao.destinatario().equals(email)
                                 && notificacao.assunto().contains(nivel)),
-                "painel nao recebeu notificacao de nivel " + nivel);
+                "painel não recebeu notificação de nível " + nivel);
     }
 
     @E("a notificacao deve informar {int} dias restantes")
@@ -246,7 +246,7 @@ public class PraxisSteps {
     @Entao("nenhuma notificacao deve ser enviada")
     public void nenhumaNotificacao() {
         assertTrue(alertas.isEmpty(), "alertas inesperados: " + alertas);
-        assertTrue(painel.getEntregues().isEmpty(), "painel recebeu notificacao inesperada");
+        assertTrue(painel.getEntregues().isEmpty(), "painel recebeu notificação inesperada");
     }
 
     @Entao("o advogado {string} deve ser notificado sobre prazo vencido")
@@ -318,21 +318,21 @@ public class PraxisSteps {
     @Entao("o cadastro do modelo deve ser recusado")
     public void oCadastroDoModeloDeveSerRecusado() {
         assertNotNull(falhaEsperada, "o cadastro duplicado foi aceito");
-        assertTrue(falhaEsperada.getMessage().contains("ja existe modelo"),
+        assertTrue(falhaEsperada.getMessage().contains("já existe modelo"),
                 "motivo inesperado: " + falhaEsperada.getMessage());
     }
 
     @Entao("a geracao deve ser recusada por falta de gerador")
     public void recusadaPorFaltaDeGerador() {
-        assertNotNull(falhaEsperada, "a geracao foi aceita");
-        assertTrue(falhaEsperada.getMessage().contains("nao tem gerador compilado"),
+        assertNotNull(falhaEsperada, "a geração foi aceita");
+        assertTrue(falhaEsperada.getMessage().contains("não tem gerador compilado"),
                 "motivo inesperado: " + falhaEsperada.getMessage());
     }
 
     @Entao("a geracao deve ser recusada por modelo inexistente")
     public void recusadaPorModeloInexistente() {
-        assertNotNull(falhaEsperada, "a geracao foi aceita");
-        assertTrue(falhaEsperada.getMessage().contains("modelo nao encontrado"),
+        assertNotNull(falhaEsperada, "a geração foi aceita");
+        assertTrue(falhaEsperada.getMessage().contains("modelo não encontrado"),
                 "motivo inesperado: " + falhaEsperada.getMessage());
     }
 
@@ -377,7 +377,7 @@ public class PraxisSteps {
     @Entao("o dia {string} deve correr prazo")
     public void oDiaDeveCorrerPrazo(String data) {
         assertTrue(consultarDiaUtil.executar(LocalDate.parse(data)).diaUtil(),
-                data + " deveria ser dia util");
+                data + " deveria ser dia útil");
     }
 
     @E("o proximo dia util depois de {string} deve ser {string}")
@@ -445,7 +445,7 @@ public class PraxisSteps {
         assertTrue(entregues.stream()
                         .anyMatch(notificacao -> notificacao.destinatario().equals(email)
                                 && notificacao.assunto().startsWith("Documento gerado")),
-                "painel nao recebeu aviso de documento gerado: " + entregues);
+                "painel não recebeu aviso de documento gerado: " + entregues);
     }
 
     @Entao("a leitura da peca pela OAB {string} deve ser permitida")
@@ -503,7 +503,7 @@ public class PraxisSteps {
         assertTrue(documento.getHistorico().stream()
                         .anyMatch(registro -> registro.getDeEstado().equals(de)
                                 && registro.getParaEstado().equals(para)),
-                "historico nao contem transicao de " + de + " para " + para);
+                "histórico não contem transição de " + de + " para " + para);
     }
 
     @Entao("tentar aprovar o documento deve falhar")
@@ -516,13 +516,13 @@ public class PraxisSteps {
 
     @Quando("eu junto aos autos o arquivo {string} do tipo {string}")
     public void euJuntoOArquivo(String nome, String mime) {
-        anexo = juntar(numeroProcesso, nome, mime, "conteudo de teste".getBytes());
+        anexo = juntar(numeroProcesso, nome, mime, "conteúdo de teste".getBytes());
     }
 
     @Quando("eu tento juntar aos autos o arquivo {string} do tipo {string}")
     public void euTentoJuntarTipoInvalido(String nome, String mime) {
         falhaEsperada = assertThrows(IllegalArgumentException.class,
-                () -> juntar(numeroProcesso, nome, mime, "conteudo de teste".getBytes()));
+                () -> juntar(numeroProcesso, nome, mime, "conteúdo de teste".getBytes()));
     }
 
     @Quando("eu tento juntar aos autos um arquivo vazio")
@@ -541,7 +541,7 @@ public class PraxisSteps {
     public void oAnexoDeveConstarNaLista() {
         assertTrue(listarAnexos.executar(numeroProcesso).stream()
                         .anyMatch(item -> item.id().equals(anexo.id())),
-                "anexo nao aparece na lista do processo");
+                "anexo não aparece na lista do processo");
     }
 
     @Entao("o nome do anexo deve ser {string}")
@@ -573,22 +573,22 @@ public class PraxisSteps {
         List<Notificacao> entregues = painel.getEntregues();
         assertTrue(entregues.stream()
                         .anyMatch(notificacao -> notificacao.assunto().startsWith("Arquivo juntado")),
-                "painel nao recebeu aviso de arquivo juntado: " + entregues);
+                "painel não recebeu aviso de arquivo juntado: " + entregues);
     }
 
     @Entao("a juntada deve ser recusada por tipo nao aceito")
     public void recusadaPorTipo() {
-        assertRecusa("tipo de arquivo nao aceito");
+        assertRecusa("tipo de arquivo não aceito");
     }
 
     @Entao("a juntada deve ser recusada por falta de conteudo")
     public void recusadaPorConteudo() {
-        assertRecusa("anexo sem conteudo");
+        assertRecusa("anexo sem conteúdo");
     }
 
     @Entao("a juntada deve ser recusada por processo inexistente")
     public void recusadaPorProcesso() {
-        assertRecusa("processo nao encontrado");
+        assertRecusa("processo não encontrado");
     }
 
     private AnexosUseCases.ItemAnexo juntar(String numero, String nome, String mime, byte[] bytes) {
@@ -597,7 +597,7 @@ public class PraxisSteps {
     }
 
     private void assertRecusa(String motivoEsperado) {
-        assertNotNull(falhaEsperada, "a operacao foi aceita");
+        assertNotNull(falhaEsperada, "a operação foi aceita");
         assertTrue(falhaEsperada.getMessage().contains(motivoEsperado),
                 "motivo inesperado: " + falhaEsperada.getMessage());
     }
@@ -654,7 +654,7 @@ public class PraxisSteps {
     public void oContratoDeveConstarNaLista() {
         assertTrue(listarContratos.executar(numeroProcesso).stream()
                         .anyMatch(item -> item.id().equals(contrato.id())),
-                "contrato nao aparece na lista do processo");
+                "contrato não aparece na lista do processo");
     }
 
     @Entao("a contratacao deve ser recusada por limite etico")
@@ -664,7 +664,7 @@ public class PraxisSteps {
 
     @Entao("a contratacao deve ser recusada por processo inexistente")
     public void aContratacaoDeveSerRecusadaPorProcessoInexistente() {
-        assertRecusa("processo nao encontrado");
+        assertRecusa("processo não encontrado");
     }
 
     private HonorariosUseCases.ItemContrato contratarFixo(String numero, String valor) {

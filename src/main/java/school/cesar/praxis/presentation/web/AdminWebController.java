@@ -55,7 +55,7 @@ public class AdminWebController {
         String[] perfis = ambiente.getActiveProfiles();
         return new FichaTecnica(
                 perfis.length == 0 ? "dev (nenhum perfil ativo)" : String.join(", ", perfis),
-                semParametros(ambiente.getProperty("spring.datasource.url", "nao informado")),
+                semParametros(ambiente.getProperty("spring.datasource.url", "não informado")),
                 ambiente.getProperty("spring.jpa.hibernate.ddl-auto", "padrao"),
                 Boolean.parseBoolean(ambiente.getProperty("spring.flyway.enabled", "false")),
                 Boolean.parseBoolean(ambiente.getProperty("praxis.dados-exemplo", "false")),
@@ -92,13 +92,13 @@ public class AdminWebController {
             return List.of(
                     new Atalho("Usuários", "Cadastrar, promover e remover quem acessa o sistema",
                             "/painel/usuarios"),
-                    new Atalho("Modelos", "Modelos de peca usados na geracao de documentos",
+                    new Atalho("Modelos", "Modelos de peça usados na geração de documentos",
                             "/painel/modelos"),
-                    new Atalho("Feriados", "Calendario forense que alimenta a contagem de prazos",
+                    new Atalho("Feriados", "Calendário forense que alimenta a contagem de prazos",
                             "/painel/feriados"),
                     new Atalho("Processos", "Cadastro de processos, andamentos e prazos",
                             "/painel/processos"),
-                    new Atalho("Documentos", "Fila de revisao, aprovacao e protocolo de pecas",
+                    new Atalho("Documentos", "Fila de revisão, aprovação e protocolo de peças",
                             "/painel/documentos"),
                     new Atalho("Anexos", "Arquivos juntados aos autos", "/painel/anexos"));
         }

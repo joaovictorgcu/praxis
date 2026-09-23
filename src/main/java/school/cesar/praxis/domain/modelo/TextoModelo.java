@@ -24,7 +24,7 @@ public final class TextoModelo {
 
     public TextoModelo(String texto) {
         if (texto == null || texto.isBlank()) {
-            throw new IllegalArgumentException("trecho do modelo nao pode ficar vazio");
+            throw new IllegalArgumentException("trecho do modelo não pode ficar vazio");
         }
         this.texto = texto;
         this.expressoes = analisar(texto);

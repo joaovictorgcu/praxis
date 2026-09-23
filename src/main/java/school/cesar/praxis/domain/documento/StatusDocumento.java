@@ -10,7 +10,7 @@ public interface StatusDocumento {
 
     default StatusDocumento transicaoInvalida(String tentativa) {
         throw new IllegalStateException(
-                "Nao e possivel " + tentativa + " um documento no estado " + nome());
+                "Não é possível " + tentativa + " um documento no estado " + nome());
     }
 
     static StatusDocumento porNome(String nome) {

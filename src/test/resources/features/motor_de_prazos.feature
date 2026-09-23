@@ -37,7 +37,7 @@ Funcionalidade: Motor de prazos processuais com alertas
     Entao nenhuma notificacao deve ser enviada
 
   Cenario: prazo comum nao gera alerta na politica padrao do escritorio
-    Dado um prazo comum "Manifestacao sobre laudo" de 5 dias uteis intimado em "2026-09-04"
+    Dado um prazo comum "Manifestação sobre laudo" de 5 dias uteis intimado em "2026-09-04"
     Quando a varredura de prazos roda em "2026-09-11"
     Entao nenhuma notificacao deve ser enviada
 

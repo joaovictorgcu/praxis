@@ -79,7 +79,7 @@ public class FeriadoWebController {
     public String remover(@PathVariable Long id, RedirectAttributes flash) {
         try {
             remover.executar(id);
-            flash.addFlashAttribute("mensagem", "Feriado removido do calendario.");
+            flash.addFlashAttribute("mensagem", "Feriado removido do calendário.");
         } catch (IllegalArgumentException | NoSuchElementException falha) {
             flash.addFlashAttribute("erro", falha.getMessage());
         }

@@ -29,7 +29,7 @@ public abstract class GeradorDocumento {
     }
 
     protected String enderecamento(DadosDocumento dados) {
-        return "EXCELENTISSIMO SENHOR DOUTOR JUIZ DE DIREITO DA COMARCA DE "
+        return "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA COMARCA DE "
                 + dados.comarca().toUpperCase() + ".";
     }
 

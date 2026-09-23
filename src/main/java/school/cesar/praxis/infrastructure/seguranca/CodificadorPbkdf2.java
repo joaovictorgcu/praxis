@@ -57,7 +57,7 @@ public class CodificadorPbkdf2 implements CodificadorDeSenha {
             PBEKeySpec spec = new PBEKeySpec(senha.toCharArray(), sal, iteracoes, TAMANHO_HASH_BITS);
             return SecretKeyFactory.getInstance(ALGORITMO).generateSecret(spec).getEncoded();
         } catch (GeneralSecurityException falha) {
-            throw new IllegalStateException("PBKDF2 indisponivel nesta JVM", falha);
+            throw new IllegalStateException("PBKDF2 indisponível nesta JVM", falha);
         }
     }
 }

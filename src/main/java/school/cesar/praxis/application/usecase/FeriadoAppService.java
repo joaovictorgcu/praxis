@@ -39,7 +39,7 @@ public class FeriadoAppService implements FeriadosUseCases.CadastrarFeriado,
     @Transactional
     public FeriadosUseCases.ItemFeriado executar(Comando comando) {
         if (comando.data() == null) {
-            throw new IllegalArgumentException("data do feriado e obrigatoria");
+            throw new IllegalArgumentException("data do feriado é obrigatória");
         }
 
         RegraRecorrencia recorrencia = comando.repeteTodoAno()
@@ -67,7 +67,7 @@ public class FeriadoAppService implements FeriadosUseCases.CadastrarFeriado,
     @Transactional
     public void executar(Long id) {
         if (feriados.porId(id).isEmpty()) {
-            throw new NoSuchElementException("feriado nao encontrado: " + id);
+            throw new NoSuchElementException("feriado não encontrado: " + id);
         }
         feriados.remover(id);
     }

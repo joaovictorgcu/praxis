@@ -105,29 +105,29 @@ public class DadosDeExemplo implements CommandLineRunner {
                 "Bruno Carvalho", "bruno.carvalho@praxis.adv.br", "PE54321"));
 
         registrar.executar(new ProcessosUseCases.RegistrarAndamento.Comando(
-                PROCESSO_PUBLICO, hoje.minusDays(20), "Distribuicao da acao", TipoAndamento.OUTRO));
+                PROCESSO_PUBLICO, hoje.minusDays(20), "Distribuição da ação", TipoAndamento.OUTRO));
         registrar.executar(new ProcessosUseCases.RegistrarAndamento.Comando(
-                PROCESSO_PUBLICO, hoje.minusDays(4), "Intimacao para contestar", TipoAndamento.INTIMACAO));
+                PROCESSO_PUBLICO, hoje.minusDays(4), "Intimação para contestar", TipoAndamento.INTIMACAO));
         registrar.executar(new ProcessosUseCases.RegistrarAndamento.Comando(
-                PROCESSO_SIGILOSO, hoje.minusDays(9), "Citacao da parte re", TipoAndamento.CITACAO));
+                PROCESSO_SIGILOSO, hoje.minusDays(9), "Citação da parte ré", TipoAndamento.CITACAO));
 
         abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
-                PROCESSO_PUBLICO, "Contestacao", hoje.minusDays(4), 15, true, RegimeContagem.DIAS_UTEIS));
+                PROCESSO_PUBLICO, "Contestação", hoje.minusDays(4), 15, true, RegimeContagem.DIAS_UTEIS));
         abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
-                PROCESSO_PUBLICO, "Manifestacao sobre laudo", hoje.minusDays(1), 10, false, RegimeContagem.DIAS_UTEIS));
+                PROCESSO_PUBLICO, "Manifestação sobre laudo", hoje.minusDays(1), 10, false, RegimeContagem.DIAS_UTEIS));
         abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
-                PROCESSO_SIGILOSO, "Embargos de declaracao", hoje.minusDays(9), 5, true, RegimeContagem.DIAS_UTEIS));
+                PROCESSO_SIGILOSO, "Embargos de declaração", hoje.minusDays(9), 5, true, RegimeContagem.DIAS_UTEIS));
 
         // Prazo ja cumprido: sai da agenda do dia, mas aparece na administracao.
         Prazo juntada = abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
-                PROCESSO_PUBLICO, "Juntada de procuracao", hoje.minusDays(25), 5, false, RegimeContagem.DIAS_UTEIS));
+                PROCESSO_PUBLICO, "Juntada de procuração", hoje.minusDays(25), 5, false, RegimeContagem.DIAS_UTEIS));
         cumprirPrazo.executar(juntada.getId());
 
         // Uma peca ja em revisao, para o chefe encontrar trabalho ao entrar.
         DocumentoGerado contestacao = gerarDocumento.executar(new DocumentosUseCases.GerarDocumento.Comando(
                 PROCESSO_PUBLICO, TipoDocumento.CONTESTACAO,
-                Map.of("preliminares", "Ilegitimidade passiva: a re nao figura no contrato de locacao.",
-                        "merito", "A re nega o inadimplemento alegado; os alugueis foram pagos (art. 336 do CPC)."),
+                Map.of("preliminares", "Ilegitimidade passiva: a ré não figura no contrato de locação.",
+                        "merito", "A ré nega o inadimplemento alegado; os aluguéis foram pagos (art. 336 do CPC)."),
                 "PE12345"));
         enviarParaRevisao.executar(new DocumentosUseCases.EnviarDocumentoParaRevisao.Comando(contestacao.getId()));
 
@@ -147,42 +147,42 @@ public class DadosDeExemplo implements CommandLineRunner {
      */
     private void carregarCarteira(LocalDate hoje) {
         // numero CNJ, cliente, comarca, segredo, responsavel, e-mail, OAB
-        processo("0002345-77.2026.8.17.0001", "Mercadinho Sao Jose Ltda.", "Recife", false,
+        processo("0002345-77.2026.8.17.0001", "Mercadinho São José Ltda.", "Recife", false,
                 "Ana Beatriz Souza", "ana.souza@praxis.adv.br", "PE12345",
-                hoje.minusDays(12), "Intimacao para replica", TipoAndamento.INTIMACAO,
+                hoje.minusDays(12), "Intimação para réplica", TipoAndamento.INTIMACAO,
                 // descricao, intimacao (dias atras), dias, fatal, regime, cumprido
-                prazo("Replica a contestacao", 12, 15, true, RegimeContagem.DIAS_UTEIS, false),
-                prazo("Especificacao de provas", 3, 5, false, RegimeContagem.DIAS_UTEIS, false));
+                prazo("Réplica a contestação", 12, 15, true, RegimeContagem.DIAS_UTEIS, false),
+                prazo("Especificação de provas", 3, 5, false, RegimeContagem.DIAS_UTEIS, false));
 
         processo("0003456-93.2026.8.17.0002", "Helena Barros", "Olinda", false,
                 "Bruno Carvalho", "bruno.carvalho@praxis.adv.br", "PE54321",
-                hoje.minusDays(6), "Sentenca publicada", TipoAndamento.SENTENCA,
-                prazo("Apelacao", 6, 15, true, RegimeContagem.DIAS_UTEIS, false),
+                hoje.minusDays(6), "Sentença publicada", TipoAndamento.SENTENCA,
+                prazo("Apelação", 6, 15, true, RegimeContagem.DIAS_UTEIS, false),
                 prazo("Custas de preparo", 6, 10, false, RegimeContagem.DIAS_CORRIDOS, false));
 
         processo("0004567-12.2026.8.17.0003", "Transportes Norte S.A.", "Jaboatao dos Guararapes", false,
                 "Carla Mendes", "carla.mendes@praxis.adv.br", "PE00001",
                 hoje.minusDays(2), "Despacho saneador", TipoAndamento.DESPACHO,
-                prazo("Manifestacao sobre saneador", 2, 5, true, RegimeContagem.DIAS_UTEIS, false),
+                prazo("Manifestação sobre saneador", 2, 5, true, RegimeContagem.DIAS_UTEIS, false),
                 prazo("Rol de testemunhas", 2, 15, false, RegimeContagem.DIAS_UTEIS, false));
 
         processo("0005678-28.2026.8.17.0004", "Padaria Dois Irmaos ME", "Recife", false,
                 "Ana Beatriz Souza", "ana.souza@praxis.adv.br", "PE12345",
-                hoje.minusDays(45), "Intimacao para impugnacao", TipoAndamento.INTIMACAO,
+                hoje.minusDays(45), "Intimação para impugnação", TipoAndamento.INTIMACAO,
                 // Vencido em aberto: o alerta de prazo perdido tem de aparecer na agenda.
-                prazo("Impugnacao ao cumprimento de sentenca", 45, 15, true, RegimeContagem.DIAS_UTEIS, false),
+                prazo("Impugnação ao cumprimento de sentença", 45, 15, true, RegimeContagem.DIAS_UTEIS, false),
                 prazo("Juntada de substabelecimento", 40, 5, false, RegimeContagem.DIAS_UTEIS, true));
 
         processo("0006789-44.2026.8.17.0005", "Condominio Edificio Aurora", "Recife", false,
                 "Bruno Carvalho", "bruno.carvalho@praxis.adv.br", "PE54321",
-                hoje.minusDays(20), "Audiencia de conciliacao designada", TipoAndamento.AUDIENCIA,
+                hoje.minusDays(20), "Audiência de conciliação designada", TipoAndamento.AUDIENCIA,
                 prazo("Proposta de acordo", 20, 30, false, RegimeContagem.DIAS_CORRIDOS, false),
                 prazo("Comprovacao de pagamento", 30, 10, false, RegimeContagem.DIAS_UTEIS, true));
 
         processo("0008901-80.2026.8.17.0006", "J. P. M.", "Camaragibe", true,
                 "Carla Mendes", "carla.mendes@praxis.adv.br", "PE00001",
-                hoje.minusDays(1), "Citacao por oficial de justica", TipoAndamento.CITACAO,
-                prazo("Contestacao", 1, 15, true, RegimeContagem.DIAS_UTEIS, false));
+                hoje.minusDays(1), "Citação por oficial de justiça", TipoAndamento.CITACAO,
+                prazo("Contestação", 1, 15, true, RegimeContagem.DIAS_UTEIS, false));
     }
 
     /** Descricao de um prazo da carteira, resolvida contra a data de hoje. */
@@ -243,8 +243,8 @@ public class DadosDeExemplo implements CommandLineRunner {
         audiencia.setNomeParteAutora("Construtora Alfa Ltda.");
         audiencia.setDataHoraInicio(hoje.plusDays(22).atTime(LocalTime.of(14, 0)));
         audiencia.setDataHoraFim(hoje.plusDays(22).atTime(LocalTime.of(15, 30)));
-        audiencia.setSala("Sala 3 - 2a Vara Civel");
-        audiencia.setObservacoes("Audiencia de conciliacao");
+        audiencia.setSala("Sala 3 - 2a Vara Cível");
+        audiencia.setObservacoes("Audiência de conciliação");
         audiencias.criarAudiencia(audiencia);
 
         contratos.executar(new HonorariosUseCases.CadastrarContrato.Comando(

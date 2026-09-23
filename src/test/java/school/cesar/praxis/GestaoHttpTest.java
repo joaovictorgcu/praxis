@@ -81,7 +81,7 @@ class GestaoHttpTest {
                 .andExpect(flash().attribute("mensagem", containsString("cadastrado")));
 
         mvc.perform(post("/painel/processos/" + numero + "/andamentos").session(ana)
-                        .param("data", "2026-09-01").param("descricao", "Intimacao para contestar")
+                        .param("data", "2026-09-01").param("descricao", "Intimação para contestar")
                         .param("tipo", "INTIMACAO"))
                 .andExpect(flash().attribute("mensagem", containsString("Andamento")));
 
@@ -93,7 +93,7 @@ class GestaoHttpTest {
         mvc.perform(get("/painel/processos/" + numero).session(ana))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Padaria Beta ME")))
-                .andExpect(content().string(containsString("Intimacao para contestar")))
+                .andExpect(content().string(containsString("Intimação para contestar")))
                 .andExpect(content().string(containsString("Contestacao")))
                 .andExpect(content().string(containsString("em aberto")));
 
@@ -104,12 +104,12 @@ class GestaoHttpTest {
         // Data invalida vira mensagem, nao 500.
         mvc.perform(post("/painel/processos/" + numero + "/andamentos").session(ana)
                         .param("data", "01/09/2026").param("descricao", "x").param("tipo", "OUTRO"))
-                .andExpect(flash().attribute("erro", containsString("data invalida")));
+                .andExpect(flash().attribute("erro", containsString("data inválida")));
 
         // CNJ inexistente na ficha volta para a lista com erro.
         mvc.perform(get("/painel/processos/0000000-00.2026.8.17.0000").session(ana))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("nao encontrado")));
+                .andExpect(content().string(containsString("não encontrado")));
     }
 
     @Test
@@ -130,11 +130,11 @@ class GestaoHttpTest {
         mvc.perform(post("/painel/usuarios").session(carla)
                         .param("nome", "Outro").param("email", "davi@praxis.adv.br")
                         .param("oab", "PE77778").param("papel", "ADVOGADO").param("senha", "outro123"))
-                .andExpect(flash().attribute("erro", containsString("ja existe usuario com o e-mail")));
+                .andExpect(flash().attribute("erro", containsString("já existe usuário com o e-mail")));
 
         Long idCarla = UsuarioLogado.da(carla).id();
         mvc.perform(post("/painel/usuarios/" + idCarla + "/remover").session(carla))
-                .andExpect(flash().attribute("erro", containsString("proprio usuario")));
+                .andExpect(flash().attribute("erro", containsString("próprio usuário")));
     }
 
     @Test
@@ -151,11 +151,11 @@ class GestaoHttpTest {
         mvc.perform(post("/painel/conta/senha").session(elisa)
                         .param("senhaAtual", "errada!").param("novaSenha", "nova1234").param("confirmacao", "nova1234"))
                 .andExpect(redirectedUrl("/painel/conta"))
-                .andExpect(flash().attribute("erro", containsString("senha atual nao confere")));
+                .andExpect(flash().attribute("erro", containsString("senha atual não confere")));
 
         mvc.perform(post("/painel/conta/senha").session(elisa)
                         .param("senhaAtual", "elisa123").param("novaSenha", "nova1234").param("confirmacao", "diferente"))
-                .andExpect(flash().attribute("erro", containsString("confirmacao")));
+                .andExpect(flash().attribute("erro", containsString("confirmação")));
 
         mvc.perform(post("/painel/conta/senha").session(elisa)
                         .param("senhaAtual", "elisa123").param("novaSenha", "nova1234").param("confirmacao", "nova1234"))
@@ -227,11 +227,11 @@ class GestaoHttpTest {
         Long id = doc.getId();
 
         enviarRevisao.executar(new DocumentosUseCases.EnviarDocumentoParaRevisao.Comando(id));
-        rejeitar.executar(new DocumentosUseCases.RejeitarDocumento.Comando(id, "PE00001", "faltou procuracao; refazer | urgente"));
+        rejeitar.executar(new DocumentosUseCases.RejeitarDocumento.Comando(id, "PE00001", "faltou procuração; refazer | urgente"));
 
         DocumentoGerado lido = baixar.executar(id, "PE54321");
         assertEquals("REJEITADO", lido.getStatus().nome());
-        assertEquals("faltou procuracao; refazer | urgente",
+        assertEquals("faltou procuração; refazer | urgente",
                 lido.getHistorico().get(lido.getHistorico().size() - 1).getComentario());
 
         // Habilita OAB depois da decisao; desfazer deve preservar.
@@ -277,7 +277,7 @@ class GestaoHttpTest {
         mvc.perform(get("/painel").session(chefe()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Prazos Vencidos")))
-                .andExpect(content().string(containsString("aguardando sua revisao")))
+                .andExpect(content().string(containsString("Aguardando Sua Revisão")))
                 .andExpect(content().string(containsString("/painel/conta")))
                 .andExpect(content().string(containsString("/painel/usuarios")));
 
@@ -287,6 +287,6 @@ class GestaoHttpTest {
 
         mvc.perform(get("/painel").param("ate", "hoje").session(advogada()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("data invalida")));
+                .andExpect(content().string(containsString("data inválida")));
     }
 }

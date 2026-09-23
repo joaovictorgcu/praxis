@@ -28,7 +28,7 @@ public abstract class RegraDistribuicao {
         if (proxima != null) {
             return proxima.distribuir(areaDireito, candidatos);
         }
-        throw new IllegalStateException("nenhum advogado disponivel para distribuicao");
+        throw new IllegalStateException("nenhum advogado disponível para distribuição");
     }
 
     protected abstract Optional<Advogado> tentar(String areaDireito, List<CandidatoDistribuicao> candidatos);

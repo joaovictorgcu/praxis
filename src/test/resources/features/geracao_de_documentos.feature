@@ -11,18 +11,18 @@ Funcionalidade: Geracao de documentos por template
   Cenario: gerar peticao inicial com fatos e fundamentos informados
     Quando eu gero a peca "PETICAO_INICIAL" com os campos:
       | fatos       | inadimplemento contratual  |
-      | fundamentos | art. 475 do Codigo Civil   |
+      | fundamentos | art. 475 do Código Civil   |
     Entao a peca gerada deve conter "DOS FATOS"
     E a peca gerada deve conter "inadimplemento contratual"
-    E a peca gerada deve conter "EXCELENTISSIMO SENHOR DOUTOR JUIZ DE DIREITO DA COMARCA DE RECIFE"
+    E a peca gerada deve conter "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA COMARCA DE RECIFE"
     E a peca gerada deve conter "OAB PE12345"
     E a peca deve ficar registrada nos autos do processo
 
   Cenario: procuracao nao se enderaca ao juizo
     Quando eu gero a peca "PROCURACAO" com os campos:
-      | poderesEspeciais | receber citacao e dar quitacao |
-    Entao a peca gerada deve conter "PROCURACAO AD JUDICIA ET EXTRA"
-    E a peca gerada deve conter "receber citacao e dar quitacao"
+      | poderesEspeciais | receber citação e dar quitação |
+    Entao a peca gerada deve conter "PROCURAÇÃO AD JUDICIA ET EXTRA"
+    E a peca gerada deve conter "receber citação e dar quitação"
     E a peca gerada nao deve conter "EXCELENTISSIMO"
 
   Cenario: contestacao traz preliminares e merito
@@ -41,6 +41,6 @@ Funcionalidade: Geracao de documentos por template
     Dado um processo em segredo de justica "0007654-32.2026.8.17.0002" do cliente "M. R. S." na comarca de "Olinda"
     E o advogado responsavel "Bruno Carvalho" com e-mail "bruno@praxis.adv.br" e OAB "PE54321"
     Quando eu gero a peca "PETICAO_INICIAL" com os campos:
-      | fatos | materia de familia |
+      | fatos | materia de família |
     Entao a leitura da peca pela OAB "PE54321" deve ser permitida
     E a leitura da peca pela OAB "PE99999" deve ser negada

@@ -23,7 +23,7 @@ class ModeloDeDocumentoTest {
 
     private ModeloDocumento modelo(String corpo, String pedidos, boolean juizo, String titulo) {
         return new ModeloDocumento(
-                CodigoModelo.de("COBRANCA_ALUGUEL"), "Cobranca de aluguel",
+                CodigoModelo.de("COBRANCA_ALUGUEL"), "Cobrança de aluguel",
                 TipoDocumento.PETICAO_INICIAL, titulo,
                 new TextoModelo(corpo), new TextoModelo(pedidos), juizo);
     }
@@ -103,7 +103,7 @@ class ModeloDeDocumentoTest {
         // As secoes de moldura sao as mesmas nos dois caminhos.
         for (String peca : List.of(porModelo, compilada)) {
             assertTrue(peca.contains("PROCESSO N. 0001234-56.2026.8.17.0001"));
-            assertTrue(peca.contains("EXCELENTISSIMO SENHOR DOUTOR JUIZ DE DIREITO"
+            assertTrue(peca.contains("EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO"
                     + " DA COMARCA DE RECIFE"));
             assertTrue(peca.contains("Construtora Alfa Ltda., por seu advogado"));
             assertTrue(peca.contains("Termos em que pede deferimento."));
@@ -120,17 +120,17 @@ class ModeloDeDocumentoTest {
     @DisplayName("modelo que nao vai a juizo abandona toda a linguagem de juizo")
     void modeloSemEnderecamento() {
         String peca = new GeradorPorModelo(
-                modelo("Acordo entre as partes.", "Quitacao reciproca.", false,
+                modelo("Acordo entre as partes.", "Quitação reciproca.", false,
                         "Instrumento particular de acordo"))
                 .gerar(dados);
 
         assertTrue(peca.startsWith("INSTRUMENTO PARTICULAR DE ACORDO - PROCESSO N."));
-        assertTrue(peca.contains("Processo de referencia: 0001234-56.2026.8.17.0001"));
+        assertTrue(peca.contains("Processo de referência: 0001234-56.2026.8.17.0001"));
         assertTrue(peca.contains("firma o presente instrumento."));
         assertTrue(peca.contains("Recife, data da assinatura."));
 
         // Nenhuma das tres secoes do juizo pode vazar para uma peca extrajudicial.
-        assertFalse(peca.contains("EXCELENTISSIMO"));
+        assertFalse(peca.contains("EXCELENTÍSSIMO"));
         assertFalse(peca.contains("Vossa Excelencia"));
         assertFalse(peca.contains("pede deferimento"));
     }

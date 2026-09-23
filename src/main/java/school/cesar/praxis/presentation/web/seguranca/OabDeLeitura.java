@@ -27,7 +27,7 @@ public final class OabDeLeitura {
         String daSessao = usuario.oab();
         if (daSessao == null || !daSessao.equalsIgnoreCase(oabInformada)) {
             throw new ProxyDeAcesso.AcessoNegadoException(
-                    "a OAB " + oabInformada + " nao e a da sessao; leia com a sua propria inscricao");
+                    "a OAB " + oabInformada + " não é a da sessão; leia com a sua própria inscrição");
         }
         return daSessao;
     }

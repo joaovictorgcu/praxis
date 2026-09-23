@@ -96,7 +96,7 @@ class AdminHttpTest {
                 numero, "Cliente do panorama", "Recife", false,
                 "Ana Beatriz Souza", "ana.souza@praxis.adv.br", "PE12345"));
         var prazo = abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
-                numero, "Contestacao do panorama", LocalDate.now().minusDays(1), 15, true,
+                numero, "Contestação do panorama", LocalDate.now().minusDays(1), 15, true,
                 RegimeContagem.DIAS_UTEIS));
         cumprirPrazo.executar(prazo.getId());
 
@@ -105,6 +105,6 @@ class AdminHttpTest {
                 "prazo cumprido deveria aparecer no panorama");
 
         mvc.perform(get("/painel/admin").session(chefe()))
-                .andExpect(content().string(containsString("Contestacao do panorama")));
+                .andExpect(content().string(containsString("Contestação do panorama")));
     }
 }

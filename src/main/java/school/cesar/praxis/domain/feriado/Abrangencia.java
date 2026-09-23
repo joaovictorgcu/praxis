@@ -14,7 +14,7 @@ public record Abrangencia(Nivel nivel, String valor) {
 
     public Abrangencia {
         if (nivel == null) {
-            throw new IllegalArgumentException("nivel de abrangencia e obrigatorio");
+            throw new IllegalArgumentException("nível de abrangência é obrigatório");
         }
         valor = valor == null ? null : valor.trim();
         if (nivel == Nivel.NACIONAL) {
@@ -22,7 +22,7 @@ public record Abrangencia(Nivel nivel, String valor) {
             valor = null;
         } else if (valor == null || valor.isBlank()) {
             throw new IllegalArgumentException(
-                    "abrangencia " + nivel + " exige o valor de referencia");
+                    "abrangência " + nivel + " exige o valor de referência");
         } else if (nivel == Nivel.ESTADUAL) {
             valor = valor.toUpperCase();
         }
@@ -50,6 +50,10 @@ public record Abrangencia(Nivel nivel, String valor) {
     }
 
     public String rotulo() {
-        return nivel == Nivel.NACIONAL ? "Nacional" : nivel + " " + valor;
+        return switch (nivel) {
+            case NACIONAL -> "Nacional";
+            case ESTADUAL -> "Estadual " + valor;
+            case COMARCAL -> "Comarcal " + valor;
+        };
     }
 }

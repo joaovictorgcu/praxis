@@ -17,8 +17,8 @@ public final class CodigoModelo {
         String normalizado = valor == null ? null : valor.trim().toUpperCase();
         if (normalizado == null || !FORMATO.matcher(normalizado).matches()) {
             throw new IllegalArgumentException(
-                    "codigo de modelo invalido: " + valor
-                            + " (use letras, numeros e underscore, de 3 a 40 caracteres)");
+                    "código de modelo inválido: " + valor
+                            + " (use letras, números e underscore, de 3 a 40 caracteres)");
         }
         this.valor = normalizado;
     }

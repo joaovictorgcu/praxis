@@ -28,7 +28,7 @@ public class FluxoAprovacaoDocumentoService implements
     private DocumentoGerado buscar(Long id) {
         DocumentoGerado documento = documentos.carregar(id);
         if (documento == null) {
-            throw new NoSuchElementException("documento nao encontrado: " + id);
+            throw new NoSuchElementException("documento não encontrado: " + id);
         }
         return documento;
     }

@@ -37,19 +37,19 @@ public class ModeloDocumento {
                            TextoModelo pedidos,
                            boolean enderecaAoJuizo) {
         if (codigo == null) {
-            throw new IllegalArgumentException("codigo do modelo e obrigatorio");
+            throw new IllegalArgumentException("código do modelo é obrigatório");
         }
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("nome do modelo e obrigatorio");
+            throw new IllegalArgumentException("nome do modelo é obrigatório");
         }
         if (tipo == null) {
-            throw new IllegalArgumentException("tipo da peca produzida e obrigatorio");
+            throw new IllegalArgumentException("tipo da peça produzida é obrigatório");
         }
         if (corpo == null) {
-            throw new IllegalArgumentException("corpo do modelo e obrigatorio");
+            throw new IllegalArgumentException("corpo do modelo é obrigatório");
         }
         if (pedidos == null) {
-            throw new IllegalArgumentException("pedidos do modelo sao obrigatorios");
+            throw new IllegalArgumentException("pedidos do modelo são obrigatórios");
         }
         this.id = id;
         this.codigo = codigo;

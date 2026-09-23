@@ -63,14 +63,14 @@ class AnexoHttpTest {
         String numero = "0003333-33.2026.8.17.0003";
         processo(numero, false, "PE12345");
 
-        byte[] bytes = "%PDF-1.4 conteudo de teste".getBytes();
+        byte[] bytes = "%PDF-1.4 conteúdo de teste".getBytes();
         MockMultipartFile arquivo = new MockMultipartFile(
                 "arquivo", "procuracao.pdf", "application/pdf", bytes);
 
         String resposta = mvc.perform(juntada("PE12345")
                         .file(arquivo)
                         .param("numeroProcesso", numero)
-                        .param("descricao", "Procuracao assinada"))
+                        .param("descricao", "Procuração assinada"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("procuracao.pdf"))
                 .andExpect(jsonPath("$.tipo").value("PDF"))
@@ -116,14 +116,14 @@ class AnexoHttpTest {
 
         mvc.perform(get("/api/anexos/" + id).param("oab", "PE99999"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string(containsString("segredo de justica")));
+                .andExpect(content().string(containsString("segredo de justiça")));
 
         // Advogada logada nao le o anexo sigiloso com a inscricao de outro.
         mvc.perform(get("/api/anexos/" + id)
                         .session(ApoioDeTesteWeb.sessaoDe(2L, "Ana Souza", "PE12345", Papel.ADVOGADO))
                         .param("oab", "PE54321"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string(containsString("nao e a da sessao")));
+                .andExpect(content().string(containsString("não é a da sessão")));
     }
 
     @Test
@@ -140,7 +140,7 @@ class AnexoHttpTest {
                         .file(executavel)
                         .param("numeroProcesso", numero))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.erro", containsString("tipo de arquivo nao aceito")));
+                .andExpect(jsonPath("$.erro", containsString("tipo de arquivo não aceito")));
 
         mvc.perform(get("/api/anexos").param("processo", numero))
                 .andExpect(status().isOk())

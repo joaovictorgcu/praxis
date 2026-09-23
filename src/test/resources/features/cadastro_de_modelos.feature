@@ -11,17 +11,17 @@ Funcionalidade: Cadastro de modelos de documento
   Cenario: peca gerada por modelo mantem o esqueleto da peca compilada
     Dado o modelo cadastrado:
       | codigo  | COBRANCA_TESTE                                  |
-      | nome    | Cobranca de aluguel                             |
+      | nome    | Cobrança de aluguel                             |
       | tipo    | PETICAO_INICIAL                                 |
-      | corpo   | DOS FATOS O locatario deve {{valorDivida}}.     |
+      | corpo   | DOS FATOS O locatário deve {{valorDivida}}.     |
       | pedidos | DOS PEDIDOS a) o pagamento de {{valorDivida}}.  |
       | juizo   | sim                                             |
     Quando eu gero a peca pelo modelo "COBRANCA_TESTE" com os campos:
       | valorDivida | R$ 12.500,00 |
-    Entao a peca gerada deve conter "EXCELENTISSIMO SENHOR DOUTOR JUIZ DE DIREITO DA COMARCA DE RECIFE"
+    Entao a peca gerada deve conter "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA COMARCA DE RECIFE"
     E a peca gerada deve conter "Termos em que pede deferimento."
     E a peca gerada deve conter "OAB PE12345"
-    E a peca gerada deve conter "O locatario deve R$ 12.500,00."
+    E a peca gerada deve conter "O locatário deve R$ 12.500,00."
     E a peca deve ficar registrada nos autos do processo
 
   Cenario: dados dos autos entram na peca sem o usuario digitar
@@ -54,7 +54,7 @@ Funcionalidade: Cadastro de modelos de documento
       | tipo    | PECA_AVULSA                        |
       | titulo  | Instrumento particular de acordo   |
       | corpo   | As partes ajustam a composicao.    |
-      | pedidos | CLAUSULAS a) quitacao reciproca.   |
+      | pedidos | CLÁUSULAS a) quitação reciproca.   |
       | juizo   | nao                                |
     Quando eu gero a peca pelo modelo "ACORDO_TESTE" sem informar campos
     Entao a peca gerada deve conter "INSTRUMENTO PARTICULAR DE ACORDO"

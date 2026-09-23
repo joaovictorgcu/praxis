@@ -41,7 +41,7 @@ class AvisoDePerdaTest {
         assertFalse(hoje.get().vencido());
 
         Optional<AlertaPrazo> perdido = motor.avaliar(prazo, vencimento.plusDays(1));
-        assertTrue(perdido.isPresent(), "aviso de perda nao saiu apos o 'vence hoje'");
+        assertTrue(perdido.isPresent(), "aviso de perda não saiu após o 'vence hoje'");
         assertEquals(NivelAlerta.VENCIDO, perdido.get().nivel());
         assertTrue(perdido.get().vencido());
 

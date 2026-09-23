@@ -37,7 +37,7 @@ public class SessaoInterceptor implements HandlerInterceptor {
         }
         if (exigeChefe(handler) && !usuario.chefe()) {
             resposta.sendError(HttpServletResponse.SC_FORBIDDEN,
-                    "acao reservada ao chefe do escritorio");
+                    "ação reservada ao chefe do escritório");
             return false;
         }
         return true;

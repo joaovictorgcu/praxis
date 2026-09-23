@@ -38,7 +38,7 @@ public class CsrfInterceptor implements HandlerInterceptor {
         }
         if (!tokenValido(requisicao)) {
             resposta.sendError(HttpServletResponse.SC_FORBIDDEN,
-                    "token CSRF ausente ou invalido; recarregue a pagina e tente de novo");
+                    "token CSRF ausente ou inválido; recarregue a página e tente de novo");
             return false;
         }
         return true;

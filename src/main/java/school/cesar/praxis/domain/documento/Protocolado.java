@@ -4,7 +4,7 @@ public class Protocolado implements StatusDocumento {
 
     @Override
     public StatusDocumento enviarParaRevisao(DocumentoGerado documento) {
-        return transicaoInvalida("enviar para revisao");
+        return transicaoInvalida("enviar para revisão");
     }
 
     @Override
