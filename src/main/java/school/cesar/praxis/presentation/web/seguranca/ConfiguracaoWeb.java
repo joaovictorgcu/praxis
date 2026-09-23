@@ -47,8 +47,10 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registro) {
+        // O padrao e relativo ao handler: em /css/** o caminho que chega aqui e
+        // "/praxis-<hash>.css", sem o "/css". Por isso "/**", e nao "/css/**".
         VersionResourceResolver resolucaoVersao = new VersionResourceResolver()
-                .addVersionStrategy(new ContentVersionStrategy(), "/css/**", "/js/**");
+                .addVersionStrategy(new ContentVersionStrategy(), "/**");
 
         registro.addResourceHandler("/css/**")
                 .addResourceLocations("classpath:/static/css/")

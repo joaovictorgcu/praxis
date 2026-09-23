@@ -10,7 +10,11 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import school.cesar.praxis.domain.usuario.Papel;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -64,5 +68,20 @@ class FrontHttpTest {
         mvc.perform(get("/js/praxis.js"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", containsString("max-age=31536000")));
+    }
+
+    @Test
+    @DisplayName("as URLs com hash que as telas referenciam existem de fato")
+    void urlsComHashSaoServidas() throws Exception {
+        String html = mvc.perform(get("/login")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        for (String padrao : new String[]{"href=\"(/css/praxis-[0-9a-f]+\\.css)\"",
+                "src=\"(/js/praxis-[0-9a-f]+\\.js)\""}) {
+            Matcher achado = Pattern.compile(padrao).matcher(html);
+            assertTrue(achado.find(), "tela de login sem asset com hash: " + padrao);
+            mvc.perform(get(achado.group(1)))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Cache-Control", containsString("max-age=31536000")));
+        }
     }
 }
