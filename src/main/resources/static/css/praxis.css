@@ -931,7 +931,9 @@ a.estatistica:hover { background: var(--realce); }
 
 .atalho:hover { background: var(--realce); }
 .atalho .icone { width: 18px; height: 18px; color: var(--tinta-clara); }
-.atalho form { margin: 0; }
+/* O atalho que e submit mora num <form>: o form e o item da grade, o botao ocupa a celula inteira. */
+.atalhos form { margin: 0; display: flex; }
+.atalhos form .atalho { flex: 1; }
 
 @media (max-width: 900px) {
     /* O menu vira uma faixa de icones: os rotulos sairiam por cima do conteudo. */
