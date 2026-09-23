@@ -75,119 +75,121 @@
     </a>
   </section>
 
+  <!-- Cada coluna empilha os proprios cartoes: cartao alto de um lado nao abre buraco do outro. -->
   <div class="painel-duplo">
 
-    <section class="cartao">
-      <div class="cartao-cabecalho">
-        <h2>Proximos prazos</h2>
-        <span class="contador" th:text="${#lists.size(itens)}">0</span>
-      </div>
-      <ul class="lista-prazos">
-        <li th:each="item, iter : ${itens}" th:if="${iter.index < 5}"
-            th:classappend="${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : '')">
-          <span class="icone-circulo" aria-hidden="true">
-            <svg class="icone" focusable="false"><use href="#i-agenda"/></svg>
-          </span>
-          <span class="corpo">
-            <a class="titulo" th:href="@{'/painel/processos/' + ${item.numeroProcesso()}}"
-               th:text="${item.descricao()}">Contestacao</a>
-            <span class="detalhe" th:text="${item.numeroProcesso()}">0000000-00.0000.0.00.0000</span>
-            <span class="detalhe" th:text="'Vence em ' + ${#temporals.format(item.vencimento(), 'dd/MM/yyyy')}
-                                           + ' - OAB ' + ${item.responsavel()}">Vence em 00/00/0000</span>
-          </span>
-          <span th:if="${item.fatal()}" class="etiqueta vermelha">fatal</span>
-          <span th:unless="${item.fatal()}" class="etiqueta cinza">comum</span>
-        </li>
-        <li th:if="${#lists.isEmpty(itens)}" class="vazio">Nenhum prazo em aberto no periodo.</li>
-      </ul>
-    </section>
+    <div class="coluna">
+      <section class="cartao">
+        <div class="cartao-cabecalho">
+          <h2>Proximos prazos</h2>
+          <span class="contador" th:text="${#lists.size(itens)}">0</span>
+        </div>
+        <ul class="lista-prazos">
+          <li th:each="item, iter : ${itens}" th:if="${iter.index < 5}"
+              th:classappend="${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : '')">
+            <span class="icone-circulo" aria-hidden="true">
+              <svg class="icone" focusable="false"><use href="#i-agenda"/></svg>
+            </span>
+            <span class="corpo">
+              <a class="titulo" th:href="@{'/painel/processos/' + ${item.numeroProcesso()}}"
+                 th:text="${item.descricao()}">Contestacao</a>
+              <span class="detalhe" th:text="${item.numeroProcesso()}">0000000-00.0000.0.00.0000</span>
+              <span class="detalhe" th:text="'Vence em ' + ${#temporals.format(item.vencimento(), 'dd/MM/yyyy')}
+                                             + ' - OAB ' + ${item.responsavel()}">Vence em 00/00/0000</span>
+            </span>
+            <span th:if="${item.fatal()}" class="etiqueta vermelha">fatal</span>
+            <span th:unless="${item.fatal()}" class="etiqueta cinza">comum</span>
+          </li>
+          <li th:if="${#lists.isEmpty(itens)}" class="vazio">Nenhum prazo em aberto no periodo.</li>
+        </ul>
+      </section>
 
-    <section class="cartao">
-      <div class="cartao-cabecalho">
-        <h2>Situacao da carteira</h2>
-      </div>
-      <ul class="niveis">
-        <li>
-          <span class="bolinha vermelha" aria-hidden="true"></span>
-          <span class="nome">Vencidos em aberto</span>
-          <strong class="quanto" th:text="${vencidos}">0</strong>
-          <span class="unidade">prazos</span>
-        </li>
-        <li>
-          <span class="bolinha ambar" aria-hidden="true"></span>
-          <span class="nome">Vencem em ate 3 dias</span>
-          <strong class="quanto" th:text="${criticos}">0</strong>
-          <span class="unidade">prazos</span>
-        </li>
-        <li>
-          <span class="bolinha verde" aria-hidden="true"></span>
-          <span class="nome">Demais prazos do periodo</span>
-          <strong class="quanto" th:text="${#lists.size(itens) - vencidos - criticos}">0</strong>
-          <span class="unidade">prazos</span>
-        </li>
-        <li>
-          <span class="bolinha" aria-hidden="true"></span>
-          <span class="nome"
-                th:text="${usuario.chefe()} ? 'Pecas aguardando sua revisao' : 'Pecas em revisao'">Pecas em revisao</span>
-          <strong class="quanto" th:text="${emRevisao}">0</strong>
-          <span class="unidade">pecas</span>
-        </li>
-        <li>
-          <span class="bolinha" aria-hidden="true"></span>
-          <span class="nome">Rascunhos e rejeitadas a retrabalhar</span>
-          <strong class="quanto" th:text="${rascunhos}">0</strong>
-          <span class="unidade">pecas</span>
-        </li>
-      </ul>
-    </section>
-  </div>
+      <section class="cartao">
+        <div class="cartao-cabecalho">
+          <h2>Acoes rapidas</h2>
+        </div>
+        <!-- Cada atalho e um link ou um submit: nada aqui depende de JavaScript. -->
+        <div class="atalhos">
+          <a class="atalho" th:href="@{/painel/processos}">
+            <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-processos"/></svg>
+            Novo processo
+          </a>
+          <a class="atalho" th:href="@{/painel/documentos}">
+            <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-documentos"/></svg>
+            Gerar peca
+          </a>
+          <a class="atalho" th:href="@{/painel/anexos}">
+            <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-anexos"/></svg>
+            Juntar anexo
+          </a>
+          <form th:action="@{/painel/varredura}" method="post">
+            <input type="hidden" name="_csrf" th:value="${csrf}">
+            <button type="submit" class="atalho">
+              <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-raio"/></svg>
+              Rodar varredura
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
 
-  <div class="painel-duplo">
+    <div class="coluna">
+      <section class="cartao">
+        <div class="cartao-cabecalho">
+          <h2>Situacao da carteira</h2>
+        </div>
+        <ul class="niveis">
+          <li>
+            <span class="bolinha vermelha" aria-hidden="true"></span>
+            <span class="nome">Vencidos em aberto</span>
+            <strong class="quanto" th:text="${vencidos}">0</strong>
+            <span class="unidade">prazos</span>
+          </li>
+          <li>
+            <span class="bolinha ambar" aria-hidden="true"></span>
+            <span class="nome">Vencem em ate 3 dias</span>
+            <strong class="quanto" th:text="${criticos}">0</strong>
+            <span class="unidade">prazos</span>
+          </li>
+          <li>
+            <span class="bolinha verde" aria-hidden="true"></span>
+            <span class="nome">Demais prazos do periodo</span>
+            <strong class="quanto" th:text="${#lists.size(itens) - vencidos - criticos}">0</strong>
+            <span class="unidade">prazos</span>
+          </li>
+          <li>
+            <span class="bolinha" aria-hidden="true"></span>
+            <span class="nome"
+                  th:text="${usuario.chefe()} ? 'Pecas aguardando sua revisao' : 'Pecas em revisao'">Pecas em revisao</span>
+            <strong class="quanto" th:text="${emRevisao}">0</strong>
+            <span class="unidade">pecas</span>
+          </li>
+          <li>
+            <span class="bolinha" aria-hidden="true"></span>
+            <span class="nome">Rascunhos e rejeitadas a retrabalhar</span>
+            <strong class="quanto" th:text="${rascunhos}">0</strong>
+            <span class="unidade">pecas</span>
+          </li>
+        </ul>
+      </section>
 
-    <section class="cartao">
-      <div class="cartao-cabecalho">
-        <h2>Acoes rapidas</h2>
-      </div>
-      <!-- Cada atalho e um link ou um submit: nada aqui depende de JavaScript. -->
-      <div class="atalhos">
-        <a class="atalho" th:href="@{/painel/processos}">
-          <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-processos"/></svg>
-          Novo processo
-        </a>
-        <a class="atalho" th:href="@{/painel/documentos}">
-          <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-documentos"/></svg>
-          Gerar peca
-        </a>
-        <a class="atalho" th:href="@{/painel/anexos}">
-          <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-anexos"/></svg>
-          Juntar anexo
-        </a>
-        <form th:action="@{/painel/varredura}" method="post">
-          <input type="hidden" name="_csrf" th:value="${csrf}">
-          <button type="submit" class="atalho">
-            <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-raio"/></svg>
-            Rodar varredura
-          </button>
-        </form>
-      </div>
-    </section>
-
-    <section class="cartao">
-      <div class="cartao-cabecalho">
-        <h2>Avisos do motor de prazos</h2>
-        <span class="contador" th:text="${#lists.size(avisos)}">0</span>
-      </div>
-      <ul class="avisos">
-        <li th:each="aviso, iter : ${avisos}" th:if="${iter.index < 4}">
-          <strong th:text="${aviso.assunto()}">assunto</strong>
-          <span th:text="${aviso.destinatario()}">destinatario</span>
-          <p th:text="${aviso.corpo()}">corpo</p>
-        </li>
-        <li th:if="${#lists.isEmpty(avisos)}" class="vazio">
-          Nenhum alerta nesta sessao. Rode a varredura para avaliar a agenda.
-        </li>
-      </ul>
-    </section>
+      <section class="cartao">
+        <div class="cartao-cabecalho">
+          <h2>Avisos do motor de prazos</h2>
+          <span class="contador" th:text="${#lists.size(avisos)}">0</span>
+        </div>
+        <ul class="avisos">
+          <li th:each="aviso, iter : ${avisos}" th:if="${iter.index < 4}">
+            <strong th:text="${aviso.assunto()}">assunto</strong>
+            <span th:text="${aviso.destinatario()}">destinatario</span>
+            <p th:text="${aviso.corpo()}">corpo</p>
+          </li>
+          <li th:if="${#lists.isEmpty(avisos)}" class="vazio">
+            Nenhum alerta nesta sessao. Rode a varredura para avaliar a agenda.
+          </li>
+        </ul>
+      </section>
+    </div>
   </div>
 
   <section class="cartao" id="agenda">
