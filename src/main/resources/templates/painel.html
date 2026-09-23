@@ -15,7 +15,7 @@
   <div th:replace="~{fragmentos :: mensagens}"></div>
 
   <div class="cabecalho-pagina">
-    <h2>Agenda de prazos</h2>
+    <h2>Agenda de Prazos</h2>
     <p class="apoio" style="margin:0">
       Hoje: <strong th:text="${#temporals.format(hoje, 'dd/MM/yyyy')}">08/09/2026</strong> &middot;
       em aberto ate <strong th:text="${#temporals.format(limite, 'dd/MM/yyyy')}">08/10/2026</strong>
@@ -41,7 +41,7 @@
 
     <div class="estatistica">
       <span>
-        <span class="rotulo">Clientes ativos</span>
+        <span class="rotulo">Clientes Ativos</span>
         <span class="numero" th:text="${clientesAtivos}">0</span>
         <span class="apoio" th:text="'de ' + ${clientesTotal} + ' cadastrados'">de 0 cadastrados</span>
       </span>
@@ -52,7 +52,7 @@
 
     <a class="estatistica" href="#agenda">
       <span>
-        <span class="rotulo">Prazos vencidos</span>
+        <span class="rotulo">Prazos Vencidos</span>
         <span class="numero" th:text="${vencidos}">0</span>
         <span class="apoio" th:classappend="${vencidos > 0} ? 'alerta' : 'bom'"
               th:text="${vencidos > 0} ? 'em aberto apos o vencimento' : 'nenhum prazo perdido'">nenhum prazo perdido</span>
@@ -64,7 +64,7 @@
 
     <a class="estatistica" href="#agenda">
       <span>
-        <span class="rotulo">Vencem em ate 3 dias</span>
+        <span class="rotulo">Vencem em até 3 Dias</span>
         <span class="numero" th:text="${criticos}">0</span>
         <span class="apoio" th:classappend="${criticos > 0} ? 'atencao'"
               th:text="${meus} + ' sob sua responsabilidade'">0 sob sua responsabilidade</span>
@@ -81,7 +81,7 @@
     <div class="coluna">
       <section class="cartao">
         <div class="cartao-cabecalho">
-          <h2>Proximos prazos</h2>
+          <h2>Próximos Prazos</h2>
           <span class="contador" th:text="${#lists.size(itens)}">0</span>
         </div>
         <ul class="lista-prazos">
@@ -106,7 +106,7 @@
 
       <section class="cartao">
         <div class="cartao-cabecalho">
-          <h2>Acoes rapidas</h2>
+          <h2>Ações Rápidas</h2>
         </div>
         <!-- Cada atalho e um link ou um submit: nada aqui depende de JavaScript. -->
         <div class="atalhos">
@@ -136,7 +136,7 @@
     <div class="coluna">
       <section class="cartao">
         <div class="cartao-cabecalho">
-          <h2>Situacao da carteira</h2>
+          <h2>Situação da Carteira</h2>
         </div>
         <ul class="niveis">
           <li>
@@ -175,7 +175,7 @@
 
       <section class="cartao">
         <div class="cartao-cabecalho">
-          <h2>Avisos do motor de prazos</h2>
+          <h2>Avisos do Motor de Prazos</h2>
           <span class="contador" th:text="${#lists.size(avisos)}">0</span>
         </div>
         <ul class="avisos">
@@ -194,7 +194,7 @@
 
   <section class="cartao" id="agenda">
     <div class="cartao-cabecalho">
-      <h2>Todos os prazos do periodo</h2>
+      <h2>Todos os Prazos do Período</h2>
       <form th:action="@{/painel/varredura}" method="post" class="linha" style="margin:0">
         <input type="hidden" name="_csrf" th:value="${csrf}">
         <label for="hoje">Simular data</label>
@@ -221,9 +221,9 @@
           <th>Processo</th>
           <th>Prazo</th>
           <th>Vencimento</th>
-          <th>Dias restantes</th>
+          <th>Dias Restantes</th>
           <th>Fatal</th>
-          <th>Responsavel</th>
+          <th>Responsável</th>
           <th></th>
         </tr>
         </thead>

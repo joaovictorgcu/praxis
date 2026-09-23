@@ -89,10 +89,10 @@
     <a class="marca" th:href="@{/painel}">
       <img class="marca-sigla" th:src="@{/img/praxis-marca.svg}" alt="" aria-hidden="true"
            width="40" height="40">
-      <span class="marca-nome">Praxis<span>Gestao juridica</span></span>
+      <span class="marca-nome">Praxis<span>Gestão Jurídica</span></span>
     </a>
 
-    <p class="menu-titulo">Escritorio</p>
+    <p class="menu-titulo">Escritório</p>
 
     <nav aria-label="Secoes do painel">
       <a th:href="@{/painel}" th:classappend="${ativo == 'painel'} ? 'ativo'"
@@ -129,18 +129,18 @@
          th:classappend="${ativo == 'usuarios'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'usuarios'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-usuarios"/></svg>
-        <span>Usuarios</span>
+        <span>Usuários</span>
       </a>
       <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/admin}"
          th:classappend="${ativo == 'admin'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'admin'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-admin"/></svg>
-        <span>Administracao</span>
+        <span>Administração</span>
       </a>
       <a th:href="@{/painel/conta}" th:classappend="${ativo == 'conta'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'conta'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-conta"/></svg>
-        <span>Minha conta</span>
+        <span>Minha Conta</span>
       </a>
     </nav>
   </aside>
@@ -151,19 +151,19 @@
       <svg class="icone" aria-hidden="true" focusable="false">
         <use th:attr="href='#i-' + (${ativo == 'painel'} ? 'agenda' : ${ativo})" href="#i-agenda"/>
       </svg>
-      <span th:text="${ativo == 'painel'} ? 'Agenda de prazos'
+      <span th:text="${ativo == 'painel'} ? 'Agenda de Prazos'
                      : (${ativo == 'processos'} ? 'Processos'
                      : (${ativo == 'documentos'} ? 'Documentos'
                      : (${ativo == 'anexos'} ? 'Anexos'
                      : (${ativo == 'modelos'} ? 'Modelos'
                      : (${ativo == 'feriados'} ? 'Feriados'
-                     : (${ativo == 'usuarios'} ? 'Usuarios'
-                     : (${ativo == 'admin'} ? 'Administracao'
-                     : 'Minha conta')))))))">Agenda de prazos</span>
+                     : (${ativo == 'usuarios'} ? 'Usuários'
+                     : (${ativo == 'admin'} ? 'Administração'
+                     : 'Minha Conta')))))))">Agenda de Prazos</span>
     </p>
 
     <div class="sessao" th:if="${usuario != null}">
-      <a class="quem" th:href="@{/painel/conta}" title="Minha conta">
+      <a class="quem" th:href="@{/painel/conta}" title="Minha Conta">
         <strong th:text="${usuario.nome()}">Nome</strong>
         <span th:text="'OAB ' + ${usuario.oab()}">OAB</span>
       </a>

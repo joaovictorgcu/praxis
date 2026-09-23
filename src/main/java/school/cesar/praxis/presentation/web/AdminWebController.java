@@ -90,7 +90,7 @@ public class AdminWebController {
 
         public static List<Atalho> todos() {
             return List.of(
-                    new Atalho("Usuarios", "Cadastrar, promover e remover quem acessa o sistema",
+                    new Atalho("Usuários", "Cadastrar, promover e remover quem acessa o sistema",
                             "/painel/usuarios"),
                     new Atalho("Modelos", "Modelos de peca usados na geracao de documentos",
                             "/painel/modelos"),

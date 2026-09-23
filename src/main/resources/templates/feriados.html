@@ -15,7 +15,7 @@
   <div th:replace="~{fragmentos :: mensagens}"></div>
 
   <section class="cartao">
-    <h2>Cadastrar feriado</h2>
+    <h2>Cadastrar Feriado</h2>
     <p class="apoio">
       Feriado cadastrado aqui entra na contagem de prazo do foro
       <strong th:text="${foro}">Recife/PE</strong> a partir da proxima contagem.
@@ -53,7 +53,7 @@
 
   <section class="cartao">
     <div class="cartao-cabecalho">
-      <h2>Feriados cadastrados</h2>
+      <h2>Feriados Cadastrados</h2>
       <form th:action="@{/painel/feriados}" method="get" class="linha" style="margin:0">
         <label for="verificar">Corre prazo em</label>
         <input type="date" id="verificar" name="verificar">
@@ -75,9 +75,9 @@
       <table>
         <thead>
         <tr>
-          <th>Descricao</th>
-          <th>Quando incide</th>
-          <th>Onde vale</th>
+          <th>Descrição</th>
+          <th>Quando Incide</th>
+          <th>Onde Vale</th>
           <th></th>
         </tr>
         </thead>

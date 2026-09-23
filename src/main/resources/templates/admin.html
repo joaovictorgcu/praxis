@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Praxis - Administracao</title>
+  <title>Praxis - Administração</title>
   <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
   <link rel="stylesheet" th:href="${assetCss}">
   <script th:src="${assetJs}" defer></script>
@@ -66,7 +66,7 @@
   </section>
 
   <section class="cartao">
-    <h2>O que exige atencao</h2>
+    <h2>O Que Exige Atenção</h2>
     <p class="apoio" th:text="'Retrato de ' + ${#temporals.format(hoje, 'dd/MM/yyyy')} + '. Esta tela so le: para alterar, use o atalho do cadastro correspondente.'">
       Retrato de hoje.
     </p>
@@ -92,7 +92,7 @@
   </section>
 
   <section class="cartao">
-    <h2>Atalhos de administracao</h2>
+    <h2>Atalhos de Administração</h2>
     <p class="apoio">Cada cadastro tem sua tela, com as regras e a confirmacao de remocao.</p>
     <div class="linha">
       <a th:each="atalho : ${atalhos}" class="botao secundario"
@@ -102,10 +102,10 @@
   </section>
 
   <section class="cartao">
-    <h2>Instancia em execucao</h2>
+    <h2>Instância em Execução</h2>
     <dl class="ficha">
       <div>
-        <dt>Perfil ativo</dt>
+        <dt>Perfil Ativo</dt>
         <dd th:text="${sistema.perfis()}">dev</dd>
       </div>
       <div>
@@ -121,14 +121,14 @@
         </dd>
       </div>
       <div>
-        <dt>Dados de exemplo</dt>
+        <dt>Dados de Exemplo</dt>
         <dd>
           <span class="etiqueta" th:classappend="${sistema.dadosDeExemplo()} ? 'ambar' : 'cinza'"
                 th:text="${sistema.dadosDeExemplo()} ? 'carregados' : 'desligados'">estado</span>
         </dd>
       </div>
       <div>
-        <dt>Dominio de e-mail</dt>
+        <dt>Domínio de E-mail</dt>
         <dd th:text="${sistema.dominioEmail()}">praxis.adv.br</dd>
       </div>
       <div>
@@ -136,14 +136,14 @@
         <dd th:text="${sistema.java()}">17</dd>
       </div>
       <div>
-        <dt>No ar ha</dt>
+        <dt>No Ar Há</dt>
         <dd th:text="${sistema.tempoNoAr()}">0h</dd>
       </div>
     </dl>
   </section>
 
   <section class="cartao" id="usuarios">
-    <h2>Usuarios</h2>
+    <h2>Usuários</h2>
     <p class="apoio">Senha nunca sai do banco: nem codificada, nem nesta tela.</p>
     <div class="tabela">
       <table>
@@ -175,7 +175,7 @@
     <div class="tabela">
       <table>
         <thead>
-        <tr><th>#</th><th>Numero CNJ</th><th>Cliente</th><th>Comarca</th><th>Responsavel</th>
+        <tr><th>#</th><th>Número CNJ</th><th>Cliente</th><th>Comarca</th><th>Responsável</th>
           <th>Andamentos</th><th>Sigilo</th></tr>
         </thead>
         <tbody>
@@ -205,8 +205,8 @@
     <div class="tabela">
       <table>
         <thead>
-        <tr><th>#</th><th>Processo</th><th>Descricao</th><th>Vencimento</th><th>Dias</th>
-          <th>Responsavel</th><th>Situacao</th></tr>
+        <tr><th>#</th><th>Processo</th><th>Descrição</th><th>Vencimento</th><th>Dias</th>
+          <th>Responsável</th><th>Situação</th></tr>
         </thead>
         <tbody>
         <tr th:each="pr : ${panorama.prazos()}"
@@ -235,7 +235,7 @@
   </section>
 
   <section class="cartao" id="documentos">
-    <h2>Pecas geradas</h2>
+    <h2>Peças Geradas</h2>
     <div class="tabela">
       <table>
         <thead>
@@ -297,7 +297,7 @@
       <table>
         <thead>
         <tr><th>#</th><th>Nome</th><th>CPF/CNPJ</th><th>Tipo</th><th>Contato</th>
-          <th>Cidade/UF</th><th>Situacao</th></tr>
+          <th>Cidade/UF</th><th>Situação</th></tr>
         </thead>
         <tbody>
         <tr th:each="c : ${panorama.clientes()}">
@@ -324,13 +324,13 @@
   </section>
 
   <section class="cartao" id="partes">
-    <h2>Partes contrarias</h2>
+    <h2>Partes Contrárias</h2>
     <p class="apoio">Inclui as desativadas. Cadastro e edicao pela API REST <code>/api/partes-contrarias</code>.</p>
     <div class="tabela">
       <table>
         <thead>
         <tr><th>#</th><th>Nome</th><th>CPF/CNPJ</th><th>Tipo</th><th>Contato</th>
-          <th>Cidade/UF</th><th>Situacao</th></tr>
+          <th>Cidade/UF</th><th>Situação</th></tr>
         </thead>
         <tbody>
         <tr th:each="pc : ${panorama.partesContrarias()}">
@@ -357,13 +357,13 @@
   </section>
 
   <section class="cartao" id="audiencias">
-    <h2>Audiencias</h2>
+    <h2>Audiências</h2>
     <p class="apoio">Inclui as canceladas. Agendamento pela API REST <code>/api/audiencias</code>.</p>
     <div class="tabela">
       <table>
         <thead>
-        <tr><th>#</th><th>Processo</th><th>Parte autora</th><th>Inicio</th><th>Fim</th>
-          <th>Sala</th><th>Situacao</th></tr>
+        <tr><th>#</th><th>Processo</th><th>Parte Autora</th><th>Início</th><th>Fim</th>
+          <th>Sala</th><th>Situação</th></tr>
         </thead>
         <tbody>
         <tr th:each="au : ${panorama.audiencias()}">
@@ -387,11 +387,11 @@
   </section>
 
   <section class="cartao" id="contratos">
-    <h2>Contratos de honorario</h2>
+    <h2>Contratos de Honorário</h2>
     <div class="tabela">
       <table>
         <thead>
-        <tr><th>#</th><th>Processo</th><th>Modalidade</th><th>Celebrado em</th><th>Valor contratado</th></tr>
+        <tr><th>#</th><th>Processo</th><th>Modalidade</th><th>Celebrado em</th><th>Valor Contratado</th></tr>
         </thead>
         <tbody>
         <tr th:each="ct : ${panorama.contratos()}">
@@ -410,11 +410,11 @@
   </section>
 
   <section class="cartao" id="modelos">
-    <h2>Modelos de peca</h2>
+    <h2>Modelos de Peça</h2>
     <div class="tabela">
       <table>
         <thead>
-        <tr><th>#</th><th>Codigo</th><th>Nome</th><th>Tipo</th><th>Titulo</th><th>Campos esperados</th></tr>
+        <tr><th>#</th><th>Código</th><th>Nome</th><th>Tipo</th><th>Título</th><th>Campos Esperados</th></tr>
         </thead>
         <tbody>
         <tr th:each="m : ${panorama.modelos()}">
@@ -438,7 +438,7 @@
     <div class="tabela">
       <table>
         <thead>
-        <tr><th>#</th><th>Descricao</th><th>Data de referencia</th><th>Recorrencia</th><th>Abrangencia</th></tr>
+        <tr><th>#</th><th>Descrição</th><th>Data de Referência</th><th>Recorrência</th><th>Abrangência</th></tr>
         </thead>
         <tbody>
         <tr th:each="f : ${panorama.feriados()}">
@@ -457,7 +457,7 @@
   </section>
 
   <section class="cartao" id="avisos">
-    <h2>Avisos emitidos</h2>
+    <h2>Avisos Emitidos</h2>
     <p class="apoio">Fila do notificador de painel desta instancia: some quando a aplicacao reinicia.</p>
     <ul class="avisos">
       <li th:each="aviso : ${avisos}">

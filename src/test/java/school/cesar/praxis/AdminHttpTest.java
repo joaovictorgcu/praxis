@@ -70,10 +70,10 @@ class AdminHttpTest {
     void panoramaNaTela() throws Exception {
         mvc.perform(get("/painel/admin").session(chefe()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Instancia em execucao")))
+                .andExpect(content().string(containsString("Instância em Execução")))
                 .andExpect(content().string(containsString("carla.mendes@praxis.adv.br")))
-                .andExpect(content().string(containsString("Contratos de honorario")))
-                .andExpect(content().string(containsString("Partes contrarias")));
+                .andExpect(content().string(containsString("Contratos de Honorário")))
+                .andExpect(content().string(containsString("Partes Contrárias")));
     }
 
     @Test

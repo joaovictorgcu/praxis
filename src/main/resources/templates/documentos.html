@@ -15,7 +15,7 @@
   <div th:replace="~{fragmentos :: mensagens}"></div>
 
   <section class="cartao">
-    <h2>Gerar peca por template</h2>
+    <h2>Gerar Peça por Template</h2>
     <p class="apoio">
       O esqueleto da peca e fixo (cabecalho, enderecamento, qualificacao, corpo,
       pedidos, assinatura); cada tipo preenche o que lhe e proprio. A peca nasce como
@@ -66,7 +66,7 @@
 
       <!-- Modelo cadastrado: um campo por marcador {{campo}} que o modelo espera (gerado em praxis.js). -->
       <fieldset class="largo campos-modelo" id="campos-modelo" hidden>
-        <legend>Campos pedidos pelo modelo</legend>
+        <legend>Campos Pedidos pelo Modelo</legend>
         <p class="apoio vazio-modelo">Este modelo so usa campos dos autos (cliente, comarca, processo, advogado, OAB): nada a preencher.</p>
         <div class="grade-campos"></div>
       </fieldset>
@@ -79,7 +79,7 @@
   <section class="cartao" th:if="${previa}">
     <div class="cartao-cabecalho">
       <h2>
-        Peca <span th:if="${documentoGerado}" th:text="'#' + ${documentoGerado}">#1</span>
+        Peça <span th:if="${documentoGerado}" th:text="'#' + ${documentoGerado}">#1</span>
         <th:block th:if="${statusDocumento}">
           <span th:replace="~{fragmentos :: status(${statusDocumento})}"></span>
         </th:block>
@@ -160,7 +160,7 @@
 
   <section class="cartao">
     <div class="cartao-cabecalho">
-      <h2>Pecas geradas</h2>
+      <h2>Peças Geradas</h2>
       <form th:action="@{/painel/documentos}" method="get" class="linha">
         <input type="text" name="processo" th:value="${processoFiltro}" placeholder="Filtrar por CNJ">
         <button type="submit" class="secundario">Filtrar</button>

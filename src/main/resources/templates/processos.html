@@ -15,7 +15,7 @@
   <div th:replace="~{fragmentos :: mensagens}"></div>
 
   <section class="cartao">
-    <h2>Cadastrar processo</h2>
+    <h2>Cadastrar Processo</h2>
     <p class="apoio">
       O responsavel e escolhido entre os usuarios do escritorio: a OAB dele e a que fica
       habilitada nos autos. Processo em <strong>segredo de justica</strong> so tem peca e anexo
@@ -53,7 +53,7 @@
 
   <section class="cartao">
     <div class="cartao-cabecalho">
-      <h2>Processos do escritorio</h2>
+      <h2>Processos do Escritório</h2>
       <form th:action="@{/painel/processos}" method="get" class="linha" style="margin:0">
         <input type="search" name="busca" th:value="${busca}" placeholder="CNJ, cliente ou responsavel">
         <button type="submit" class="secundario">Buscar</button>
@@ -63,10 +63,10 @@
       <table>
         <thead>
         <tr>
-          <th>Numero CNJ</th>
+          <th>Número CNJ</th>
           <th>Cliente</th>
           <th>Comarca</th>
-          <th>Responsavel</th>
+          <th>Responsável</th>
           <th>Sigilo</th>
           <th>Andamentos</th>
           <th></th>

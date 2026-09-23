@@ -25,13 +25,13 @@
     <dl class="ficha">
       <div><dt>Cliente</dt><dd th:text="${processo.cliente}">-</dd></div>
       <div><dt>Comarca</dt><dd th:text="${processo.comarca}">-</dd></div>
-      <div><dt>Responsavel</dt>
+      <div><dt>Responsável</dt>
         <dd>
           <span th:text="${processo.responsavel.nome()}">-</span>
           <span class="apoio" th:text="'OAB ' + ${processo.responsavel.oab()} + ' - ' + ${processo.responsavel.email()}">-</span>
         </dd>
       </div>
-      <div><dt>Ultima intimacao</dt>
+      <div><dt>Última Intimação</dt>
         <dd th:with="ult=${processo.ultimaIntimacao()}">
           <span th:if="${ult != null}" th:text="${#temporals.format(ult.data, 'dd/MM/yyyy')} + ' - ' + ${ult.descricao}">-</span>
           <span th:if="${ult == null}" class="apoio">nenhuma</span>
@@ -50,7 +50,7 @@
 
   <div class="duas-colunas">
     <section class="cartao">
-      <h2>Registrar andamento</h2>
+      <h2>Registrar Andamento</h2>
       <p class="apoio">Intimacao e citacao iniciam contagem de prazo; o responsavel e avisado (Observer).</p>
       <form th:action="@{'/painel/processos/' + ${processo.numero.valor()} + '/andamentos'}" method="post" class="empilhado">
       <input type="hidden" name="_csrf" th:value="${csrf}">
@@ -70,7 +70,7 @@
     </section>
 
     <section class="cartao">
-      <h2>Abrir prazo</h2>
+      <h2>Abrir Prazo</h2>
       <p class="apoio">
         Vencimento calculado pelo motor: termo inicial no primeiro dia util apos a intimacao,
         feriados do foro e recesso forense (CPC arts. 219, 220 e 224). Fica congelado na abertura.
@@ -104,7 +104,7 @@
   </div>
 
   <section class="cartao">
-    <h2>Linha do tempo</h2>
+    <h2>Linha do Tempo</h2>
     <ol class="linha-do-tempo">
       <li th:each="a : ${andamentos}">
         <time th:text="${#temporals.format(a.data, 'dd/MM/yyyy')}">data</time>
@@ -124,9 +124,9 @@
         <tr>
           <th>Prazo</th>
           <th>Vencimento</th>
-          <th>Dias restantes</th>
+          <th>Dias Restantes</th>
           <th>Fatal</th>
-          <th>Situacao</th>
+          <th>Situação</th>
           <th></th>
         </tr>
         </thead>
@@ -168,7 +168,7 @@
 
   <div class="duas-colunas">
     <section class="cartao">
-      <h2>Pecas</h2>
+      <h2>Peças</h2>
       <div class="tabela">
         <table>
           <thead><tr><th>#</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>

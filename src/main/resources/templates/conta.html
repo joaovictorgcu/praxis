@@ -19,7 +19,7 @@
   </p>
 
   <section class="cartao">
-    <h2>Minha conta</h2>
+    <h2>Minha Conta</h2>
     <dl class="ficha">
       <div><dt>Nome</dt><dd th:text="${usuario.nome()}">-</dd></div>
       <div><dt>E-mail</dt><dd th:text="${usuario.email()}">-</dd></div>
@@ -35,7 +35,7 @@
   </section>
 
   <section class="cartao">
-    <h2>Trocar senha</h2>
+    <h2>Trocar Senha</h2>
     <p class="apoio">Minimo de 6 caracteres. Ao confirmar, a sessao e encerrada e voce entra de novo com a nova senha.</p>
     <form th:action="@{/painel/conta/senha}" method="post" class="formulario">
       <input type="hidden" name="_csrf" th:value="${csrf}">

@@ -15,7 +15,7 @@
   <div th:replace="~{fragmentos :: mensagens}"></div>
 
   <section class="cartao">
-    <h2>Juntar arquivo aos autos</h2>
+    <h2>Juntar Arquivo aos Autos</h2>
     <p class="apoio">
       O anexo herda o <strong>segredo de justica</strong> do processo no momento da juntada, e a
       leitura passa pelo mesmo Proxy das pecas geradas: OAB nao habilitada recebe 403.
@@ -52,7 +52,7 @@
 
   <section class="cartao">
     <div class="cartao-cabecalho">
-      <h2>Arquivos juntados</h2>
+      <h2>Arquivos Juntados</h2>
       <form th:action="@{/painel/anexos}" method="get" class="linha">
         <input type="text" name="processo" th:value="${processoFiltro}" placeholder="Filtrar por CNJ">
         <button type="submit" class="secundario">Filtrar</button>
