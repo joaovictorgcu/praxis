@@ -398,6 +398,9 @@ td.numero, th.numero { text-align: right; font-variant-numeric: tabular-nums; }
 tbody tr:hover td { background: var(--realce); }
 tr.critico td, tr.critico:hover td { background: var(--atencao-fundo); }
 tr.vencido td, tr.vencido:hover td { background: var(--erro-fundo); }
+/* O fundo da linha destacada e o mesmo da etiqueta vermelha (e quase o da ambar):
+   a etiqueta sumia e o texto ficava solto. Com o fundo do cartao ela volta a aparecer. */
+tr.critico .etiqueta, tr.vencido .etiqueta { background: var(--branco); }
 
 td.acoes { white-space: nowrap; text-align: right; }
 td.acoes form { display: inline-block; margin-left: 4px; }
