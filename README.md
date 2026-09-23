@@ -19,14 +19,21 @@ Escritório perde causa por **prazo** e perde tempo por **retrabalho**.
 
 ## Como rodar
 
-Só é preciso um **JDK 17** no `PATH`; o Maven vem no wrapper e o banco é em memória.
+Só é preciso um **JDK 17 ou mais novo** no `PATH` (confira com `java -version`). O Maven vem no wrapper e o banco é H2 em memória: não há mais nada para instalar nem configurar.
 
 ```bash
-./mvnw test            # suíte completa: unidade + contrato HTTP + cenários BDD
-./mvnw spring-boot:run # sobe em http://localhost:8080
+# Linux, macOS ou Git Bash
+./mvnw spring-boot:run
 ```
 
-Abra <http://localhost:8080/painel> — o painel inteiro é autenticado. A aplicação sobe com um escritório de mentira montado (processos, prazos em estados diferentes, peça em revisão, clientes, audiência, honorários e anexo), suficiente para percorrer o sistema sem cadastrar nada.
+```powershell
+# Windows (PowerShell ou cmd)
+.\mvnw.cmd spring-boot:run
+```
+
+A primeira execução baixa o Maven e as dependências e demora alguns minutos; as seguintes sobem em segundos. Quando o log mostrar `Started PraxisApplication`, abra <http://localhost:8080/painel> — o painel inteiro é autenticado. `Ctrl+C` encerra. Como o banco é em memória, cada subida começa do zero.
+
+A aplicação sobe com um escritório de mentira montado (processos, prazos em estados diferentes, peça em revisão, clientes, audiência, honorários e anexo), suficiente para percorrer o sistema sem cadastrar nada.
 
 | Papel | Usuário | Senha | OAB |
 |---|---|---|---|
@@ -37,7 +44,21 @@ Abra <http://localhost:8080/painel> — o painel inteiro é autenticado. A aplic
 
 Sem `@`, o sistema completa o domínio. Ana responde pelo processo público; Bruno, pelo que corre em segredo de justiça. Entre como `admin` para ver tudo e depois como `ana.souza` para sentir o que um advogado *não* pode fazer.
 
-Console do banco em `/h2-console` (JDBC `jdbc:h2:mem:praxis`, usuário `sa`, sem senha). Desligar a carga de exemplo: `praxis.dados-exemplo=false`. Porta ocupada: `./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8081`.
+Console do banco em `/h2-console` (JDBC `jdbc:h2:mem:praxis`, usuário `sa`, sem senha).
+
+**Porta 8080 ocupada** (`Port 8080 was already in use` no log): suba em outra porta.
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+```
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--server.port=8081"
+```
+
+No PowerShell as aspas são obrigatórias. O mesmo `-Dspring-boot.run.arguments=` aceita outras propriedades — `--praxis.dados-exemplo=false` sobe sem o escritório de exemplo.
+
+Para rodar os testes: `./mvnw test` (ou `.\mvnw.cmd test`), detalhes em [Testes](#testes).
 
 ## As telas
 
@@ -93,15 +114,7 @@ Os cenários são escritos em português e cobrem acesso ao painel, motor de pra
 ./mvnw verify                           # suíte + cobertura JaCoCo
 ```
 
-> Estado atual: `distribuicao.feature` entrou sem os steps correspondentes, então seus 3 cenários rodam como *undefined* e a suíte fecha vermelha. Falta criar `DistribuicaoSteps` ao lado de [`HonorariosSteps`](src/test/java/school/cesar/praxis/bdd/HonorariosSteps.java).
-
 O [workflow de CI](.github/workflows/build.yml) roda `verify` com piso de cobertura no JaCoCo e ainda sobe a aplicação no perfil `prod` contra um PostgreSQL de verdade, para provar que a migração do Flyway e as entidades concordam.
-
-## Publicar
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/joaovictorgcu/praxis)
-
-O repositório traz o [`Dockerfile`](Dockerfile) e o blueprint [`render.yaml`](render.yaml), que cria o PostgreSQL e o serviço web juntos. O Render pede a senha do administrador no Apply — ela não vive no repositório. Passo a passo e o perfil `prod`: [`docs/implantacao.md`](docs/implantacao.md).
 
 ## Documentação
 
@@ -110,7 +123,6 @@ O repositório traz o [`Dockerfile`](Dockerfile) e o blueprint [`render.yaml`](r
 | [`docs/visita-guiada.md`](docs/visita-guiada.md) | As telas em uso e as regras que o domínio faz cumprir |
 | [`docs/arquitetura.md`](docs/arquitetura.md) | Arquitetura limpa, DDD nos 4 níveis, padrões, front, segurança e testes |
 | [`docs/api-rest.md`](docs/api-rest.md) | Contrato HTTP, com exemplos que mostram as regras funcionando |
-| [`docs/implantacao.md`](docs/implantacao.md) | Render, perfil `prod`, PostgreSQL e Flyway |
 | [`docs/limitacoes.md`](docs/limitacoes.md) | O que esta entrega ainda não faz, e onde trocar |
 | [`docs/dominio.md`](docs/dominio.md) | Descrição do domínio e linguagem onipresente |
 | [`docs/mapa-historia-usuario.md`](docs/mapa-historia-usuario.md) | Mapa da história do usuário |
