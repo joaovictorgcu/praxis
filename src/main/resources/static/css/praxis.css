@@ -411,6 +411,8 @@ td.acoes form { display: inline-block; margin-left: 4px; }
     font-size: 11.5px;
     font-weight: 600;
     white-space: nowrap;
+    /* O texto vem minusculo do template e do enum; a tela mostra "Fatal", "Em Aberto". */
+    text-transform: capitalize;
 }
 
 .etiqueta.vermelha { background: var(--erro-fundo); color: var(--vermelho); }
