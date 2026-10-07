@@ -1,11 +1,11 @@
 package school.cesar.praxis.application.port.out;
 
-import school.cesar.praxis.domain.equipe.Equipe;
-
 import java.util.List;
 import java.util.Optional;
+import school.cesar.praxis.domain.equipe.Equipe;
 
 public interface EquipeRepositorio {
+    void excluir(Long id);
 
     Equipe salvar(Equipe equipe);
 

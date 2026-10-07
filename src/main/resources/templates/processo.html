@@ -43,6 +43,7 @@
       serão recusados pelo Proxy. Peça ao chefe para habilitar a OAB na peça.
     </p>
     <div class="fluxo">
+      <a class="botao secundario pequeno" th:href="@{/painel/kanban(processo=${processo.numero.valor()})}">Tarefas do Processo</a>
       <a class="botao pequeno" th:href="@{/painel/documentos(processo=${processo.numero.valor()})}">Gerar Peça</a>
       <a class="botao secundario pequeno" th:href="@{/painel/anexos(processo=${processo.numero.valor()})}">Juntar Arquivo</a>
     </div>

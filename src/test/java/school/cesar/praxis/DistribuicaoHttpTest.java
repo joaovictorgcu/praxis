@@ -35,17 +35,7 @@ class DistribuicaoHttpTest {
         String jsonPayload = """
             {
                 "numeroProcesso": "0001111-22.2026.8.17.0001",
-                "areaDireito": "Trabalhista",
-                "candidatos": [
-                    {
-                        "nome": "Ana Souza",
-                        "email": "ana@praxis.adv.br",
-                        "oab": "PE12345",
-                        "especialidade": "Trabalhista",
-                        "processosAtivos": 2,
-                        "disponivel": true
-                    }
-                ]
+                "areaDireito": "Trabalhista"
             }
             """;
 

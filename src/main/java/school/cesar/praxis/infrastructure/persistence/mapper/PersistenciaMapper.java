@@ -21,6 +21,7 @@ import school.cesar.praxis.domain.prazo.NivelAlerta;
 import school.cesar.praxis.domain.prazo.Prazo;
 import school.cesar.praxis.domain.processo.*;
 import school.cesar.praxis.domain.usuario.Usuario;
+import school.cesar.praxis.domain.escritorio.Escritorio;
 import school.cesar.praxis.infrastructure.persistence.entity.AdvogadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.AndamentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.AudienciaEntity;
@@ -28,6 +29,7 @@ import school.cesar.praxis.infrastructure.persistence.entity.ArquivoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ClienteEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ContratoHonorarioEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.EscritorioEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ParteContrariaEntity;
@@ -510,6 +512,33 @@ public final class PersistenciaMapper {
                 entidade.getPapel(),
                 entidade.getSenhaCodificada(),
                 entidade.isSenhaProvisoria());
+    }
+
+    // --- Escritorio ---
+
+    public static EscritorioEntity paraEntidade(Escritorio escritorio) {
+        EscritorioEntity entidade = new EscritorioEntity();
+        entidade.setId(escritorio.getId());
+        entidade.setNome(escritorio.getNome());
+        entidade.setCnpj(escritorio.getCnpj());
+        entidade.setEmail(escritorio.getEmail());
+        entidade.setTelefone(escritorio.getTelefone());
+        entidade.setUf(escritorio.getUf());
+        entidade.setComarca(escritorio.getComarca());
+        entidade.setSenhaCodificada(escritorio.getSenhaCodificada());
+        return entidade;
+    }
+
+    public static Escritorio paraDominio(EscritorioEntity entidade) {
+        return new Escritorio(
+                entidade.getId(),
+                entidade.getNome(),
+                entidade.getCnpj(),
+                entidade.getEmail(),
+                entidade.getTelefone(),
+                entidade.getUf(),
+                entidade.getComarca(),
+                entidade.getSenhaCodificada());
     }
 
     // --- Advogado ---

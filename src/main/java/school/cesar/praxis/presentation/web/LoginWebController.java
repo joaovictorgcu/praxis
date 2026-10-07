@@ -2,35 +2,39 @@ package school.cesar.praxis.presentation.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import school.cesar.praxis.application.port.in.EscritoriosUseCases;
 import school.cesar.praxis.application.port.in.UsuariosUseCases;
+import school.cesar.praxis.domain.escritorio.Escritorio;
 import school.cesar.praxis.domain.usuario.CredenciaisInvalidasException;
 import school.cesar.praxis.domain.usuario.Usuario;
 import school.cesar.praxis.presentation.web.seguranca.ProtecaoForcaBruta;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
 /**
- * Entrada e saida do painel. Nao contem regra: traduz o formulario no caso de
- * uso de autenticacao e guarda na sessao so a projecao {@link UsuarioLogado}.
+ * Entrada e saida do painel. Quem loga e o escritorio (login unico, sem
+ * usuario individual dentro dele) ou um usuario avulso (administrador da
+ * demonstracao) - nao contem regra: traduz o formulario no caso de uso de
+ * autenticacao e guarda na sessao so a projecao {@link UsuarioLogado}.
  */
 @Controller
 public class LoginWebController {
 
-    private final UsuariosUseCases.Autenticar autenticar;
+    private final EscritoriosUseCases.Autenticar autenticarEscritorio;
+    private final UsuariosUseCases.Autenticar autenticarUsuario;
     private final ProtecaoForcaBruta protecao;
-    private final String dominioEmail;
 
-    public LoginWebController(UsuariosUseCases.Autenticar autenticar, ProtecaoForcaBruta protecao,
-                              @Value("${praxis.dominio-email:praxis.adv.br}") String dominioEmail) {
-        this.autenticar = autenticar;
+    public LoginWebController(EscritoriosUseCases.Autenticar autenticarEscritorio,
+                              UsuariosUseCases.Autenticar autenticarUsuario,
+                              ProtecaoForcaBruta protecao) {
+        this.autenticarEscritorio = autenticarEscritorio;
+        this.autenticarUsuario = autenticarUsuario;
         this.protecao = protecao;
-        this.dominioEmail = dominioEmail;
     }
 
     @GetMapping("/login")
@@ -49,10 +53,6 @@ public class LoginWebController {
                          @RequestParam(required = false) String proximo,
                          HttpServletRequest requisicao,
                          Model model) {
-        // Login curto ("admin") vira e-mail do dominio do escritorio.
-        if (email != null && !email.isBlank() && !email.contains("@")) {
-            email = email.trim() + "@" + dominioEmail;
-        }
         model.addAttribute("email", email);
         model.addAttribute("proximo", destinoSeguro(proximo));
 
@@ -62,19 +62,31 @@ public class LoginWebController {
             return "login";
         }
         try {
-            Usuario usuario = autenticar.executar(new UsuariosUseCases.Autenticar.Comando(email, senha));
+            UsuarioLogado logado = autenticar(email, senha);
             protecao.registrarSucesso(email);
             // Sessao nova apos autenticar: evita fixacao de sessao.
             HttpSession anterior = requisicao.getSession(false);
             if (anterior != null) {
                 anterior.invalidate();
             }
-            requisicao.getSession(true).setAttribute(UsuarioLogado.CHAVE_SESSAO, UsuarioLogado.de(usuario));
+            requisicao.getSession(true).setAttribute(UsuarioLogado.CHAVE_SESSAO, logado);
             return "redirect:" + destinoSeguro(proximo);
         } catch (CredenciaisInvalidasException invalidas) {
             protecao.registrarFalha(email);
             model.addAttribute("erro", invalidas.getMessage());
             return "login";
+        }
+    }
+
+    /** Usuario avulso cobre so o administrador da demonstracao; o caso comum e o escritorio. */
+    private UsuarioLogado autenticar(String email, String senha) {
+        try {
+            Usuario usuario = autenticarUsuario.executar(new UsuariosUseCases.Autenticar.Comando(email, senha));
+            return UsuarioLogado.de(usuario);
+        } catch (CredenciaisInvalidasException invalidas) {
+            Escritorio escritorio = autenticarEscritorio.executar(
+                    new EscritoriosUseCases.Autenticar.Comando(email, senha));
+            return UsuarioLogado.de(escritorio);
         }
     }
 

@@ -3,6 +3,7 @@ package school.cesar.praxis.application.usecase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import school.cesar.praxis.application.port.in.AdministracaoUseCases;
+import school.cesar.praxis.application.port.in.AdvogadosUseCases;
 import school.cesar.praxis.application.port.in.AgendaDeAudienciasUseCase;
 import school.cesar.praxis.application.port.in.AnexosUseCases;
 import school.cesar.praxis.application.port.in.ClienteUseCase;
@@ -24,6 +25,7 @@ import school.cesar.praxis.application.port.in.UsuariosUseCases;
 public class PanoramaAppService implements AdministracaoUseCases.ConsultarPanorama {
 
     private final UsuariosUseCases.ListarUsuarios usuarios;
+    private final AdvogadosUseCases.ListarAdvogados advogados;
     private final ProcessosUseCases.ListarProcessos processos;
     private final PrazosUseCases.ListarTodosOsPrazos prazos;
     private final DocumentosUseCases.ListarDocumentos documentos;
@@ -36,6 +38,7 @@ public class PanoramaAppService implements AdministracaoUseCases.ConsultarPanora
     private final AgendaDeAudienciasUseCase audiencias;
 
     public PanoramaAppService(UsuariosUseCases.ListarUsuarios usuarios,
+                              AdvogadosUseCases.ListarAdvogados advogados,
                               ProcessosUseCases.ListarProcessos processos,
                               PrazosUseCases.ListarTodosOsPrazos prazos,
                               DocumentosUseCases.ListarDocumentos documentos,
@@ -47,6 +50,7 @@ public class PanoramaAppService implements AdministracaoUseCases.ConsultarPanora
                               ParteContrariaUseCase partesContrarias,
                               AgendaDeAudienciasUseCase audiencias) {
         this.usuarios = usuarios;
+        this.advogados = advogados;
         this.processos = processos;
         this.prazos = prazos;
         this.documentos = documentos;
@@ -64,6 +68,7 @@ public class PanoramaAppService implements AdministracaoUseCases.ConsultarPanora
     public Panorama executar() {
         return new Panorama(
                 usuarios.executar(),
+                advogados.executar(),
                 processos.executar(),
                 prazos.executar(),
                 documentos.executar(null),

@@ -10,8 +10,8 @@ public class Equipe {
     private final Set<Long> membrosIds = new LinkedHashSet<>();
 
     public Equipe(Long id, String nome, Set<Long> membrosIds) {
-        if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("nome da equipe e obrigatorio");
+        if (nome == null || nome.isBlank() || nome.trim().length() > 120) {
+            throw new IllegalArgumentException("Informe um nome de equipe com até 120 caracteres");
         }
         this.id = id;
         this.nome = nome.trim();
@@ -25,8 +25,8 @@ public class Equipe {
     }
 
     public void renomear(String nome) {
-        if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("nome da equipe e obrigatorio");
+        if (nome == null || nome.isBlank() || nome.trim().length() > 120) {
+            throw new IllegalArgumentException("Informe um nome de equipe com até 120 caracteres");
         }
         this.nome = nome.trim();
     }

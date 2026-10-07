@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>praxis - cadastrar escritorio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2314213d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2718%27 font-family=%27Segoe UI,Arial%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23ffffff%27%3Ep%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" th:href="@{/css/praxis.css}">
+  <script th:src="@{/js/praxis.js}" defer></script>
+</head>
+<body class="entrada">
+<main class="cartao-login" style="max-width: 460px;">
+  <h1>praxis</h1>
+  <p class="apoio">Cadastre o seu escritorio para comecar.</p>
+
+  <p th:if="${erro}" class="mensagem erro" role="alert" th:text="${erro}">erro</p>
+
+  <form th:action="@{/cadastro}" method="post" class="empilhado">
+    <label>Nome do escritorio
+      <input type="text" name="nome" th:value="${nome}" required autofocus
+             placeholder="Praxis Advocacia">
+    </label>
+
+    <div class="linha">
+      <label>CNPJ <span class="opcional">(opcional)</span>
+        <input type="text" name="cnpj" th:value="${cnpj}" placeholder="00.000.000/0001-00">
+      </label>
+      <label>Telefone <span class="opcional">(opcional)</span>
+        <input type="text" name="telefone" th:value="${telefone}" placeholder="(81) 99999-0000">
+      </label>
+    </div>
+
+    <label>E-mail
+      <input type="email" name="email" th:value="${email}" required
+             autocomplete="username" placeholder="contato@seuescritorio.adv.br">
+    </label>
+
+    <div class="linha">
+      <label>UF do foro <span class="opcional">(opcional)</span>
+        <input type="text" name="uf" th:value="${uf}" maxlength="2" placeholder="PE">
+      </label>
+      <label>Comarca <span class="opcional">(opcional)</span>
+        <input type="text" name="comarca" th:value="${comarca}" placeholder="Recife">
+      </label>
+    </div>
+
+    <label>Senha
+      <input type="password" name="senha" required minlength="6" autocomplete="new-password">
+    </label>
+    <label>Confirmar senha
+      <input type="password" name="confirmacao" required minlength="6" autocomplete="new-password">
+    </label>
+
+    <button type="submit">Cadastrar escritorio</button>
+  </form>
+
+  <p class="dica">
+    Depois de cadastrado, o escritorio entra direto e cadastra os proprios
+    advogados dentro do painel. Ja tem conta? <a th:href="@{/login}">Entrar</a>.
+  </p>
+</main>
+</body>
+</html>

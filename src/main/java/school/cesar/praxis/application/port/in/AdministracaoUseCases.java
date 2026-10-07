@@ -23,6 +23,7 @@ public interface AdministracaoUseCases {
          * nao pode ir para a tela (senha codificada) nao entra aqui.
          */
         record Panorama(List<Usuario> usuarios,
+                        List<AdvogadosUseCases.ItemAdvogado> advogados,
                         List<Processo> processos,
                         List<PrazosUseCases.ConsultarAgenda.ItemAgenda> prazos,
                         List<DocumentosUseCases.ListarDocumentos.ItemDocumento> documentos,

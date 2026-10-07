@@ -5,18 +5,16 @@ import io.cucumber.java.pt.Dado;
 import io.cucumber.java.pt.Então;
 import io.cucumber.java.pt.Quando;
 import org.junit.jupiter.api.Assertions;
+import school.cesar.praxis.domain.advogado.Advogado;
 import school.cesar.praxis.domain.distribuicao.CandidatoDistribuicao;
 import school.cesar.praxis.domain.distribuicao.RegraPadrao;
 import school.cesar.praxis.domain.distribuicao.RegraPorDisponibilidade;
 import school.cesar.praxis.domain.distribuicao.RegraPorEspecialidade;
-import school.cesar.praxis.domain.processo.Advogado;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class DistribuicaoSteps {
 
@@ -44,11 +42,10 @@ public class DistribuicaoSteps {
                 disponivel = Boolean.parseBoolean(valDisponivel);
             }
 
-            Advogado advMock = mock(Advogado.class);
-            when(advMock.toString()).thenReturn(nome);
+            Advogado advogado = new Advogado(nome, "advogado@praxis.adv.br", "PE00000",
+                    null, especialidade, disponivel, LocalDate.now());
 
-            CandidatoDistribuicao candidato = new CandidatoDistribuicao(advMock, especialidade, processosAtivos, disponivel);
-            candidatos.add(candidato);
+            candidatos.add(new CandidatoDistribuicao(advogado, processosAtivos));
         }
     }
 
@@ -67,7 +64,7 @@ public class DistribuicaoSteps {
     @Então("o processo deve ser atribuído ao advogado {string}")
     public void o_processo_deve_ser_atribuído_ao_advogado(String nomeEsperado) {
         Assertions.assertNotNull(this.advogadoAtribuido, "Nenhum advogado foi atribuído ao processo");
-        Assertions.assertEquals(nomeEsperado, this.advogadoAtribuido.toString());
+        Assertions.assertEquals(nomeEsperado, this.advogadoAtribuido.getNome());
     }
 
     private String getValor(Map<String, String> row, String... chaves) {

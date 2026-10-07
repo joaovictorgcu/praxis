@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" th:content="${csrf}" />
+    <title>Praxis - Kanban de Tarefas</title>
+    <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml" />
+    <link rel="stylesheet" th:href="${assetCss}" />
+    <script th:src="${assetJs}" defer></script>
+  </head>
+  <body class="app">
+    <header th:replace="~{fragmentos :: cabecalho('kanban')}"></header>
+    <main
+      id="conteudo"
+      tabindex="-1"
+      class="kb-pagina"
+      data-kanban
+      th:attr="data-chefe=${usuario.chefe()},data-processo=${processoSelecionado}"
+    >
+      <div th:replace="~{fragmentos :: mensagens}"></div>
+      <section class="kb-hero">
+        <div>
+          <p class="foro-sobrancelha">DO PLANEJAMENTO À ENTREGA</p>
+          <h1>O trabalho em movimento.</h1>
+          <p class="apoio">
+            Um quadro para organizar as tarefas de cada processo e acompanhar o que vem a seguir.
+          </p>
+        </div>
+        <div class="kb-hero-acoes">
+          <button type="button" class="secundario" id="kb-configurar" th:if="${usuario.chefe()}">
+            ⚙ Configurar quadro</button
+          ><button type="button" id="kb-nova">+ Nova tarefa</button>
+        </div>
+      </section>
+      <div class="kb-indicadores">
+        <div><span class="apoio">Tarefas no quadro</span><strong id="kb-total">—</strong></div>
+        <div><span class="apoio">Em aberto</span><strong id="kb-abertas">—</strong></div>
+        <div><span class="apoio">Vencidas</span><strong id="kb-vencidas">—</strong></div>
+        <div><span class="apoio">Concluídas</span><strong id="kb-concluidas">—</strong></div>
+        <div class="kb-progresso">
+          <span class="apoio">Progresso das tarefas</span>
+          <div>
+            <strong id="kb-percentual">0%</strong
+            ><progress
+              id="kb-progresso"
+              value="0"
+              max="100"
+              aria-label="Percentual de tarefas concluídas"
+            ></progress>
+          </div>
+        </div>
+      </div>
+      <section class="kb-quadro" aria-label="Quadro de tarefas">
+        <div class="kb-toolbar">
+          <label class="kb-filtro-processo"
+            >Processo<select id="kb-processo">
+              <option value="">Todos os processos</option>
+            </select></label
+          ><label class="kb-filtro-busca"
+            >Pesquisar<input
+              type="search"
+              id="kb-busca"
+              placeholder="Título, descrição ou cliente"
+              autocomplete="off" /></label
+          ><label
+            >Responsável<select id="kb-responsavel">
+              <option value="">Todos</option>
+              <option value="sem">Sem responsável</option>
+            </select></label
+          ><label
+            >Prioridade<select id="kb-prioridade">
+              <option value="">Todas</option>
+              <option value="URGENTE">Urgente</option>
+              <option value="ALTA">Alta</option>
+              <option value="NORMAL">Normal</option>
+              <option value="BAIXA">Baixa</option>
+            </select></label
+          ><label class="kb-filtro-vencidas"><input type="checkbox" id="kb-so-vencidas" />Só vencidas</label
+          ><button type="button" class="secundario" id="kb-limpar" hidden>Limpar</button
+          ><button
+            type="button"
+            class="secundario"
+            id="kb-atualizar"
+            aria-label="Atualizar quadro"
+            title="Atualizar quadro"
+          >
+            ↻
+          </button>
+        </div>
+        <div class="kb-quadro-legenda">
+          <span id="kb-resultados" aria-live="polite"></span
+          ><span>Arraste os cartões ou use o botão Mover.</span>
+        </div>
+        <div id="kb-feedback" role="status" aria-live="polite"></div>
+        <div
+          class="kb-colunas"
+          id="kb-colunas"
+          tabindex="0"
+          aria-label="Colunas do Kanban, role horizontalmente para ver todas"
+        ></div>
+      </section>
+      <p class="kb-nota apoio">
+        As etapas organizam o trabalho do escritório. Os vencimentos das tarefas são datas de acompanhamento;
+        os prazos processuais continuam na agenda.
+      </p>
+      <dialog id="kb-modal" class="juridico-modal kb-modal" aria-labelledby="kb-modal-titulo">
+        <div class="foro-modal-cabecalho">
+          <div>
+            <p class="foro-sobrancelha" id="kb-modal-subtitulo"></p>
+            <h2 id="kb-modal-titulo"></h2>
+          </div>
+          <button type="button" class="secundario" data-kb-fechar aria-label="Fechar modal">×</button>
+        </div>
+        <div id="kb-modal-conteudo"></div>
+      </dialog>
+      <template id="kb-form-tarefa"
+        ><form class="foro-form">
+          <fieldset>
+            <legend>Informações da tarefa</legend>
+            <label class="foro-largo"
+              >Título<input
+                name="titulo"
+                required
+                maxlength="160"
+                placeholder="Ex.: Revisar documentos do cliente" /></label
+            ><label class="foro-largo"
+              >Processo<select name="numeroProcesso" required>
+                <option value="">Selecione o processo</option>
+              </select></label
+            ><label>Etapa<select name="colunaId" required></select></label
+            ><label
+              >Prioridade<select name="prioridade">
+                <option value="NORMAL">Normal</option>
+                <option value="BAIXA">Baixa</option>
+                <option value="ALTA">Alta</option>
+                <option value="URGENTE">Urgente</option>
+              </select></label
+            ><label
+              >Responsável<select name="responsavelId">
+                <option value="">Sem responsável</option>
+              </select></label
+            ><label>Vencimento<input name="vencimento" type="date" /></label
+            ><label class="foro-largo"
+              >Descrição<textarea
+                name="descricao"
+                rows="3"
+                maxlength="3000"
+                placeholder="Contexto, orientações e resultado esperado"
+              ></textarea>
+            </label>
+          </fieldset>
+          <fieldset>
+            <legend>Checklist <span>opcional · até 20 itens</span></legend>
+            <div class="foro-largo" data-kb-checklist-editor></div>
+            <button type="button" class="secundario foro-largo" data-kb-adicionar-item>
+              + Adicionar item
+            </button>
+          </fieldset>
+          <p class="mensagem erro" data-kb-erro role="alert" hidden></p>
+          <div class="foro-form-rodape">
+            <button type="button" class="secundario" data-kb-fechar>Cancelar</button
+            ><button type="submit">Salvar tarefa</button>
+          </div>
+        </form></template
+      >
+    </main>
+  </body>
+</html>

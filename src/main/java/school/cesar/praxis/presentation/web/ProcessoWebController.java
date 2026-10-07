@@ -5,14 +5,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import school.cesar.praxis.application.port.in.*;
+import school.cesar.praxis.domain.advogado.StatusAdvogado;
 import school.cesar.praxis.domain.prazo.RegimeContagem;
 import school.cesar.praxis.domain.processo.Processo;
 import school.cesar.praxis.domain.processo.TipoAndamento;
-import school.cesar.praxis.domain.usuario.Usuario;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
@@ -35,7 +36,7 @@ public class ProcessoWebController {
     private final PrazosUseCases.CumprirPrazo cumprirPrazo;
     private final DocumentosUseCases.ListarDocumentos listarDocumentos;
     private final AnexosUseCases.ListarAnexos listarAnexos;
-    private final UsuariosUseCases.ListarUsuarios listarUsuarios;
+    private final AdvogadosUseCases.ListarAdvogados listarAdvogados;
 
     public ProcessoWebController(ProcessosUseCases.ListarProcessos listar,
                                  ProcessosUseCases.ConsultarProcesso consultar,
@@ -46,7 +47,7 @@ public class ProcessoWebController {
                                  PrazosUseCases.CumprirPrazo cumprirPrazo,
                                  DocumentosUseCases.ListarDocumentos listarDocumentos,
                                  AnexosUseCases.ListarAnexos listarAnexos,
-                                 UsuariosUseCases.ListarUsuarios listarUsuarios) {
+                                 AdvogadosUseCases.ListarAdvogados listarAdvogados) {
         this.listar = listar;
         this.consultar = consultar;
         this.cadastrar = cadastrar;
@@ -56,7 +57,14 @@ public class ProcessoWebController {
         this.cumprirPrazo = cumprirPrazo;
         this.listarDocumentos = listarDocumentos;
         this.listarAnexos = listarAnexos;
-        this.listarUsuarios = listarUsuarios;
+        this.listarAdvogados = listarAdvogados;
+    }
+
+    /** So advogados ativos assumem processo novo; desativado fica so no historico. */
+    private List<AdvogadosUseCases.ItemAdvogado> advogadosDisponiveisParaResponsavel() {
+        return listarAdvogados.executar().stream()
+                .filter(a -> a.status() == StatusAdvogado.ATIVO)
+                .toList();
     }
 
     @GetMapping
@@ -69,11 +77,11 @@ public class ProcessoWebController {
                         || p.getCliente().toLowerCase().contains(filtro)
                         || p.getResponsavel().nome().toLowerCase().contains(filtro))
                 .toList());
-        model.addAttribute("advogados", listarUsuarios.executar());
+        model.addAttribute("advogados", advogadosDisponiveisParaResponsavel());
         return "processos";
     }
 
-    /** O responsavel e escolhido entre os usuarios cadastrados: nome, e-mail e OAB vem de la. */
+    /** O responsavel e escolhido entre os advogados cadastrados no escritorio: nome, e-mail e OAB vem de la. */
     @PostMapping
     public String cadastrar(@RequestParam String numeroCnj,
                             @RequestParam String cliente,
@@ -82,14 +90,14 @@ public class ProcessoWebController {
                             @RequestParam String responsavelOab,
                             RedirectAttributes flash) {
         try {
-            Usuario responsavel = listarUsuarios.executar().stream()
-                    .filter(u -> u.getOab().equalsIgnoreCase(responsavelOab))
+            AdvogadosUseCases.ItemAdvogado responsavel = advogadosDisponiveisParaResponsavel().stream()
+                    .filter(a -> a.oab().equalsIgnoreCase(responsavelOab))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "responsável com OAB " + responsavelOab + " não é usuário do sistema"));
+                            "responsável com OAB " + responsavelOab + " não é advogado ativo do escritório"));
             Processo processo = cadastrar.executar(new ProcessosUseCases.CadastrarProcesso.Comando(
                     numeroCnj.trim(), cliente, comarca, Boolean.TRUE.equals(segredoJustica),
-                    responsavel.getNome(), responsavel.getEmail(), responsavel.getOab()));
+                    responsavel.nome(), responsavel.email(), responsavel.oab()));
             flash.addFlashAttribute("mensagem", "Processo " + processo.getNumero().valor() + " cadastrado.");
             return "redirect:/painel/processos/" + processo.getNumero().valor();
         } catch (IllegalArgumentException | NoSuchElementException falha) {
@@ -119,7 +127,7 @@ public class ProcessoWebController {
         } catch (IllegalArgumentException | NoSuchElementException falha) {
             model.addAttribute("erro", falha.getMessage());
             model.addAttribute("processos", listar.executar());
-            model.addAttribute("advogados", listarUsuarios.executar());
+            model.addAttribute("advogados", advogadosDisponiveisParaResponsavel());
             return "processos";
         }
     }

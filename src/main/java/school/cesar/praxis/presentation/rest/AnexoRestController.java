@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import school.cesar.praxis.application.port.in.AnexosUseCases;
 import school.cesar.praxis.domain.anexo.ArquivoAnexo;
-import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.presentation.web.seguranca.OabDeLeitura;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
@@ -66,17 +65,11 @@ public class AnexoRestController {
     public ResponseEntity<byte[]> baixar(@PathVariable Long id,
                                          @RequestParam(name = "oab") String oab,
                                          UsuarioLogado usuario) {
-        try {
-            ArquivoAnexo anexo = baixar.executar(id, OabDeLeitura.conciliar(usuario, oab));
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + anexo.getNome() + "\"")
-                    .contentType(MediaType.parseMediaType(anexo.getTipo().mime()))
-                    .body(anexo.getConteudo());
-        } catch (ProxyDeAcesso.AcessoNegadoException negado) {
-            return ResponseEntity.status(403)
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(negado.getMessage().getBytes());
-        }
+        ArquivoAnexo anexo = baixar.executar(id, OabDeLeitura.conciliar(usuario, oab));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + anexo.getNome() + "\"")
+                .contentType(MediaType.parseMediaType(anexo.getTipo().mime()))
+                .body(anexo.getConteudo());
     }
 }

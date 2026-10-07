@@ -19,6 +19,10 @@
       <span class="numero" th:text="${#lists.size(panorama.usuarios())}">0</span>
       <span class="rotulo">Usuários</span>
     </a>
+    <a href="#advogados">
+      <span class="numero" th:text="${#lists.size(panorama.advogados())}">0</span>
+      <span class="rotulo">Advogados</span>
+    </a>
     <a href="#processos">
       <span class="numero" th:text="${#lists.size(panorama.processos())}">0</span>
       <span class="rotulo">Processos</span>
@@ -164,6 +168,37 @@
         </tr>
         <tr th:if="${#lists.isEmpty(panorama.usuarios())}">
           <td colspan="6" class="vazio">nenhum usuário cadastrado</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="cartao" id="advogados">
+    <h2>Advogados</h2>
+    <p class="apoio">Corpo jurídico do escritório para distribuição automática de processos e coordenação.</p>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr><th>#</th><th>Nome</th><th>OAB</th><th>Especialidade</th><th>Status</th><th>Disponível</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${panorama.advogados()}">
+          <td th:text="${a.id()}">1</td>
+          <td th:text="${a.nome()}">-</td>
+          <td><code th:text="${a.oab()}">-</code></td>
+          <td th:text="${a.especialidade()} ?: '-'">-</td>
+          <td>
+            <span class="etiqueta" th:classappend="${a.status().name() == 'ATIVO'} ? 'verde' : 'vermelha'"
+                  th:text="${a.status().name() == 'ATIVO'} ? 'Ativo' : 'Desativado'">estado</span>
+          </td>
+          <td>
+            <span class="etiqueta" th:classappend="${a.disponivel()} ? 'verde' : 'cinza'"
+                  th:text="${a.disponivel()} ? 'Sim' : 'Não'">disponível</span>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(panorama.advogados())}">
+          <td colspan="6" class="vazio">nenhum advogado cadastrado</td>
         </tr>
         </tbody>
       </table>

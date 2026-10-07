@@ -44,10 +44,10 @@ class LoginHttpTest {
     }
 
     @Test
-    @DisplayName("login com a senha inicial abre sessao e o painel mostra quem entrou")
+    @DisplayName("login com a senha do escritorio inicial abre sessao e o painel mostra quem entrou")
     void loginAbreSessao() throws Exception {
         MvcResult resultado = mvc.perform(post("/login")
-                        .param("email", "Carla.Mendes@praxis.adv.br")
+                        .param("email", "contato@praxis.adv.br")
                         .param("senha", "praxis123")
                         .param("proximo", "/painel/feriados"))
                 .andExpect(status().is3xxRedirection())
@@ -57,28 +57,12 @@ class LoginHttpTest {
         MockHttpSession sessao = (MockHttpSession) resultado.getRequest().getSession(false);
         assertNotNull(sessao);
         UsuarioLogado logado = UsuarioLogado.da(sessao);
-        assertEquals("PE00001", logado.oab());
         assertTrue(logado.chefe());
 
         mvc.perform(get("/painel").session(sessao))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Carla Mendes")))
+                .andExpect(content().string(containsString("Praxis Advocacia")))
                 .andExpect(content().string(containsString("Sair")));
-    }
-
-    @Test
-    @DisplayName("admin entra digitando so o usuario; e chefe; nao aparece como provisorio")
-    void adminLoginCurto() throws Exception {
-        MvcResult resultado = mvc.perform(post("/login")
-                        .param("email", "admin")
-                        .param("senha", "123"))
-                .andExpect(redirectedUrl("/painel"))
-                .andReturn();
-        UsuarioLogado admin = UsuarioLogado.da((MockHttpSession) resultado.getRequest().getSession(false));
-        assertEquals("admin@praxis.adv.br", admin.email());
-        assertEquals("ADMIN", admin.oab());
-        assertTrue(admin.chefe());
-        assertFalse(admin.senhaProvisoria());
     }
 
     @Test
@@ -101,7 +85,7 @@ class LoginHttpTest {
     @DisplayName("destino externo no login e ignorado: sempre volta ao painel")
     void naoRedirecionaParaFora() throws Exception {
         mvc.perform(post("/login")
-                        .param("email", "bruno.carvalho@praxis.adv.br")
+                        .param("email", "contato@praxis.adv.br")
                         .param("senha", "praxis123")
                         .param("proximo", "https://malicioso.example/"))
                 .andExpect(redirectedUrl("/painel"));

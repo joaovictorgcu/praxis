@@ -7,10 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import school.cesar.praxis.application.port.in.UsuariosUseCases;
 import school.cesar.praxis.domain.usuario.Papel;
-import school.cesar.praxis.domain.usuario.Usuario;
 import school.cesar.praxis.presentation.web.seguranca.CsrfInterceptor;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
@@ -22,8 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * CSRF, cabecalhos de seguranca e senha provisoria. Aqui o MockMvc e o puro
- * (sem o parametro _csrf padrao), para o ritual completo ser exercitado.
+ * CSRF e cabecalhos de seguranca. Aqui o MockMvc e o puro (sem o parametro
+ * _csrf padrao), para o ritual completo ser exercitado.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -31,8 +28,6 @@ class SegurancaHttpTest {
 
     @Autowired
     private MockMvc mvc;
-    @Autowired
-    private UsuariosUseCases.CadastrarUsuario cadastrar;
 
     private static MockHttpSession sessaoSemToken() {
         MockHttpSession s = new MockHttpSession();
@@ -89,53 +84,5 @@ class SegurancaHttpTest {
 
         mvc.perform(get("/api/feriados"))
                 .andExpect(header().exists("Content-Security-Policy"));
-    }
-
-    @Test
-    @DisplayName("senha provisoria: login cai na troca de senha e o resto do painel redireciona ate trocar")
-    void senhaProvisoria() throws Exception {
-        Usuario novo = cadastrar.executar(new UsuariosUseCases.CadastrarUsuario.Comando(
-                "Fabio Nunes", "fabio@praxis.adv.br", "PE66666", Papel.ADVOGADO, "provisoria1"));
-        assertTrue(novo.isSenhaProvisoria());
-
-        MvcResult login = mvc.perform(post("/login")
-                        .param("email", "fabio@praxis.adv.br").param("senha", "provisoria1"))
-                .andExpect(redirectedUrl("/painel"))
-                .andReturn();
-        MockHttpSession sessao = (MockHttpSession) login.getRequest().getSession(false);
-        assertTrue(UsuarioLogado.da(sessao).senhaProvisoria());
-
-        mvc.perform(get("/painel").session(sessao))
-                .andExpect(redirectedUrl("/painel/conta?provisoria"));
-        mvc.perform(get("/painel/processos").session(sessao))
-                .andExpect(redirectedUrl("/painel/conta?provisoria"));
-        mvc.perform(get("/painel/conta").session(sessao))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Sua senha é provisória")));
-
-        String token = (String) sessao.getAttribute(CsrfInterceptor.CHAVE_SESSAO);
-        mvc.perform(post("/painel/conta/senha").session(sessao).param("_csrf", token)
-                        .param("senhaAtual", "provisoria1").param("novaSenha", "definitiva1")
-                        .param("confirmacao", "definitiva1"))
-                .andExpect(redirectedUrl("/login"));
-
-        MvcResult segundoLogin = mvc.perform(post("/login")
-                        .param("email", "fabio@praxis.adv.br").param("senha", "definitiva1"))
-                .andExpect(redirectedUrl("/painel"))
-                .andReturn();
-        MockHttpSession nova = (MockHttpSession) segundoLogin.getRequest().getSession(false);
-        assertFalse(UsuarioLogado.da(nova).senhaProvisoria());
-        mvc.perform(get("/painel").session(nova)).andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("usuarios iniciais em dev entram sem troca obrigatoria")
-    void iniciaisSemTroca() throws Exception {
-        MvcResult login = mvc.perform(post("/login")
-                        .param("email", "ana.souza@praxis.adv.br").param("senha", "praxis123"))
-                .andReturn();
-        MockHttpSession sessao = (MockHttpSession) login.getRequest().getSession(false);
-        assertFalse(UsuarioLogado.da(sessao).senhaProvisoria());
-        mvc.perform(get("/painel").session(sessao)).andExpect(status().isOk());
     }
 }

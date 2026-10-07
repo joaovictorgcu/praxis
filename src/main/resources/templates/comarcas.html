@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" th:content="${csrf}" />
+    <title>Praxis - Comarcas e Varas</title>
+    <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml" />
+    <link rel="stylesheet" th:href="${assetCss}" />
+    <script th:src="${assetJs}" defer></script>
+  </head>
+  <body class="app">
+    <header th:replace="~{fragmentos :: cabecalho('comarcas')}"></header>
+    <main id="conteudo" tabindex="-1" data-jurisdicao th:attr="data-chefe=${usuario.chefe()}">
+      <div th:replace="~{fragmentos :: mensagens}"></div>
+      <section class="foro-hero">
+        <div>
+          <p class="foro-sobrancelha">ORGANIZAÇÃO JUDICIÁRIA</p>
+          <h1>Comarcas e varas</h1>
+          <p class="apoio">
+            Os lugares onde seus processos acontecem.<br />Organize unidades, competências e contatos em um só
+            lugar.
+          </p>
+          <div class="foro-hero-acoes" th:if="${usuario.chefe()}">
+            <button type="button" data-nova-comarca>+ Nova comarca</button
+            ><button type="button" class="secundario" data-nova-vara>+ Nova vara</button>
+          </div>
+        </div>
+        <div class="foro-selo" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><use href="#i-comarcas" /></svg><span>SEU MAPA JUDICIÁRIO</span
+          ><span>Comarca <b>→</b> Vara <b>→</b> Competência</span>
+        </div>
+      </section>
+      <div class="foro-indicadores" aria-label="Resumo dos cadastros">
+        <div>
+          <span class="foro-indicador-icone" aria-hidden="true">⌖</span>
+          <div><strong id="foro-total-comarcas">—</strong><span>comarcas cadastradas</span></div>
+        </div>
+        <div>
+          <svg class="foro-indicador-icone" aria-hidden="true"><use href="#i-comarcas" /></svg>
+          <div><strong id="foro-total-varas">—</strong><span>varas organizadas</span></div>
+        </div>
+        <div>
+          <span class="foro-indicador-icone" aria-hidden="true">◎</span>
+          <div><strong id="foro-total-estados">—</strong><span>estados presentes</span></div>
+        </div>
+      </div>
+      <section class="cartao foro-diretorio">
+        <div class="foro-abas" role="tablist" aria-label="Cadastros judiciários">
+          <button
+            id="foro-aba-comarcas"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="foro-lista"
+            data-foro-aba="comarcas"
+          >
+            Comarcas <span id="foro-contagem-comarcas">0</span></button
+          ><button
+            id="foro-aba-varas"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="foro-lista"
+            tabindex="-1"
+            data-foro-aba="varas"
+          >
+            Varas <span id="foro-contagem-varas">0</span>
+          </button>
+        </div>
+        <div class="foro-cabecalho">
+          <div>
+            <h2 id="foro-titulo-lista">Diretório de comarcas</h2>
+            <p class="apoio" id="foro-descricao-lista">
+              Uma visão das localidades e das varas que compõem cada comarca.
+            </p>
+          </div>
+          <span id="foro-resultados" class="apoio" aria-live="polite"></span>
+        </div>
+        <div class="foro-filtros">
+          <label class="foro-pesquisa"
+            >Pesquisar<input
+              id="foro-busca"
+              type="search"
+              placeholder="Nome da comarca, município ou tribunal"
+              autocomplete="off" /></label
+          ><label id="foro-label-estado"
+            >Estado<select id="foro-estado">
+              <option value="">Todos os estados</option>
+            </select></label
+          ><label id="foro-label-comarca" hidden
+            >Comarca<select id="foro-comarca">
+              <option value="">Todas as comarcas</option>
+            </select></label
+          ><label id="foro-label-competencia" hidden
+            >Competência<select id="foro-competencia">
+              <option value="">Todas as competências</option>
+            </select></label
+          ><button type="button" class="secundario" id="foro-limpar" hidden>Limpar filtros</button>
+        </div>
+        <div id="foro-feedback" role="status" aria-live="polite"></div>
+        <div
+          id="foro-lista"
+          class="foro-grade"
+          role="tabpanel"
+          aria-labelledby="foro-aba-comarcas"
+          tabindex="0"
+        ></div>
+      </section>
+      <aside class="foro-explicacao">
+        <svg class="icone" aria-hidden="true"><use href="#i-comarcas" /></svg>
+        <div>
+          <strong>Comarca ou vara?</strong>
+          <p>
+            A comarca organiza uma área territorial. Dentro dela, as varas são as unidades que recebem e
+            julgam os processos, conforme sua competência — como cível, família ou criminal.
+          </p>
+        </div>
+      </aside>
+      <dialog id="foro-modal" class="juridico-modal foro-modal" aria-labelledby="foro-modal-titulo">
+        <div class="foro-modal-cabecalho">
+          <div>
+            <p class="foro-sobrancelha" id="foro-modal-subtitulo"></p>
+            <h2 id="foro-modal-titulo"></h2>
+          </div>
+          <button type="button" class="secundario" data-foro-fechar aria-label="Fechar modal">×</button>
+        </div>
+        <div id="foro-modal-conteudo"></div>
+      </dialog>
+      <template id="foro-form-comarca"
+        ><form class="foro-form">
+          <fieldset>
+            <legend>Identificação da comarca</legend>
+            <label class="foro-largo"
+              >Nome da comarca<input
+                name="nome"
+                required
+                maxlength="160"
+                placeholder="Ex.: Comarca do Recife" /></label
+            ><label
+              >Município sede<input
+                name="municipio"
+                required
+                maxlength="120"
+                placeholder="Ex.: Recife" /></label
+            ><label
+              >Estado<select name="uf" required data-foro-ufs>
+                <option value="">Selecione o estado</option>
+              </select></label
+            ><label class="foro-largo"
+              >Tribunal<input
+                name="tribunal"
+                required
+                maxlength="120"
+                placeholder="Ex.: Tribunal de Justiça de Pernambuco"
+                list="foro-tribunais" /><datalist id="foro-tribunais"></datalist
+            ></label>
+          </fieldset>
+          <fieldset>
+            <legend>Localização e atendimento <span>opcional</span></legend>
+            <label class="foro-largo"
+              >Endereço do fórum<input
+                name="endereco"
+                maxlength="300"
+                placeholder="Rua, número, bairro e CEP" /></label
+            ><label
+              >Telefone<input name="telefone" type="tel" maxlength="30" placeholder="(81) 0000-0000" /></label
+            ><label
+              >E-mail<input
+                name="email"
+                type="email"
+                maxlength="160"
+                placeholder="contato@tribunal.jus.br" /></label
+            ><label class="foro-largo"
+              >Horário de atendimento<input
+                name="horarioAtendimento"
+                maxlength="120"
+                placeholder="Ex.: Segunda a sexta, das 9h às 17h" /></label
+            ><label class="foro-largo"
+              >Observações<textarea
+                name="observacoes"
+                rows="3"
+                maxlength="1000"
+                placeholder="Informações úteis para a rotina do escritório"
+              ></textarea>
+            </label>
+          </fieldset>
+          <p class="mensagem erro" data-foro-erro role="alert" hidden></p>
+          <div class="foro-form-rodape">
+            <button type="button" class="secundario" data-foro-fechar>Cancelar</button
+            ><button type="submit">Salvar comarca</button>
+          </div>
+        </form></template
+      >
+      <template id="foro-form-vara"
+        ><form class="foro-form">
+          <fieldset>
+            <legend>Identificação da vara</legend>
+            <label class="foro-largo"
+              >Comarca<select name="comarcaId" required>
+                <option value="">Selecione a comarca</option>
+              </select></label
+            ><label class="foro-largo"
+              >Nome da vara<input
+                name="nome"
+                required
+                maxlength="160"
+                placeholder="Ex.: 1ª Vara Cível" /></label
+            ><label class="foro-largo"
+              >Competência<input
+                name="competencia"
+                required
+                maxlength="120"
+                placeholder="Ex.: Cível"
+                list="foro-competencias" /><datalist id="foro-competencias">
+                <option value="Cível"></option>
+                <option value="Família e Sucessões"></option>
+                <option value="Criminal"></option>
+                <option value="Fazenda Pública"></option>
+                <option value="Infância e Juventude"></option>
+                <option value="Execução Penal"></option>
+                <option value="Competência geral"></option></datalist
+            ></label>
+          </fieldset>
+          <fieldset>
+            <legend>Localização e atendimento <span>opcional</span></legend>
+            <p class="apoio foro-largo">
+              Informe os contatos específicos da vara. O endereço da comarca também estará disponível na
+              prévia.
+            </p>
+            <label class="foro-largo"
+              >Endereço da vara<input
+                name="endereco"
+                maxlength="300"
+                placeholder="Endereço, andar ou sala" /></label
+            ><label
+              >Telefone<input name="telefone" type="tel" maxlength="30" placeholder="(81) 0000-0000" /></label
+            ><label
+              >E-mail<input
+                name="email"
+                type="email"
+                maxlength="160"
+                placeholder="vara@tribunal.jus.br" /></label
+            ><label class="foro-largo"
+              >Horário de atendimento<input
+                name="horarioAtendimento"
+                maxlength="120"
+                placeholder="Ex.: Segunda a sexta, das 9h às 17h" /></label
+            ><label class="foro-largo"
+              >Observações<textarea
+                name="observacoes"
+                rows="3"
+                maxlength="1000"
+                placeholder="Orientações de atendimento e informações úteis"
+              ></textarea>
+            </label>
+          </fieldset>
+          <p class="mensagem erro" data-foro-erro role="alert" hidden></p>
+          <div class="foro-form-rodape">
+            <button type="button" class="secundario" data-foro-fechar>Cancelar</button
+            ><button type="submit">Salvar vara</button>
+          </div>
+        </form></template
+      >
+    </main>
+  </body>
+</html>

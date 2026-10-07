@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
-import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.TipoDocumento;
 import school.cesar.praxis.presentation.web.seguranca.OabDeLeitura;
 import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
@@ -168,16 +167,11 @@ public class DocumentoRestController {
     public ResponseEntity<String> baixar(@PathVariable Long id,
                                          @RequestParam(name = "oab") String oab,
                                          UsuarioLogado usuario) {
-        try {
-            DocumentoGerado documento = baixarDocumento.executar(
-                    id, OabDeLeitura.conciliar(usuario, oab));
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + documento.nomeArquivo() + "\"")
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(documento.getConteudo());
-        } catch (ProxyDeAcesso.AcessoNegadoException negado) {
-            return ResponseEntity.status(403).body(negado.getMessage());
-        }
+        DocumentoGerado documento = baixarDocumento.executar(id, OabDeLeitura.conciliar(usuario, oab));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + documento.nomeArquivo() + "\"")
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(documento.getConteudo());
     }
 }

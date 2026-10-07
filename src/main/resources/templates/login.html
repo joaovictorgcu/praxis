@@ -23,9 +23,9 @@
 
   <form th:action="@{/login}" method="post" class="empilhado">
     <input type="hidden" name="proximo" th:value="${proximo}">
-    <label>Usuário ou E-mail
-      <input type="text" name="email" th:value="${email}" required autofocus
-             autocomplete="username" placeholder="admin ou nome@praxis.adv.br">
+    <label>E-mail do escritorio
+      <input type="email" name="email" th:value="${email}" required autofocus
+             autocomplete="username" placeholder="contato@seuescritorio.adv.br">
     </label>
     <label>Senha
       <input type="password" name="senha" required autocomplete="current-password">
@@ -34,8 +34,9 @@
   </form>
 
   <p class="dica">
-    Advogado entra para conduzir os autos; chefe (sócio) também aprova peças e
-    administra feriados e modelos. Sem conta? Peça ao chefe do escritório.
+    O login e do escritorio: uma conta so, que depois cadastra os proprios
+    advogados dentro do sistema. Ainda nao tem conta?
+    <a th:href="@{/cadastro}">Cadastre seu escritorio</a>.
   </p>
 </main>
 </body>

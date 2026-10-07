@@ -1,5 +1,6 @@
 package school.cesar.praxis.presentation.rest;
 
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,8 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import school.cesar.praxis.application.port.in.AdvogadosUseCases;
-
-import java.util.List;
+import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
 
 @RestController
 @RequestMapping("/api/advogados")
@@ -25,13 +25,15 @@ public class AdvogadoRestController {
     private final AdvogadosUseCases.AtivarAdvogado ativar;
     private final AdvogadosUseCases.DesativarAdvogado desativar;
 
-    public AdvogadoRestController(AdvogadosUseCases.CadastrarAdvogado cadastrar,
-                                  AdvogadosUseCases.ListarAdvogados listar,
-                                  AdvogadosUseCases.PesquisarAdvogados pesquisar,
-                                  AdvogadosUseCases.BuscarAdvogadoPorId buscarPorId,
-                                  AdvogadosUseCases.AtualizarAdvogado atualizar,
-                                  AdvogadosUseCases.AtivarAdvogado ativar,
-                                  AdvogadosUseCases.DesativarAdvogado desativar) {
+    public AdvogadoRestController(
+        AdvogadosUseCases.CadastrarAdvogado cadastrar,
+        AdvogadosUseCases.ListarAdvogados listar,
+        AdvogadosUseCases.PesquisarAdvogados pesquisar,
+        AdvogadosUseCases.BuscarAdvogadoPorId buscarPorId,
+        AdvogadosUseCases.AtualizarAdvogado atualizar,
+        AdvogadosUseCases.AtivarAdvogado ativar,
+        AdvogadosUseCases.DesativarAdvogado desativar
+    ) {
         this.cadastrar = cadastrar;
         this.listar = listar;
         this.pesquisar = pesquisar;
@@ -41,25 +43,36 @@ public class AdvogadoRestController {
         this.desativar = desativar;
     }
 
-    public record NovoAdvogado(String nome,
-                               String email,
-                               String oab,
-                               String telefone,
-                               String especialidade,
-                               boolean disponivel) {
-    }
+    public record NovoAdvogado(
+        String nome,
+        String email,
+        String oab,
+        String telefone,
+        String especialidade,
+        boolean disponivel
+    ) {}
 
-    public record AtualizacaoAdvogado(String nome,
-                                      String email,
-                                      String telefone,
-                                      String especialidade,
-                                      boolean disponivel) {
-    }
+    public record AtualizacaoAdvogado(
+        String nome,
+        String email,
+        String telefone,
+        String especialidade,
+        boolean disponivel
+    ) {}
 
+    @SomenteChefe
     @PostMapping
     public ResponseEntity<AdvogadosUseCases.ItemAdvogado> cadastrar(@RequestBody NovoAdvogado corpo) {
-        AdvogadosUseCases.ItemAdvogado advogado = cadastrar.executar(new AdvogadosUseCases.CadastrarAdvogado.Comando(
-                corpo.nome(), corpo.email(), corpo.oab(), corpo.telefone(), corpo.especialidade(), corpo.disponivel()));
+        AdvogadosUseCases.ItemAdvogado advogado = cadastrar.executar(
+            new AdvogadosUseCases.CadastrarAdvogado.Comando(
+                corpo.nome(),
+                corpo.email(),
+                corpo.oab(),
+                corpo.telefone(),
+                corpo.especialidade(),
+                corpo.disponivel()
+            )
+        );
         return ResponseEntity.ok(advogado);
     }
 
@@ -76,17 +89,31 @@ public class AdvogadoRestController {
         return buscarPorId.executar(id);
     }
 
+    @SomenteChefe
     @PutMapping("/{id}")
-    public AdvogadosUseCases.ItemAdvogado atualizar(@PathVariable Long id, @RequestBody AtualizacaoAdvogado corpo) {
-        return atualizar.executar(new AdvogadosUseCases.AtualizarAdvogado.Comando(
-                id, corpo.nome(), corpo.email(), corpo.telefone(), corpo.especialidade(), corpo.disponivel()));
+    public AdvogadosUseCases.ItemAdvogado atualizar(
+        @PathVariable Long id,
+        @RequestBody AtualizacaoAdvogado corpo
+    ) {
+        return atualizar.executar(
+            new AdvogadosUseCases.AtualizarAdvogado.Comando(
+                id,
+                corpo.nome(),
+                corpo.email(),
+                corpo.telefone(),
+                corpo.especialidade(),
+                corpo.disponivel()
+            )
+        );
     }
 
+    @SomenteChefe
     @PostMapping("/{id}/ativar")
     public AdvogadosUseCases.ItemAdvogado ativar(@PathVariable Long id) {
         return ativar.executar(id);
     }
 
+    @SomenteChefe
     @PostMapping("/{id}/desativar")
     public AdvogadosUseCases.ItemAdvogado desativar(@PathVariable Long id) {
         return desativar.executar(id);

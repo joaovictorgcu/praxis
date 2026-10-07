@@ -1,13 +1,12 @@
 package school.cesar.praxis.infrastructure.persistence.adapter;
 
+import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Repository;
 import school.cesar.praxis.application.port.out.EquipeRepositorio;
 import school.cesar.praxis.domain.equipe.Equipe;
 import school.cesar.praxis.infrastructure.persistence.entity.EquipeEntity;
 import school.cesar.praxis.infrastructure.persistence.repository.EquipeJpaRepository;
-
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public class EquipeRepositorioJpa implements EquipeRepositorio {
@@ -16,6 +15,11 @@ public class EquipeRepositorioJpa implements EquipeRepositorio {
 
     public EquipeRepositorioJpa(EquipeJpaRepository jpa) {
         this.jpa = jpa;
+    }
+
+    @Override
+    public void excluir(Long id) {
+        jpa.deleteById(id);
     }
 
     @Override

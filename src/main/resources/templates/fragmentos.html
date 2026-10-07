@@ -58,6 +58,12 @@
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
         <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
       </symbol>
+      <symbol id="i-kanban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M5.5 7h1M11.5 7h1M11.5 11h1M17.5 7h1"/>
+      </symbol>
+      <symbol id="i-comarcas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m3 9 9-6 9 6H3zM5 10v8M10 10v8M14 10v8M19 10v8M3 21h18M3 18h18"/>
+      </symbol>
       <symbol id="i-advogados" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3v18M7 21h10M3 8h18M6 8l-3 6h6zM18 8l-3 6h6z"/>
@@ -109,6 +115,11 @@
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-processos"/></svg>
         <span>Processos</span>
       </a>
+      <a th:href="@{/painel/kanban}" th:classappend="${ativo == 'kanban'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'kanban'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-kanban"/></svg>
+        <span>Kanban de Tarefas</span>
+      </a>
       <a th:href="@{/painel/documentos}" th:classappend="${ativo == 'documentos'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'documentos'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-documentos"/></svg>
@@ -128,6 +139,11 @@
          th:attr="aria-current=${ativo == 'feriados'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-feriados"/></svg>
         <span>Feriados</span>
+      </a>
+      <a th:href="@{/painel/comarcas}" th:classappend="${ativo == 'comarcas'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'comarcas'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-comarcas"/></svg>
+        <span>Comarcas e Varas</span>
       </a>
       <a th:href="@{/painel/advogados}" th:classappend="${ativo == 'advogados'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'advogados'} ? 'page' : null">
@@ -166,10 +182,12 @@
                      : (${ativo == 'anexos'} ? 'Anexos'
                      : (${ativo == 'modelos'} ? 'Modelos'
                      : (${ativo == 'feriados'} ? 'Feriados'
+                     : (${ativo == 'kanban'} ? 'Kanban de Tarefas'
+                     : (${ativo == 'comarcas'} ? 'Comarcas e Varas'
                      : (${ativo == 'advogados'} ? 'Advogados'
                      : (${ativo == 'usuarios'} ? 'Usuários'
                      : (${ativo == 'admin'} ? 'Administração'
-                     : 'Minha Conta'))))))))">Agenda de Prazos</span>
+                     : 'Minha Conta'))))))))))">Agenda de Prazos</span>
     </p>
 
     <div class="sessao" th:if="${usuario != null}">
