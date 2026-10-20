@@ -149,7 +149,7 @@ Esconder o link do menu é conforto, não segurança. A proteção de verdade es
 
 ### 12. Administração: o escritório inteiro em uma tela
 
-`/painel/admin`, reservada ao chefe. Antes dela, saber o que o sistema guardava exigia passar por seis telas — e três cadastros (cliente, parte contrária e audiência) **não tinham tela nenhuma**, só API REST.
+`/painel/admin`, reservada ao chefe. Ela mostra o que o sistema guardou e oferece atalhos para as telas de gerenciamento, inclusive clientes, partes contrárias e audiências.
 
 ![Administração: contadores, o que exige atenção, atalhos e ficha da instância](prototipos/admin-panorama.png)
 
@@ -161,7 +161,7 @@ Depois vêm as tabelas, uma seção por cadastro. Os prazos trazem os **já cump
 
 ![Administração: clientes, partes contrárias, audiências e contratos de honorário](prototipos/admin-relacionados.png)
 
-Os três cadastros sem tela própria aparecem aqui, inclusive os desativados, marcados pela etiqueta de situação.
+Os três cadastros aparecem aqui, inclusive os desativados, marcados pela etiqueta de situação. Para alterá-los, o chefe usa as telas de gestão no menu lateral ou os links desta seção: clientes (`/painel/cadastros/clientes`), partes contrárias (`/painel/cadastros/partes-contrarias`) e audiências (`/painel/cadastros/audiencias`). Cada tela permite cadastrar, editar e desativar ou reativar registros; o histórico não é apagado.
 
 ![Administração: modelos, feriados e avisos emitidos](prototipos/admin-apoio.png)
 
@@ -169,7 +169,7 @@ E, no fim, o que sustenta o resto: modelos de peça, o calendário forense que a
 
 **Três decisões desta tela que valem a discussão:**
 
-- **A tela só lê.** Criar e remover continua em cada cadastro, que é onde a regra vive: remover usuário não pode deixar o escritório sem chefe; remover feriado muda a contagem de prazo de todo mundo. Duplicar esses formulários aqui duplicaria a regra — ou, pior, deixaria uma cópia sem ela.
+- **A tela administrativa é um panorama.** Os cadastros relacionados têm telas próprias de gestão, que aplicam os casos de uso existentes e preservam as regras do domínio; a administração aponta para elas sem duplicar formulários.
 - **Consulta própria, em vez de reaproveitar as do dia a dia.** As listagens existentes servem à tela do dia e por isso escondem o que já saiu de cena (a agenda só devolve prazo em aberto; cliente, parte e audiência filtram os ativos). Mudar esses métodos para trazer tudo estragaria as telas que dependem deles. Foram criadas operações novas — `PrazosUseCases.ListarTodosOsPrazos`, `listarTodosOsClientes()`, `listarTodasAsPartesContrarias()`, `listarTodasAsAudiencias()` — e as antigas ficaram como estavam.
 - **`ConsultarPanorama` não fala com repositório.** O `PanoramaAppService` compõe casos de uso que já existem; nenhuma consulta nova desce à persistência por fora das portas. Assim a tela não vira um segundo caminho até o banco, com regra de leitura própria.
 

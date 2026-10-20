@@ -140,6 +140,24 @@
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-feriados"/></svg>
         <span>Feriados</span>
       </a>
+      <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/cadastros/clientes}"
+         th:classappend="${ativo == 'clientes'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'clientes'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-conta"/></svg>
+        <span>Clientes</span>
+      </a>
+      <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/cadastros/partes-contrarias}"
+         th:classappend="${ativo == 'partes'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'partes'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-conta"/></svg>
+        <span>Partes Contrárias</span>
+      </a>
+      <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/cadastros/audiencias}"
+         th:classappend="${ativo == 'audiencias'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'audiencias'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-agenda"/></svg>
+        <span>Audiências</span>
+      </a>
       <a th:href="@{/painel/comarcas}" th:classappend="${ativo == 'comarcas'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'comarcas'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-comarcas"/></svg>
@@ -174,7 +192,10 @@
     <p class="trilha">
       <!-- O icone acompanha a secao: 'painel' e a agenda, as demais tem o mesmo nome do simbolo. -->
       <svg class="icone" aria-hidden="true" focusable="false">
-        <use th:attr="href='#i-' + (${ativo == 'painel'} ? 'agenda' : ${ativo})" href="#i-agenda"/>
+        <use th:if="${ativo == 'painel' or ativo == 'audiencias'}" href="#i-agenda"/>
+        <use th:if="${ativo == 'clientes' or ativo == 'partes'}" href="#i-conta"/>
+        <use th:unless="${ativo == 'painel' or ativo == 'audiencias' or ativo == 'clientes' or ativo == 'partes'}"
+             th:attr="href='#i-' + ${ativo}" href="#i-agenda"/>
       </svg>
       <span th:text="${ativo == 'painel'} ? 'Agenda de Prazos'
                      : (${ativo == 'processos'} ? 'Processos'
@@ -182,12 +203,15 @@
                      : (${ativo == 'anexos'} ? 'Anexos'
                      : (${ativo == 'modelos'} ? 'Modelos'
                      : (${ativo == 'feriados'} ? 'Feriados'
+                     : (${ativo == 'clientes'} ? 'Clientes'
+                     : (${ativo == 'partes'} ? 'Partes Contrárias'
+                     : (${ativo == 'audiencias'} ? 'Audiências'
                      : (${ativo == 'kanban'} ? 'Kanban de Tarefas'
                      : (${ativo == 'comarcas'} ? 'Comarcas e Varas'
                      : (${ativo == 'advogados'} ? 'Advogados'
                      : (${ativo == 'usuarios'} ? 'Usuários'
                      : (${ativo == 'admin'} ? 'Administração'
-                     : 'Minha Conta'))))))))))">Agenda de Prazos</span>
+                     : 'Minha Conta')))))))))))))">Agenda de Prazos</span>
     </p>
 
     <div class="sessao" th:if="${usuario != null}">

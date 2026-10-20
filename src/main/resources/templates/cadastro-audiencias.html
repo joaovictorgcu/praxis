@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Praxis - Audiências</title>
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
+</head>
+<body class="app">
+<header th:replace="~{fragmentos :: cabecalho('audiencias')}"></header>
+
+<main id="conteudo" tabindex="-1">
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+  <section class="cartao" th:if="${audienciaEdicao != null}">
+    <h2>Editar audiência</h2>
+    <p class="apoio">O processo não pode ser alterado por esta tela. A alteração de horário e sala verifica conflitos antes de salvar.</p>
+    <form class="empilhado" method="post"
+          th:action="@{'/painel/cadastros/audiencias/' + ${audienciaEdicao.id} + '/editar'}">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <div class="linha">
+        <label>Processo<input disabled th:value="${audienciaEdicao.numeroProcesso}"></label>
+        <label>Parte autora<input name="nomeParteAutora" required th:value="${audienciaEdicao.nomeParteAutora}"></label>
+        <label>Sala<input name="sala" required th:value="${audienciaEdicao.sala}"></label>
+      </div>
+      <div class="linha">
+        <label>Início
+          <input type="datetime-local" name="dataHoraInicio" required
+                 th:value="${#temporals.format(audienciaEdicao.dataHoraInicio, 'yyyy-MM-dd''T''HH:mm')}">
+        </label>
+        <label>Fim
+          <input type="datetime-local" name="dataHoraFim" required
+                 th:value="${#temporals.format(audienciaEdicao.dataHoraFim, 'yyyy-MM-dd''T''HH:mm')}">
+        </label>
+      </div>
+      <label>Observações<textarea name="observacoes" rows="3" th:text="${audienciaEdicao.observacoes}"></textarea></label>
+      <div class="linha">
+        <button type="submit">Salvar alterações</button>
+        <a class="botao secundario" th:href="@{/painel/cadastros/audiencias}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <h2>Agendar audiência</h2>
+    <form class="empilhado" method="post" th:action="@{/painel/cadastros/audiencias}">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <div class="linha">
+        <label>Número do processo<input name="numeroProcesso" required></label>
+        <label>Parte autora<input name="nomeParteAutora" required></label>
+        <label>Sala<input name="sala" required></label>
+      </div>
+      <div class="linha">
+        <label>Início<input type="datetime-local" name="dataHoraInicio" required></label>
+        <label>Fim<input type="datetime-local" name="dataHoraFim" required></label>
+      </div>
+      <label>Observações<textarea name="observacoes" rows="3"></textarea></label>
+      <div><button type="submit">Agendar audiência</button></div>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <h2>Audiências cadastradas</h2>
+    <p class="apoio">Cancelar preserva o histórico; audiências canceladas podem ser reativadas. Não é permitido sobrepor audiências na mesma sala.</p>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>Processo</th><th>Parte autora</th><th>Início</th><th>Fim</th><th>Sala</th><th>Situação</th><th>Ações</th></tr></thead>
+        <tbody>
+        <tr th:each="audiencia : ${audiencias}">
+          <td th:text="${audiencia.numeroProcesso}">Processo</td>
+          <td th:text="${audiencia.nomeParteAutora}">Parte autora</td>
+          <td th:text="${#temporals.format(audiencia.dataHoraInicio, 'dd/MM/yyyy HH:mm')}">Início</td>
+          <td th:text="${#temporals.format(audiencia.dataHoraFim, 'dd/MM/yyyy HH:mm')}">Fim</td>
+          <td th:text="${audiencia.sala}">Sala</td>
+          <td>
+            <span class="etiqueta" th:classappend="${audiencia.ativa} ? 'verde' : 'cinza'"
+                  th:text="${audiencia.ativa} ? 'ativa' : 'cancelada'">situação</span>
+          </td>
+          <td class="acoes">
+            <a th:if="${audiencia.ativa}" class="botao secundario pequeno"
+               th:href="@{/painel/cadastros/audiencias(editar=${audiencia.id})}">Editar</a>
+            <form th:if="${audiencia.ativa}" method="post"
+                  th:action="@{'/painel/cadastros/audiencias/' + ${audiencia.id} + '/cancelar'}"
+                  th:attr="data-confirmar='Cancelar a audiência de ' + ${audiencia.nomeParteAutora} + '?'">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button class="perigo pequeno" type="submit">Cancelar</button>
+            </form>
+            <form th:unless="${audiencia.ativa}" method="post"
+                  th:action="@{'/painel/cadastros/audiencias/' + ${audiencia.id} + '/reativar'}">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button class="secundario pequeno" type="submit">Reativar</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(audiencias)}"><td colspan="7" class="vazio">Nenhuma audiência cadastrada.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

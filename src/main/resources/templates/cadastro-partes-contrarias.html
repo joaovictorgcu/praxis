@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Praxis - Partes Contrárias</title>
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
+</head>
+<body class="app">
+<header th:replace="~{fragmentos :: cabecalho('partes')}"></header>
+
+<main id="conteudo" tabindex="-1">
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+  <section class="cartao" th:if="${parteEdicao != null}">
+    <h2>Editar parte contrária</h2>
+    <p class="apoio">CPF/CNPJ e tipo de pessoa são dados de identificação e não podem ser alterados nesta tela.</p>
+    <form class="empilhado" method="post"
+          th:action="@{'/painel/cadastros/partes-contrarias/' + ${parteEdicao.id} + '/editar'}">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <div class="linha">
+        <label>Nome<input name="nome" required th:value="${parteEdicao.nome}"></label>
+        <label>CPF/CNPJ<input disabled th:value="${parteEdicao.cpfOuCnpj}"></label>
+        <label>Tipo<input disabled th:value="${parteEdicao.tipoPessoa.descricao}"></label>
+      </div>
+      <div class="linha">
+        <label>E-mail<input type="email" name="email" th:value="${parteEdicao.email}"></label>
+        <label>Telefone<input name="telefone" th:value="${parteEdicao.telefone}"></label>
+      </div>
+      <div class="linha">
+        <label>Endereço<input name="endereco" th:value="${parteEdicao.endereco}"></label>
+        <label>Cidade<input name="cidade" th:value="${parteEdicao.cidade}"></label>
+        <label>Estado<input name="estado" maxlength="2" th:value="${parteEdicao.estado}"></label>
+        <label>CEP<input name="cep" th:value="${parteEdicao.cep}"></label>
+      </div>
+      <label>Observações<textarea name="observacoes" rows="3" th:text="${parteEdicao.observacoes}"></textarea></label>
+      <div class="linha">
+        <button type="submit">Salvar alterações</button>
+        <a class="botao secundario" th:href="@{/painel/cadastros/partes-contrarias}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <h2>Cadastrar parte contrária</h2>
+    <form class="empilhado" method="post" th:action="@{/painel/cadastros/partes-contrarias}">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <div class="linha">
+        <label>Nome<input name="nome" required></label>
+        <label>CPF/CNPJ<input name="cpfOuCnpj" required></label>
+        <label>Tipo de pessoa
+          <select name="tipoPessoa" required>
+            <option th:each="tipo : ${tiposPessoa}" th:value="${tipo}" th:text="${tipo.descricao}">Pessoa Física</option>
+          </select>
+        </label>
+      </div>
+      <div class="linha">
+        <label>E-mail<input type="email" name="email"></label>
+        <label>Telefone<input name="telefone"></label>
+      </div>
+      <div class="linha">
+        <label>Endereço<input name="endereco"></label>
+        <label>Cidade<input name="cidade"></label>
+        <label>Estado<input name="estado" maxlength="2"></label>
+        <label>CEP<input name="cep"></label>
+      </div>
+      <label>Observações<textarea name="observacoes" rows="3"></textarea></label>
+      <div><button type="submit">Cadastrar parte contrária</button></div>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <h2>Partes contrárias cadastradas</h2>
+    <p class="apoio">Desativar preserva o histórico; partes desativadas podem ser reativadas.</p>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>Nome</th><th>CPF/CNPJ</th><th>Contato</th><th>Cidade/UF</th><th>Situação</th><th>Ações</th></tr></thead>
+        <tbody>
+        <tr th:each="parte : ${partes}">
+          <td th:text="${parte.nome}">Nome</td>
+          <td th:text="${parte.cpfOuCnpj}">CPF/CNPJ</td>
+          <td><span th:text="${parte.email}">e-mail</span><span class="apoio" th:text="${parte.telefone}">telefone</span></td>
+          <td th:text="${parte.cidade} + '/' + ${parte.estado}">Cidade/UF</td>
+          <td>
+            <span class="etiqueta" th:classappend="${parte.ativa} ? 'verde' : 'cinza'"
+                  th:text="${parte.ativa} ? 'ativa' : 'desativada'">situação</span>
+          </td>
+          <td class="acoes">
+            <a th:if="${parte.ativa}" class="botao secundario pequeno"
+               th:href="@{/painel/cadastros/partes-contrarias(editar=${parte.id})}">Editar</a>
+            <form th:if="${parte.ativa}" method="post"
+                  th:action="@{'/painel/cadastros/partes-contrarias/' + ${parte.id} + '/desativar'}"
+                  th:attr="data-confirmar='Desativar a parte contrária ' + ${parte.nome} + '?'">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button class="perigo pequeno" type="submit">Desativar</button>
+            </form>
+            <form th:unless="${parte.ativa}" method="post"
+                  th:action="@{'/painel/cadastros/partes-contrarias/' + ${parte.id} + '/reativar'}">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button class="secundario pequeno" type="submit">Reativar</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(partes)}"><td colspan="6" class="vazio">Nenhuma parte contrária cadastrada.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

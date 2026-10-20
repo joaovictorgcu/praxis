@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Praxis - Clientes</title>
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
+</head>
+<body class="app">
+<header th:replace="~{fragmentos :: cabecalho('clientes')}"></header>
+
+<main id="conteudo" tabindex="-1">
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+  <section class="cartao" th:if="${clienteEdicao != null}">
+    <h2>Editar cliente</h2>
+    <p class="apoio">CPF/CNPJ e tipo de pessoa são dados de identificação e não podem ser alterados nesta tela.</p>
+    <form class="empilhado" method="post"
+          th:action="@{'/painel/cadastros/clientes/' + ${clienteEdicao.id} + '/editar'}">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <div class="linha">
+        <label>Nome
+          <input name="nome" required th:value="${clienteEdicao.nome}">
+        </label>
+        <label>CPF/CNPJ
+          <input disabled th:value="${clienteEdicao.cpfOuCnpj}">
+        </label>
+        <label>Tipo
+          <input disabled th:value="${clienteEdicao.tipoPessoa.descricao}">
+        </label>
+      </div>
+      <div class="linha">
+        <label>E-mail<input type="email" name="email" th:value="${clienteEdicao.email}"></label>
+        <label>Telefone<input name="telefone" th:value="${clienteEdicao.telefone}"></label>
+        <label>Celular<input name="celular" th:value="${clienteEdicao.celular}"></label>
+      </div>
+      <div class="linha">
+        <label>Endereço<input name="endereco" th:value="${clienteEdicao.endereco}"></label>
+        <label>Cidade<input name="cidade" th:value="${clienteEdicao.cidade}"></label>
+        <label>Estado<input name="estado" maxlength="2" th:value="${clienteEdicao.estado}"></label>
+        <label>CEP<input name="cep" th:value="${clienteEdicao.cep}"></label>
+      </div>
+      <div class="linha">
+        <label>Profissão<input name="profissao" th:value="${clienteEdicao.profissao}"></label>
+        <label>Empresa de trabalho<input name="empresaTrabalho" th:value="${clienteEdicao.empresaTrabalho}"></label>
+      </div>
+      <label>Observações<textarea name="observacoes" rows="3" th:text="${clienteEdicao.observacoes}"></textarea></label>
+      <div class="linha">
+        <button type="submit">Salvar alterações</button>
+        <a class="botao secundario" th:href="@{/painel/cadastros/clientes}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <h2>Cadastrar cliente</h2>
+    <form class="empilhado" method="post" th:action="@{/painel/cadastros/clientes}">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <div class="linha">
+        <label>Nome<input name="nome" required></label>
+        <label>CPF/CNPJ<input name="cpfOuCnpj" required></label>
+        <label>Tipo de pessoa
+          <select name="tipoPessoa" required>
+            <option th:each="tipo : ${tiposPessoa}" th:value="${tipo}" th:text="${tipo.descricao}">Pessoa Física</option>
+          </select>
+        </label>
+      </div>
+      <div class="linha">
+        <label>E-mail<input type="email" name="email"></label>
+        <label>Telefone<input name="telefone"></label>
+        <label>Celular<input name="celular"></label>
+      </div>
+      <div class="linha">
+        <label>Endereço<input name="endereco"></label>
+        <label>Cidade<input name="cidade"></label>
+        <label>Estado<input name="estado" maxlength="2"></label>
+        <label>CEP<input name="cep"></label>
+      </div>
+      <div class="linha">
+        <label>Profissão<input name="profissao"></label>
+        <label>Empresa de trabalho<input name="empresaTrabalho"></label>
+      </div>
+      <label>Observações<textarea name="observacoes" rows="3"></textarea></label>
+      <div><button type="submit">Cadastrar cliente</button></div>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <h2>Clientes cadastrados</h2>
+    <p class="apoio">Desativar preserva o histórico; clientes desativados podem ser reativados.</p>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>Nome</th><th>CPF/CNPJ</th><th>Contato</th><th>Cidade/UF</th><th>Situação</th><th>Ações</th></tr></thead>
+        <tbody>
+        <tr th:each="cliente : ${clientes}">
+          <td th:text="${cliente.nome}">Nome</td>
+          <td th:text="${cliente.cpfOuCnpj}">CPF/CNPJ</td>
+          <td>
+            <span th:text="${cliente.email}">e-mail</span>
+            <span class="apoio" th:text="${cliente.celular} ?: ${cliente.telefone}">telefone</span>
+          </td>
+          <td th:text="${cliente.cidade} + '/' + ${cliente.estado}">Cidade/UF</td>
+          <td>
+            <span class="etiqueta" th:classappend="${cliente.ativo} ? 'verde' : 'cinza'"
+                  th:text="${cliente.ativo} ? 'ativo' : 'desativado'">situação</span>
+          </td>
+          <td class="acoes">
+            <a th:if="${cliente.ativo}" class="botao secundario pequeno"
+               th:href="@{/painel/cadastros/clientes(editar=${cliente.id})}">Editar</a>
+            <form th:if="${cliente.ativo}" method="post"
+                  th:action="@{'/painel/cadastros/clientes/' + ${cliente.id} + '/desativar'}"
+                  th:attr="data-confirmar='Desativar o cliente ' + ${cliente.nome} + '?'">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button class="perigo pequeno" type="submit">Desativar</button>
+            </form>
+            <form th:unless="${cliente.ativo}" method="post"
+                  th:action="@{'/painel/cadastros/clientes/' + ${cliente.id} + '/reativar'}">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button class="secundario pequeno" type="submit">Reativar</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(clientes)}"><td colspan="6" class="vazio">Nenhum cliente cadastrado.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

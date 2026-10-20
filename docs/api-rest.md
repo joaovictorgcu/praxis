@@ -41,7 +41,7 @@ POST /api/documentos/{id}/protocolar           aprovado -> protocolado
 POST /api/documentos/{id}/oabs                 {oab}  habilita OAB nos autos da peça (chefe)
 ```
 
-Existem ainda `/api/clientes`, `/api/partes-contrarias`, `/api/audiencias` e `/api/honorarios` — os três cadastros sem tela própria mais os contratos de honorário.
+Existem ainda `/api/clientes`, `/api/partes-contrarias`, `/api/audiencias` e `/api/honorarios`. Clientes, partes contrárias e audiências também podem ser gerenciados manualmente pelo chefe nas telas do painel descritas abaixo.
 
 **Leitura é aberta; mutação exige a sessão do painel.** `GET`, `HEAD`, `OPTIONS` e `TRACE` em `/api/**` passam sem autenticar. Todo `POST`, `PUT`, `PATCH` e `DELETE` passa pelo `SessaoApiInterceptor`: sem sessão é `401`, sem o token CSRF (parâmetro `_csrf` ou cabeçalho `X-CSRF-Token`) é `403`, senha provisória é `403` e ação de chefe pedida por advogado é `403`. A recusa sai como `{"erro": ...}` — nunca um redirect para `/login`, que um script leria como sucesso.
 
@@ -73,6 +73,10 @@ GET  /painel/feriados              cadastro de feriados (remover: chefe)
 GET  /painel/usuarios              gestão de usuários (chefe)
 GET  /painel/conta                 minha conta; POST /painel/conta/senha troca a senha
 GET  /painel/admin                 administração (chefe): panorama dos cadastros e ficha da instância
+GET  /painel/cadastros/clientes    cadastro de clientes (chefe): criar, editar, desativar e reativar
+GET  /painel/cadastros/partes-contrarias
+                                   cadastro de partes contrárias (chefe): criar, editar, desativar e reativar
+GET  /painel/cadastros/audiencias  agenda de audiências (chefe): agendar, editar, cancelar e reativar
 ```
 
 ### Exemplos que mostram as regras funcionando

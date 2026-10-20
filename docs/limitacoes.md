@@ -11,7 +11,7 @@ Limites conhecidos, ditos abertamente - todos com um ponto de troca identificado
 - O freio de força bruta do login é em memória, por instância.
 - A deteccao de conflito de audiencia agora e do agregado `AgendaDeAudiencias`; o repositorio so entrega as candidatas da sala. A JPQL `encontrarConflitosDeHorario` saiu.
 - O papel é binário (advogado/chefe); não há vínculo entre usuário e processo além da OAB, então qualquer advogado logado vê a agenda inteira do escritório.
-- Cliente, parte contrária e audiência continuam sem tela de cadastro: a administração mostra os três, inclusive os desativados, mas criar, editar e desativar segue só pela API REST.
+- Clientes, partes contrárias e audiências têm telas de gestão para o chefe em `/painel/cadastros/clientes`, `/painel/cadastros/partes-contrarias` e `/painel/cadastros/audiencias`. A edição não altera CPF/CNPJ ou tipo de pessoa; na audiência, o processo vinculado também não pode ser trocado.
 - A administração carrega tudo de uma vez, sem paginação nem filtro: cabe no volume de um escritório, não em base grande. Paginar afeta só `PanoramaAppService` e o template.
 - Os avisos listados na administração são a fila em memória do `NotificadorPainel` (200 últimos, por instância): somem no restart e não são histórico.
 - O foro dos feriados é único e vem de propriedade (`praxis.foro.*`), não de cada processo: o `Processo` guarda a comarca, mas não a UF. Feriado por processo exigiria derivar a UF do código do tribunal no número CNJ.
