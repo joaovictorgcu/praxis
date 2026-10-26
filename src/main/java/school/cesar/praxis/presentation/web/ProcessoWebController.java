@@ -11,6 +11,7 @@ import school.cesar.praxis.domain.processo.Processo;
 import school.cesar.praxis.domain.processo.TipoAndamento;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -37,6 +38,8 @@ public class ProcessoWebController {
     private final DocumentosUseCases.ListarDocumentos listarDocumentos;
     private final AnexosUseCases.ListarAnexos listarAnexos;
     private final AdvogadosUseCases.ListarAdvogados listarAdvogados;
+    private final HonorariosUseCases.CadastrarContrato cadastrarContrato;
+    private final HonorariosUseCases.ListarContratos listarContratos;
 
     public ProcessoWebController(ProcessosUseCases.ListarProcessos listar,
                                  ProcessosUseCases.ConsultarProcesso consultar,
@@ -47,7 +50,9 @@ public class ProcessoWebController {
                                  PrazosUseCases.CumprirPrazo cumprirPrazo,
                                  DocumentosUseCases.ListarDocumentos listarDocumentos,
                                  AnexosUseCases.ListarAnexos listarAnexos,
-                                 AdvogadosUseCases.ListarAdvogados listarAdvogados) {
+                                 AdvogadosUseCases.ListarAdvogados listarAdvogados,
+                                 HonorariosUseCases.CadastrarContrato cadastrarContrato,
+                                 HonorariosUseCases.ListarContratos listarContratos) {
         this.listar = listar;
         this.consultar = consultar;
         this.cadastrar = cadastrar;
@@ -58,6 +63,8 @@ public class ProcessoWebController {
         this.listarDocumentos = listarDocumentos;
         this.listarAnexos = listarAnexos;
         this.listarAdvogados = listarAdvogados;
+        this.cadastrarContrato = cadastrarContrato;
+        this.listarContratos = listarContratos;
     }
 
     /** So advogados ativos assumem processo novo; desativado fica so no historico. */
@@ -118,6 +125,7 @@ public class ProcessoWebController {
             model.addAttribute("prazos", prazosDoProcesso.executar(numero));
             model.addAttribute("documentos", listarDocumentos.executar(numero));
             model.addAttribute("anexos", listarAnexos.executar(numero));
+            model.addAttribute("contratos", listarContratos.executar(numero));
             model.addAttribute("tiposAndamento", TipoAndamento.values());
             model.addAttribute("regimes", RegimeContagem.values());
             model.addAttribute("hoje", LocalDate.now());
@@ -155,6 +163,23 @@ public class ProcessoWebController {
                 abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
                         numero, descricao, LocalDate.parse(intimacao), quantidadeDias,
                         Boolean.TRUE.equals(fatal), regime)));
+    }
+
+    @PostMapping("/{numero}/honorarios")
+    public String contratarHonorario(@PathVariable String numero,
+                                     @RequestParam String modalidade,
+                                     @RequestParam String celebradoEm,
+                                     @RequestParam(required = false) BigDecimal valorFixo,
+                                     @RequestParam(required = false) BigDecimal valorHora,
+                                     @RequestParam(required = false) Integer horasTrabalhadas,
+                                     @RequestParam(required = false) BigDecimal valorCausa,
+                                     @RequestParam(required = false) BigDecimal percentualExito,
+                                     RedirectAttributes flash) {
+        return executar(flash, numero, "Contrato de honorários celebrado.", () ->
+                cadastrarContrato.executar(new HonorariosUseCases.CadastrarContrato.Comando(
+                        numero, modalidade, LocalDate.parse(celebradoEm),
+                        valorFixo, valorHora, horasTrabalhadas == null ? 0 : horasTrabalhadas,
+                        valorCausa, percentualExito)));
     }
 
     @PostMapping("/{numero}/prazos/{id}/cumprir")

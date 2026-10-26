@@ -98,6 +98,28 @@
     atualizar();
 })();
 
+/* Ficha do processo: so mostra (e envia) os campos da modalidade de
+   honorario escolhida. Desabilita o grupo escondido em vez de so ocultar,
+   pra nao submeter campo de outra modalidade. */
+(function () {
+    'use strict';
+    var select = document.getElementById('honorario-modalidade');
+    if (!select) { return; }
+    var grupos = document.querySelectorAll('[data-modalidade]');
+
+    function atualizar() {
+        grupos.forEach(function (grupo) {
+            var ativo = grupo.getAttribute('data-modalidade') === select.value;
+            grupo.hidden = !ativo;
+            grupo.querySelectorAll('input').forEach(function (campo) {
+                campo.disabled = !ativo;
+            });
+        });
+    }
+    select.addEventListener('change', atualizar);
+    atualizar();
+})();
+
 /* Tela de modelos: mostra, enquanto se digita, quais {{campos}} serao pedidos
    ao gerar a peca (os reservados vem dos autos e aparecem riscados). */
 (function () {

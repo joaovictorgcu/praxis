@@ -167,6 +167,65 @@
     </div>
   </section>
 
+  <section class="cartao">
+    <h2>Honorários</h2>
+    <p class="apoio">
+      Valor calculado e congelado na celebração, pela modalidade escolhida (Strategy);
+      mudar a base de cálculo depois não altera contrato já celebrado.
+    </p>
+    <form th:action="@{'/painel/processos/' + ${processo.numero.valor()} + '/honorarios'}" method="post" class="empilhado">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <div class="linha" style="margin:0">
+        <label>Modalidade
+          <select name="modalidade" id="honorario-modalidade">
+            <option value="FIXO">Fixo</option>
+            <option value="POR_HORA">Por Hora</option>
+            <option value="QUOTA_LITIS">Quota Litis</option>
+          </select>
+        </label>
+        <label>Celebrado em
+          <input type="date" name="celebradoEm" th:value="${hoje}" required>
+        </label>
+      </div>
+      <div class="linha" style="margin:0" data-modalidade="FIXO">
+        <label>Valor Fixo (R$)
+          <input type="number" name="valorFixo" min="0" step="0.01" placeholder="5000.00">
+        </label>
+      </div>
+      <div class="linha" style="margin:0" data-modalidade="POR_HORA">
+        <label>Valor da Hora (R$)
+          <input type="number" name="valorHora" min="0" step="0.01" placeholder="150.00">
+        </label>
+        <label>Horas Trabalhadas
+          <input type="number" name="horasTrabalhadas" min="0" step="1" placeholder="10">
+        </label>
+      </div>
+      <div class="linha" style="margin:0" data-modalidade="QUOTA_LITIS">
+        <label>Valor da Causa (R$)
+          <input type="number" name="valorCausa" min="0" step="0.01" placeholder="100000.00">
+        </label>
+        <label>Percentual de Êxito (%)
+          <input type="number" name="percentualExito" min="0" max="100" step="0.01" placeholder="20">
+        </label>
+      </div>
+      <div><button type="submit">Contratar</button></div>
+    </form>
+
+    <div class="tabela" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Modalidade</th><th>Celebrado em</th><th>Valor Contratado</th></tr></thead>
+        <tbody>
+        <tr th:each="ct : ${contratos}">
+          <td th:text="${@rotulos.titulo(ct.modalidade)}">-</td>
+          <td th:text="${#temporals.format(ct.celebradoEm, 'dd/MM/yyyy')}">-</td>
+          <td th:text="'R$ ' + ${#numbers.formatDecimal(ct.valorContratado, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(contratos)}"><td colspan="3" class="vazio">Nenhum contrato de honorário.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <div class="duas-colunas">
     <section class="cartao">
       <h2>Peças</h2>
