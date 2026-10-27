@@ -105,9 +105,9 @@ Três camadas, todas em `./mvnw test`:
 |---|---|---|
 | Domínio | `src/test/java/.../domain` | Regra pura, sem Spring, banco ou HTTP |
 | Contrato HTTP | `src/test/java/.../*HttpTest.java` (MockMvc) | Corpo, status de erro e garantias de front e de sessão |
-| BDD | 10 `.feature` com 62 cenários em [`src/test/resources/features`](src/test/resources/features) | Os casos de uso reais contra o banco, não dublês |
+| BDD | 12 `.feature` com 78 cenários em [`src/test/resources/features`](src/test/resources/features) | Os casos de uso reais contra o banco, não dublês |
 
-Os cenários são escritos em português e cobrem acesso ao painel, motor de prazos, geração de documentos, aprovação, feriados, modelos, anexos, agenda, honorários e distribuição.
+Os cenários são escritos em português e cobrem acesso ao painel, motor de prazos, geração de documentos, aprovação, feriados, modelos, anexos, agenda, honorários, distribuição e controle de acesso aos autos sigilosos.
 
 ```bash
 ./mvnw test -Dtest=MotorDePrazosTest    # um teste

@@ -80,7 +80,10 @@ class AnexoHttpTest {
 
         long id = json.readTree(resposta).get("id").asLong();
 
-        mvc.perform(get("/api/anexos/" + id).param("oab", "PE12345"))
+        // Download exige sessao e usa sempre a OAB de quem esta logado (nunca um
+        // parametro livre) - ver "download sem login e recusado" para o 401.
+        mvc.perform(get("/api/anexos/" + id)
+                        .session(ApoioDeTesteWeb.sessaoDe(1L, "Ana Souza", "PE12345", Papel.ADVOGADO)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition",
                         containsString("procuracao.pdf")))
@@ -94,7 +97,7 @@ class AnexoHttpTest {
     }
 
     @Test
-    @DisplayName("anexo de processo sigiloso responde 403 para OAB nao habilitada")
+    @DisplayName("anexo de processo sigiloso responde 403 para OAB nao habilitada e 401 sem login")
     void anexoSigilosoBloqueia() throws Exception {
         String numero = "0004444-44.2026.8.17.0004";
         processo(numero, true, "PE54321");
@@ -111,19 +114,21 @@ class AnexoHttpTest {
 
         long id = json.readTree(resposta).get("id").asLong();
 
-        mvc.perform(get("/api/anexos/" + id).param("oab", "PE54321"))
+        // O responsavel le os proprios autos sigilosos.
+        mvc.perform(get("/api/anexos/" + id)
+                        .session(ApoioDeTesteWeb.sessaoDe(1L, "Bruno Carvalho", "PE54321", Papel.ADVOGADO)))
                 .andExpect(status().isOk());
 
-        mvc.perform(get("/api/anexos/" + id).param("oab", "PE99999"))
+        // Advogada logada, mas sem habilitacao nos autos nem acesso ao processo.
+        mvc.perform(get("/api/anexos/" + id)
+                        .session(ApoioDeTesteWeb.sessaoDe(2L, "Ana Souza", "PE99999", Papel.ADVOGADO)))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string(containsString("segredo de justiça")));
 
-        // Advogada logada nao le o anexo sigiloso com a inscricao de outro.
-        mvc.perform(get("/api/anexos/" + id)
-                        .session(ApoioDeTesteWeb.sessaoDe(2L, "Ana Souza", "PE12345", Papel.ADVOGADO))
-                        .param("oab", "PE54321"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().string(containsString("não é a da sessão")));
+        // Sem sessao: a brecha do "?oab=" livre foi fechada, agora e 401, nunca 200.
+        mvc.perform(get("/api/anexos/" + id))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(containsString("faça login")));
     }
 
     @Test

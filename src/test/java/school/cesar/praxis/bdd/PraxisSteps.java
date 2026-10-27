@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.application.port.in.AnexosUseCases;
 import school.cesar.praxis.application.port.in.FeriadosUseCases;
-import school.cesar.praxis.application.port.in.HonorariosUseCases;
 import school.cesar.praxis.application.port.in.ModelosUseCases;
 import school.cesar.praxis.application.port.in.PrazosUseCases;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
@@ -86,6 +85,12 @@ public class PraxisSteps {
     @Autowired
     private ContratoHonorarioJpaRepository contratosJpa;
     @Autowired
+    private AcessoAoProcessoJpaRepository acessosJpa;
+    @Autowired
+    private SolicitacaoAcessoJpaRepository solicitacoesJpa;
+    @Autowired
+    private AuditoriaAcessoJpaRepository auditoriaJpa;
+    @Autowired
     private DocumentosUseCases.EnviarDocumentoParaRevisao enviarParaRevisao;
     @Autowired
     private DocumentosUseCases.AprovarDocumento aprovarDocumento;
@@ -117,6 +122,9 @@ public class PraxisSteps {
         documentosJpa.deleteAll();
         notificacoesJpa.deleteAll();
         contratosJpa.deleteAll();
+        acessosJpa.deleteAll();
+        solicitacoesJpa.deleteAll();
+        auditoriaJpa.deleteAll();
         processosJpa.deleteAll();
         painel.limpar();
         alertas.clear();

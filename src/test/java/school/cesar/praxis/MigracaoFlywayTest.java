@@ -48,8 +48,8 @@ class MigracaoFlywayTest {
     @Test
     @DisplayName("migracao V1 aplicada e validada pelo Hibernate; fluxo basico grava e le")
     void esquemaVersionado() {
-        assertEquals(5, flyway.info().applied().length);
-        assertEquals("5", flyway.info().current().getVersion().getVersion());
+        assertEquals(6, flyway.info().applied().length);
+        assertEquals("6", flyway.info().current().getVersion().getVersion());
 
         // Usuarios iniciais entraram pela carga (tabela usuario com senha_provisoria).
         assertNotNull(autenticar.executar(new UsuariosUseCases.Autenticar.Comando(

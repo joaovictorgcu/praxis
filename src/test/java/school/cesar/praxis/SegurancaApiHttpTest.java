@@ -151,7 +151,7 @@ class SegurancaApiHttpTest {
     }
 
     @Test
-    @DisplayName("peca sigilosa: advogado logado nao le os autos com a OAB de outro")
+    @DisplayName("peca sigilosa: advogado logado so le com a propria OAB, nunca uma informada na requisicao")
     void sigilosoComOabDeOutro() throws Exception {
         String numero = "0002222-22.2026.8.17.0022";
         cadastrarProcesso.executar(new ProcessosUseCases.CadastrarProcesso.Comando(
@@ -161,22 +161,47 @@ class SegurancaApiHttpTest {
                 numero, TipoDocumento.PETICAO_INICIAL, Map.of("fatos", "sigiloso"), "PE54321"));
 
         // Ana esta logada e le com a propria inscricao, que nao esta habilitada.
-        mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE12345"))
-                        .param("oab", "PE12345"))
+        mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE12345")))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string(containsString("segredo de justiça")));
 
-        // O caso que importa: Ana logada informando a OAB de Bruno, que esta
-        // habilitada nos autos. Sem a conciliacao, o ?oab= seria campo livre e
-        // bastaria descobrir uma inscricao habilitada para ler autos alheios.
+        // O caso que importa: a OAB usada e sempre a da sessao - nao existe mais
+        // um "?oab=" livre; um parametro desse tipo, se enviado, e so ignorado,
+        // entao nem a OAB de Bruno (habilitada nos autos) muda o resultado de Ana.
         mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE12345"))
                         .param("oab", "PE54321"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string(containsString("não é a da sessão")));
+                .andExpect(content().string(containsString("segredo de justiça")));
 
         // Bruno, o responsavel, le os proprios autos.
-        mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE54321"))
-                        .param("oab", "PE54321"))
+        mvc.perform(get("/api/documentos/" + peca.getId()).session(advogada("PE54321")))
+                .andExpect(status().isOk());
+
+        // Sem sessao: a brecha do "?oab=" livre foi fechada, agora e 401.
+        mvc.perform(get("/api/documentos/" + peca.getId()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(containsString("faça login")));
+    }
+
+    /**
+     * {@code @SomenteChefe} tambem vale em GET, nao so nas mutacoes: a leitura
+     * aberta por padrao e a excecao do metodo seguro, nao da anotacao. Sem
+     * isto, uma consulta marcada {@code @SomenteChefe} (auditoria de acesso,
+     * lista de acessos de um processo) ficaria legivel por qualquer um, logado
+     * ou nao - o oposto do que a anotacao promete.
+     */
+    @Test
+    @DisplayName("GET marcado @SomenteChefe exige sessao e papel de chefe, igual as mutacoes")
+    void leituraReservadaAoChefeExigeSessaoEChefe() throws Exception {
+        mvc.perform(get("/api/auditoria"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(containsString("faça login")));
+
+        mvc.perform(get("/api/auditoria").session(advogada("PE12345")))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(containsString("chefe")));
+
+        mvc.perform(get("/api/auditoria").session(chefe()))
                 .andExpect(status().isOk());
     }
 }

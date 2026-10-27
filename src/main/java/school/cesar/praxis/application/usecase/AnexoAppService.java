@@ -9,7 +9,10 @@ import school.cesar.praxis.domain.anexo.AcessoArquivo;
 import school.cesar.praxis.domain.anexo.ArquivoAnexo;
 import school.cesar.praxis.domain.anexo.ArquivoProxy;
 import school.cesar.praxis.domain.anexo.TipoArquivo;
+import school.cesar.praxis.domain.compartilhado.RegistradorDeAuditoria;
 import school.cesar.praxis.domain.compartilhado.Relogio;
+import school.cesar.praxis.domain.compartilhado.Solicitante;
+import school.cesar.praxis.domain.compartilhado.VerificadorDeAcessoAoProcesso;
 import school.cesar.praxis.domain.notificacao.EventoProcesso;
 import school.cesar.praxis.domain.notificacao.ObservadorProcesso;
 import school.cesar.praxis.domain.processo.NumeroCnj;
@@ -34,15 +37,21 @@ public class AnexoAppService implements AnexosUseCases.AnexarArquivo,
     private final ArquivoRepositorio arquivos;
     private final ObservadorProcesso observador;
     private final Relogio relogio;
+    private final VerificadorDeAcessoAoProcesso verificadorAcesso;
+    private final RegistradorDeAuditoria auditoria;
 
     public AnexoAppService(ProcessoRepositorio processos,
                            ArquivoRepositorio arquivos,
                            ObservadorProcesso observador,
-                           Relogio relogio) {
+                           Relogio relogio,
+                           VerificadorDeAcessoAoProcesso verificadorAcesso,
+                           RegistradorDeAuditoria auditoria) {
         this.processos = processos;
         this.arquivos = arquivos;
         this.observador = observador;
         this.relogio = relogio;
+        this.verificadorAcesso = verificadorAcesso;
+        this.auditoria = auditoria;
     }
 
     @Override
@@ -91,8 +100,10 @@ public class AnexoAppService implements AnexosUseCases.AnexarArquivo,
 
     @Override
     @Transactional(readOnly = true)
-    public ArquivoAnexo executar(Long anexoId, String oabSolicitante) {
-        AcessoArquivo acessoProtegido = new ArquivoProxy(arquivos, oabSolicitante);
+    public ArquivoAnexo executar(Long anexoId, String oabSolicitante, Long usuarioId, String usuarioNome) {
+        AcessoArquivo acessoProtegido = new ArquivoProxy(arquivos,
+                new Solicitante(oabSolicitante, usuarioId, usuarioNome),
+                verificadorAcesso, auditoria, relogio.hoje());
         return acessoProtegido.carregar(anexoId);
     }
 

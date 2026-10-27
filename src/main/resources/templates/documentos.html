@@ -85,7 +85,7 @@
         </th:block>
       </h2>
       <a th:if="${documentoGerado}" class="botao secundario pequeno"
-         th:href="@{'/api/documentos/' + ${documentoGerado} + '?oab=' + ${usuario.oab()}}">Baixar .txt</a>
+         th:href="@{'/api/documentos/' + ${documentoGerado}}">Baixar .txt</a>
     </div>
 
     <!-- Fluxo de aprovacao: as acoes que aparecem dependem do estado e do papel. -->

@@ -39,7 +39,13 @@ public interface DocumentosUseCases {
     /** Leitura passa pelo Proxy de segredo de justica. */
     interface BaixarDocumento {
 
-        DocumentoGerado executar(Long documentoId, String oabSolicitante);
+        /** Chamada direta (BDD, scripts): sem usuario logado, so a auditoria registra "desconhecido". */
+        default DocumentoGerado executar(Long documentoId, String oabSolicitante) {
+            return executar(documentoId, oabSolicitante, null, null);
+        }
+
+        /** Chamada do painel/API: carrega quem, alem da OAB, para a auditoria. */
+        DocumentoGerado executar(Long documentoId, String oabSolicitante, Long usuarioId, String usuarioNome);
     }
 
     interface ListarDocumentos {

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Praxis - Auditoria de Acesso</title>
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
+</head>
+<body class="app">
+<header th:replace="~{fragmentos :: cabecalho('auditoria')}"></header>
+
+<main id="conteudo" tabindex="-1">
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <div class="cabecalho-pagina">
+    <h2>Auditoria de Acesso</h2>
+    <p class="apoio" style="margin:0">Toda tentativa de leitura de peça ou anexo, e toda concessão, revogação, aprovação e negação de acesso.</p>
+  </div>
+
+  <section class="estatisticas" aria-label="Resumo da auditoria">
+    <div class="estatistica">
+      <span>
+        <span class="rotulo">Eventos no Filtro</span>
+        <span class="numero" th:text="${#lists.size(itens)}">0</span>
+      </span>
+      <span class="icone-circulo" aria-hidden="true">
+        <svg class="icone" focusable="false"><use href="#i-balanca"/></svg>
+      </span>
+    </div>
+    <div class="estatistica">
+      <span>
+        <span class="rotulo">Tentativas Negadas</span>
+        <span class="numero" th:text="${totalNegadas}">0</span>
+        <span class="apoio" th:classappend="${totalNegadas > 0} ? 'alerta' : 'bom'"
+              th:text="${totalNegadas > 0} ? 'leitura barrada pelo Proxy' : 'nenhuma'">-</span>
+      </span>
+      <span class="icone-circulo" th:classappend="${totalNegadas > 0} ? 'vermelha'" aria-hidden="true">
+        <svg class="icone" focusable="false"><use href="#i-alerta"/></svg>
+      </span>
+    </div>
+  </section>
+
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>Eventos</h2>
+    </div>
+
+    <form th:action="@{/painel/auditoria}" method="get" class="linha">
+      <label>Processo
+        <input type="text" name="processo" th:value="${processoFiltro}" placeholder="0001234-56.2026.8.17.0001">
+      </label>
+      <label>OAB
+        <input type="text" name="oab" th:value="${oabFiltro}" placeholder="PE12345">
+      </label>
+      <label>Resultado
+        <select name="resultado">
+          <option value="" th:selected="${resultadoFiltro == null}">Todos</option>
+          <option value="PERMITIDO" th:selected="${resultadoFiltro != null and resultadoFiltro.name() == 'PERMITIDO'}">Permitido</option>
+          <option value="NEGADO" th:selected="${resultadoFiltro != null and resultadoFiltro.name() == 'NEGADO'}">Negado</option>
+        </select>
+      </label>
+      <label>De
+        <input type="date" name="de" th:value="${deFiltro}">
+      </label>
+      <label>Até
+        <input type="date" name="ate" th:value="${ateFiltro}">
+      </label>
+      <div><button type="submit" class="secundario pequeno">Filtrar</button></div>
+    </form>
+
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Quando</th>
+          <th>Evento</th>
+          <th>Processo</th>
+          <th>OAB</th>
+          <th>Usuário</th>
+          <th>Resultado</th>
+          <th>Motivo</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="i : ${itens}">
+          <td style="white-space:nowrap" th:text="${#temporals.format(i.quando(), 'dd/MM/yyyy HH:mm')}">-</td>
+          <td>
+            <span th:text="${@rotulos.titulo(i.tipoEvento())}">tipo</span>
+            <span th:if="${i.conteudoTipo() != null}" class="apoio"
+                  th:text="'(' + ${i.conteudoTipo()} + ' ' + ${i.conteudoId()} + ')'">-</span>
+          </td>
+          <td><a th:href="@{'/painel/processos/' + ${i.numeroProcesso()}}" th:text="${i.numeroProcesso()}">-</a></td>
+          <td th:text="${i.oab()}">-</td>
+          <td th:text="${i.usuarioNome()}">-</td>
+          <td>
+            <span th:if="${i.tipoEvento() == 'LEITURA'}" class="etiqueta"
+                  th:classappend="${i.resultado().name() == 'PERMITIDO'} ? 'verde' : 'vermelha'"
+                  th:text="${@rotulos.titulo(i.resultado())}">resultado</span>
+            <span th:unless="${i.tipoEvento() == 'LEITURA'}" class="apoio">—</span>
+          </td>
+          <td th:text="${i.motivo()}">-</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(itens)}">
+          <td colspan="7" class="vazio">Nenhum evento no filtro aplicado.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

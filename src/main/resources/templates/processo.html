@@ -20,6 +20,8 @@
         Processo <span th:text="${processo.numero.valor()}">CNJ</span>
         <span th:replace="~{fragmentos :: sigilo(${processo.segredoJustica})}"></span>
       </h2>
+      <a th:if="${processo.segredoJustica and usuario.chefe()}" class="botao secundario pequeno"
+         th:href="@{'/painel/processos/' + ${processo.numero.valor()} + '/acessos'}">Acessos</a>
       <a class="botao secundario pequeno" th:href="@{/painel/processos}">Todos os Processos</a>
     </div>
     <dl class="ficha">
@@ -38,10 +40,26 @@
         </dd>
       </div>
     </dl>
-    <p th:if="${processo.segredoJustica and !podeLer}" class="mensagem erro" role="alert">
-      Autos em segredo de justiça: sua OAB não está habilitada; peça e anexo deste processo
-      serão recusados pelo Proxy. Peça ao chefe para habilitar a OAB na peça.
-    </p>
+    <div th:if="${processo.segredoJustica and !podeLer}" class="mensagem erro" role="alert">
+      <p style="margin:0">
+        Autos em segredo de justiça: sua OAB não está habilitada; peça e anexo deste processo
+        serão recusados pelo Proxy. Peça ao chefe para habilitar a OAB na peça, ou solicite
+        acesso ao processo inteiro abaixo.
+      </p>
+      <form th:if="${podeSolicitarAcesso}" th:action="@{/painel/solicitacoes}" method="post"
+            class="linha" style="margin:10px 0 0">
+        <input type="hidden" name="_csrf" th:value="${csrf}">
+        <input type="hidden" name="numeroProcesso" th:value="${processo.numero.valor()}">
+        <label style="flex:1;min-width:260px">Justificativa (mín. 20 caracteres)
+          <input type="text" name="justificativa" required minlength="20"
+                 placeholder="Por que você precisa acessar este processo">
+        </label>
+        <div><button type="submit" class="secundario pequeno">Solicitar Acesso</button></div>
+      </form>
+      <p th:unless="${podeSolicitarAcesso}" class="apoio" style="margin:10px 0 0">
+        Já existe uma solicitação sua pendente para este processo.
+      </p>
+    </div>
     <div class="fluxo">
       <a class="botao secundario pequeno" th:href="@{/painel/kanban(processo=${processo.numero.valor()})}">Tarefas do Processo</a>
       <a class="botao pequeno" th:href="@{/painel/documentos(processo=${processo.numero.valor()})}">Gerar Peça</a>
@@ -278,7 +296,7 @@
             <td th:text="${#temporals.format(a.anexadoEm(), 'dd/MM/yyyy')}">-</td>
             <td class="acoes">
               <a class="botao secundario pequeno"
-                 th:href="@{'/api/anexos/' + ${a.id()} + '?oab=' + ${usuario.oab()}}">Baixar</a>
+                 th:href="@{'/api/anexos/' + ${a.id()}}">Baixar</a>
             </td>
           </tr>
           <tr th:if="${#lists.isEmpty(anexos)}"><td colspan="4" class="vazio">Nenhum anexo.</td></tr>

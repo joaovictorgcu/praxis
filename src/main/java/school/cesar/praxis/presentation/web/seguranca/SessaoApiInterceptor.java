@@ -11,7 +11,11 @@ import java.nio.charset.StandardCharsets;
 /**
  * Guarda das mutacoes da API REST. Leitura segue aberta - {@code GET},
  * {@code HEAD}, {@code OPTIONS} e {@code TRACE} passam sem sessao, que e o
- * contrato dos scripts de exemplo do README e dos testes de consulta. Todo
+ * contrato dos scripts de exemplo do README e dos testes de consulta -
+ * <b>exceto</b> quando o metodo leva {@link SomenteChefe}: uma consulta
+ * reservada ao chefe (auditoria de acesso, lista de acessos de um processo)
+ * continua exigindo sessao e papel de chefe mesmo sendo GET, porque
+ * "reservada ao chefe" nao pode depender do verbo HTTP para valer. Todo
  * POST, PUT, PATCH ou DELETE exige a mesma sessao do painel, o mesmo token
  * CSRF e o mesmo {@link SomenteChefe} das telas.
  *
@@ -28,7 +32,9 @@ public class SessaoApiInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest requisicao, HttpServletResponse resposta, Object handler)
             throws IOException {
-        if (CsrfInterceptor.metodoSeguro(requisicao)) {
+        boolean seguro = CsrfInterceptor.metodoSeguro(requisicao);
+        boolean exigeChefe = SessaoInterceptor.exigeChefe(handler);
+        if (seguro && !exigeChefe) {
             return true;
         }
         UsuarioLogado usuario = UsuarioLogado.da(requisicao.getSession(false));
@@ -36,15 +42,20 @@ public class SessaoApiInterceptor implements HandlerInterceptor {
             return recusar(resposta, HttpServletResponse.SC_UNAUTHORIZED,
                     "faça login no painel antes de chamar esta operação");
         }
-        if (!CsrfInterceptor.tokenValido(requisicao)) {
-            return recusar(resposta, HttpServletResponse.SC_FORBIDDEN,
-                    "token CSRF ausente ou inválido");
+        // CSRF e senha provisoria so fazem sentido para quem muda estado; uma
+        // consulta reservada ao chefe (GET + @SomenteChefe) pula direto para a
+        // checagem de papel, abaixo.
+        if (!seguro) {
+            if (!CsrfInterceptor.tokenValido(requisicao)) {
+                return recusar(resposta, HttpServletResponse.SC_FORBIDDEN,
+                        "token CSRF ausente ou inválido");
+            }
+            if (usuario.senhaProvisoria()) {
+                return recusar(resposta, HttpServletResponse.SC_FORBIDDEN,
+                        "troque a senha provisória antes de usar a API");
+            }
         }
-        if (usuario.senhaProvisoria()) {
-            return recusar(resposta, HttpServletResponse.SC_FORBIDDEN,
-                    "troque a senha provisória antes de usar a API");
-        }
-        if (SessaoInterceptor.exigeChefe(handler) && !usuario.chefe()) {
+        if (exigeChefe && !usuario.chefe()) {
             return recusar(resposta, HttpServletResponse.SC_FORBIDDEN,
                     "ação reservada ao chefe do escritório");
         }

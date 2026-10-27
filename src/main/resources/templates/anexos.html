@@ -92,7 +92,7 @@
           </td>
           <td class="acoes">
             <a class="botao secundario pequeno"
-               th:href="@{'/api/anexos/' + ${anexo.id()} + '?oab=' + ${usuario.oab()}}">Baixar</a>
+               th:href="@{'/api/anexos/' + ${anexo.id()}}">Baixar</a>
           </td>
         </tr>
         <tr th:if="${#lists.isEmpty(anexos)}">

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import school.cesar.praxis.domain.agenda.ConflitoDEAudienciaException;
 import school.cesar.praxis.domain.agenda.HorarioInvalidoException;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
+import school.cesar.praxis.presentation.web.seguranca.SessaoExigidaException;
 
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -77,5 +78,11 @@ public class TratadorDeErrosRest {
     public ResponseEntity<Map<String, String>> acessoNegado(
             ProxyDeAcesso.AcessoNegadoException falha) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("erro", falha.getMessage()));
+    }
+
+    /** Download de peca/anexo sem sessao: 401, nao 403 - ninguem foi identificado ainda. */
+    @ExceptionHandler(SessaoExigidaException.class)
+    public ResponseEntity<Map<String, String>> sessaoExigida(SessaoExigidaException falha) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("erro", falha.getMessage()));
     }
 }

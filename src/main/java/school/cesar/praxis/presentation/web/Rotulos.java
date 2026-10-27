@@ -34,6 +34,13 @@ public class Rotulos {
             Map.entry("QUOTA_LITIS", "quota litis"),
             // Historico do contrato de honorario.
             Map.entry("CONTRATACAO", "contratação"),
+            // Evento de auditoria de acesso.
+            Map.entry("LEITURA", "leitura"),
+            Map.entry("CONCESSAO", "concessão"),
+            Map.entry("REVOGACAO", "revogação"),
+            Map.entry("SOLICITACAO_CRIADA", "solicitação criada"),
+            Map.entry("SOLICITACAO_APROVADA", "solicitação aprovada"),
+            Map.entry("SOLICITACAO_NEGADA", "solicitação negada"),
             // Abrangencia do feriado.
             Map.entry("NACIONAL", "nacional"),
             Map.entry("ESTADUAL", "estadual"),

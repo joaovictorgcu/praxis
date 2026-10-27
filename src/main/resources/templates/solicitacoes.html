@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Praxis - Solicitações de Acesso</title>
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
+</head>
+<body class="app">
+<header th:replace="~{fragmentos :: cabecalho('solicitacoes')}"></header>
+
+<main id="conteudo" tabindex="-1">
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <div class="cabecalho-pagina">
+    <h2>Solicitações de Acesso</h2>
+    <p class="apoio" style="margin:0"
+       th:text="${usuario.chefe()} ? 'Fila de pedidos de acesso a processos sigilosos, de todo o escritório.' : 'Suas solicitações de acesso a processos sigilosos.'">-</p>
+  </div>
+
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>Solicitações</h2>
+      <span class="contador" th:text="${#lists.size(solicitacoes)}">0</span>
+    </div>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Processo</th>
+          <th th:if="${usuario.chefe()}">OAB Solicitante</th>
+          <th>Justificativa</th>
+          <th>Solicitado Em</th>
+          <th>Status</th>
+          <th>Decisão</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${solicitacoes}">
+          <td><a th:href="@{'/painel/processos/' + ${s.numeroProcesso()}}" th:text="${s.numeroProcesso()}">-</a></td>
+          <td th:if="${usuario.chefe()}" th:text="${s.oabSolicitante()}">-</td>
+          <td style="max-width:280px" th:text="${s.justificativa()}">-</td>
+          <td style="white-space:nowrap" th:text="${#temporals.format(s.solicitadoEm(), 'dd/MM/yyyy')}">-</td>
+          <td>
+            <span class="etiqueta"
+                  th:classappend="${s.status() == 'APROVADA'} ? 'verde'
+                                  : (${s.status() == 'NEGADA'} ? 'vermelha'
+                                  : (${s.status() == 'CANCELADA'} ? 'cinza' : 'azul'))"
+                  th:text="${@rotulos.titulo(s.status())}">status</span>
+          </td>
+          <td>
+            <span th:if="${s.decididoEm() != null}">
+              <span th:text="${#temporals.format(s.decididoEm(), 'dd/MM/yyyy')}">-</span>
+              por <span th:text="${s.decididoPorOab()}">-</span>
+              <span th:if="${s.motivoNegacao() != null}" class="apoio" th:text="'- ' + ${s.motivoNegacao()}">-</span>
+            </span>
+            <span th:if="${s.decididoEm() == null}" class="apoio">-</span>
+          </td>
+          <td style="white-space:normal">
+            <form th:if="${usuario.chefe() and s.status() == 'PENDENTE'}"
+                  th:action="@{'/painel/solicitacoes/' + ${s.id()} + '/aprovar'}" method="post"
+                  class="linha" style="margin:0;gap:6px">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <label>Válido até (vazio = permanente)
+                <input type="date" name="expiraEm" style="width:130px">
+              </label>
+              <button type="submit" class="pequeno">Aprovar</button>
+            </form>
+            <form th:if="${usuario.chefe() and s.status() == 'PENDENTE'}"
+                  th:action="@{'/painel/solicitacoes/' + ${s.id()} + '/negar'}" method="post"
+                  class="linha" style="margin:6px 0 0;gap:6px">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <input type="text" name="motivo" required placeholder="motivo da negativa" style="width:140px">
+              <button type="submit" class="secundario pequeno">Negar</button>
+            </form>
+            <form th:if="${!usuario.chefe() and s.status() == 'PENDENTE' and s.oabSolicitante() == usuario.oab()}"
+                  th:action="@{'/painel/solicitacoes/' + ${s.id()} + '/cancelar'}" method="post"
+                  th:attr="data-confirmar='Cancelar a solicitação de acesso ao processo ' + ${s.numeroProcesso()} + '?'">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button type="submit" class="secundario pequeno">Cancelar</button>
+            </form>
+            <span th:if="${s.status() != 'PENDENTE'}" class="apoio">-</span>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(solicitacoes)}">
+          <td colspan="7" class="vazio">Nenhuma solicitação.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

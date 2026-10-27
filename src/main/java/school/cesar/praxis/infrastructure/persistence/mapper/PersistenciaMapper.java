@@ -1,5 +1,8 @@
 package school.cesar.praxis.infrastructure.persistence.mapper;
 
+import school.cesar.praxis.domain.acesso.AcessoAoProcesso;
+import school.cesar.praxis.domain.acesso.SolicitacaoAcesso;
+import school.cesar.praxis.domain.acesso.StatusSolicitacao;
 import school.cesar.praxis.domain.cliente.Cliente;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.documento.RegistroAprovacao;
@@ -37,6 +40,8 @@ import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ParcelaEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ParteContrariaEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.PrazoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.AcessoAoProcessoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.SolicitacaoAcessoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ProcessoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.UsuarioEntity;
 
@@ -622,5 +627,61 @@ public final class PersistenciaMapper {
                 entidade.getStatus(),
                 entidade.isDisponivel(),
                 entidade.getDataAdmissao());
+    }
+
+    // --- AcessoAoProcesso ---
+
+    public static AcessoAoProcessoEntity paraEntidade(AcessoAoProcesso acesso) {
+        AcessoAoProcessoEntity entidade = new AcessoAoProcessoEntity();
+        entidade.setId(acesso.getId());
+        entidade.setNumeroProcesso(acesso.getNumeroProcesso().valor());
+        entidade.setOab(acesso.getOab());
+        entidade.setConcedidoPor(acesso.getConcedidoPor());
+        entidade.setConcedidoEm(acesso.getConcedidoEm());
+        entidade.setExpiraEm(acesso.getExpiraEm());
+        entidade.setRevogadoEm(acesso.getRevogadoEm());
+        entidade.setMotivoRevogacao(acesso.getMotivoRevogacao());
+        return entidade;
+    }
+
+    public static AcessoAoProcesso paraDominio(AcessoAoProcessoEntity entidade) {
+        return new AcessoAoProcesso(
+                entidade.getId(),
+                NumeroCnj.de(entidade.getNumeroProcesso()),
+                entidade.getOab(),
+                entidade.getConcedidoPor(),
+                entidade.getConcedidoEm(),
+                entidade.getExpiraEm(),
+                entidade.getRevogadoEm(),
+                entidade.getMotivoRevogacao());
+    }
+
+    // --- SolicitacaoAcesso ---
+
+    public static SolicitacaoAcessoEntity paraEntidade(SolicitacaoAcesso solicitacao) {
+        SolicitacaoAcessoEntity entidade = new SolicitacaoAcessoEntity();
+        entidade.setId(solicitacao.getId());
+        entidade.setNumeroProcesso(solicitacao.getNumeroProcesso().valor());
+        entidade.setOabSolicitante(solicitacao.getOabSolicitante());
+        entidade.setJustificativa(solicitacao.getJustificativa());
+        entidade.setSolicitadoEm(solicitacao.getSolicitadoEm());
+        entidade.setStatus(solicitacao.getStatus().name());
+        entidade.setDecididoEm(solicitacao.getDecididoEm());
+        entidade.setDecididoPorOab(solicitacao.getDecididoPorOab());
+        entidade.setMotivoNegacao(solicitacao.getMotivoNegacao());
+        return entidade;
+    }
+
+    public static SolicitacaoAcesso paraDominio(SolicitacaoAcessoEntity entidade) {
+        return new SolicitacaoAcesso(
+                entidade.getId(),
+                NumeroCnj.de(entidade.getNumeroProcesso()),
+                entidade.getOabSolicitante(),
+                entidade.getJustificativa(),
+                entidade.getSolicitadoEm(),
+                StatusSolicitacao.valueOf(entidade.getStatus()),
+                entidade.getDecididoEm(),
+                entidade.getDecididoPorOab(),
+                entidade.getMotivoNegacao());
     }
 }

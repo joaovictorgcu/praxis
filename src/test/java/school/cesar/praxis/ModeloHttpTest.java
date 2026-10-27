@@ -114,7 +114,7 @@ class ModeloHttpTest {
         JsonNode documento = json.readTree(resposta);
 
         mvc.perform(get("/api/documentos/" + documento.get("id").asLong())
-                        .param("oab", "PE12345"))
+                        .session(ana()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Acordo de R$ 12.500,00")))
                 .andExpect(content().string(containsString("INSTRUMENTO PARTICULAR DE ACORDO")))

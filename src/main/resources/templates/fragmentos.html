@@ -163,6 +163,11 @@
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-agenda"/></svg>
         <span>Audiências</span>
       </a>
+      <a th:href="@{/painel/solicitacoes}" th:classappend="${ativo == 'solicitacoes'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'solicitacoes'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-relogio"/></svg>
+        <span>Solicitações de Acesso</span>
+      </a>
       <a th:href="@{/painel/comarcas}" th:classappend="${ativo == 'comarcas'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'comarcas'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-comarcas"/></svg>
@@ -185,6 +190,12 @@
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-admin"/></svg>
         <span>Administração</span>
       </a>
+      <a th:if="${usuario != null and usuario.chefe()}" th:href="@{/painel/auditoria}"
+         th:classappend="${ativo == 'auditoria'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'auditoria'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-alerta"/></svg>
+        <span>Auditoria de Acesso</span>
+      </a>
       <a th:href="@{/painel/conta}" th:classappend="${ativo == 'conta'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'conta'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-conta"/></svg>
@@ -200,7 +211,9 @@
         <use th:if="${ativo == 'painel' or ativo == 'audiencias'}" href="#i-agenda"/>
         <use th:if="${ativo == 'clientes' or ativo == 'partes'}" href="#i-conta"/>
         <use th:if="${ativo == 'honorarios'}" href="#i-balanca"/>
-        <use th:unless="${ativo == 'painel' or ativo == 'audiencias' or ativo == 'clientes' or ativo == 'partes' or ativo == 'honorarios'}"
+        <use th:if="${ativo == 'solicitacoes'}" href="#i-relogio"/>
+        <use th:if="${ativo == 'auditoria'}" href="#i-alerta"/>
+        <use th:unless="${ativo == 'painel' or ativo == 'audiencias' or ativo == 'clientes' or ativo == 'partes' or ativo == 'honorarios' or ativo == 'solicitacoes' or ativo == 'auditoria'}"
              th:attr="href='#i-' + ${ativo}" href="#i-agenda"/>
       </svg>
       <span th:text="${ativo == 'painel'} ? 'Agenda de Prazos'
@@ -208,6 +221,8 @@
                      : (${ativo == 'documentos'} ? 'Documentos'
                      : (${ativo == 'anexos'} ? 'Anexos'
                      : (${ativo == 'honorarios'} ? 'Honorários'
+                     : (${ativo == 'solicitacoes'} ? 'Solicitações de Acesso'
+                     : (${ativo == 'auditoria'} ? 'Auditoria de Acesso'
                      : (${ativo == 'modelos'} ? 'Modelos'
                      : (${ativo == 'feriados'} ? 'Feriados'
                      : (${ativo == 'clientes'} ? 'Clientes'
@@ -218,7 +233,7 @@
                      : (${ativo == 'advogados'} ? 'Advogados'
                      : (${ativo == 'usuarios'} ? 'Usuários'
                      : (${ativo == 'admin'} ? 'Administração'
-                     : 'Minha Conta'))))))))))))))">Agenda de Prazos</span>
+                     : 'Minha Conta'))))))))))))))))">Agenda de Prazos</span>
     </p>
 
     <div class="sessao" th:if="${usuario != null}">

@@ -40,6 +40,8 @@ public class ProcessoWebController {
     private final AdvogadosUseCases.ListarAdvogados listarAdvogados;
     private final HonorariosUseCases.CadastrarContrato cadastrarContrato;
     private final HonorariosUseCases.ListarContratos listarContratos;
+    private final AcessoUseCases.ListarAcessosDoProcesso listarAcessos;
+    private final AcessoUseCases.ListarSolicitacoes listarSolicitacoes;
 
     public ProcessoWebController(ProcessosUseCases.ListarProcessos listar,
                                  ProcessosUseCases.ConsultarProcesso consultar,
@@ -52,7 +54,9 @@ public class ProcessoWebController {
                                  AnexosUseCases.ListarAnexos listarAnexos,
                                  AdvogadosUseCases.ListarAdvogados listarAdvogados,
                                  HonorariosUseCases.CadastrarContrato cadastrarContrato,
-                                 HonorariosUseCases.ListarContratos listarContratos) {
+                                 HonorariosUseCases.ListarContratos listarContratos,
+                                 AcessoUseCases.ListarAcessosDoProcesso listarAcessos,
+                                 AcessoUseCases.ListarSolicitacoes listarSolicitacoes) {
         this.listar = listar;
         this.consultar = consultar;
         this.cadastrar = cadastrar;
@@ -65,6 +69,8 @@ public class ProcessoWebController {
         this.listarAdvogados = listarAdvogados;
         this.cadastrarContrato = cadastrarContrato;
         this.listarContratos = listarContratos;
+        this.listarAcessos = listarAcessos;
+        this.listarSolicitacoes = listarSolicitacoes;
     }
 
     /** So advogados ativos assumem processo novo; desativado fica so no historico. */
@@ -129,8 +135,19 @@ public class ProcessoWebController {
             model.addAttribute("tiposAndamento", TipoAndamento.values());
             model.addAttribute("regimes", RegimeContagem.values());
             model.addAttribute("hoje", LocalDate.now());
-            model.addAttribute("podeLer", !processo.isSegredoJustica()
-                    || processo.getResponsavel().oab().equalsIgnoreCase(usuario.oab()));
+
+            List<AcessoUseCases.ItemAcesso> acessos = listarAcessos.executar(numero);
+            boolean possuiAcessoAtivo = acessos.stream()
+                    .anyMatch(a -> a.oab().equalsIgnoreCase(usuario.oab()) && a.ativo());
+            boolean podeLer = !processo.isSegredoJustica()
+                    || processo.getResponsavel().oab().equalsIgnoreCase(usuario.oab())
+                    || possuiAcessoAtivo;
+            boolean temSolicitacaoPendente = listarSolicitacoes
+                    .executar(new AcessoUseCases.ListarSolicitacoes.Comando(usuario.oab())).stream()
+                    .anyMatch(s -> s.numeroProcesso().equals(numero) && "PENDENTE".equals(s.status()));
+            model.addAttribute("podeLer", podeLer);
+            model.addAttribute("podeSolicitarAcesso",
+                    processo.isSegredoJustica() && !podeLer && !temSolicitacaoPendente);
             return "processo";
         } catch (IllegalArgumentException | NoSuchElementException falha) {
             model.addAttribute("erro", falha.getMessage());

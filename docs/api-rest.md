@@ -18,7 +18,8 @@ POST /api/prazos/varredura?hoje=YYYY-MM-DD     roda o motor de prazos
 
 POST /api/documentos                           gera peça (campo codigoModelo opcional escolhe o modelo)
 GET  /api/documentos?processo=                 lista peças
-GET  /api/documentos/{id}?oab=                 baixa a peça (passa pelo Proxy; 403 se não habilitada)
+GET  /api/documentos/{id}                      baixa a peça (passa pelo Proxy; exige sessão, usa sempre a OAB
+                                                dela; 401 sem sessão, 403 se a OAB não estiver habilitada)
 
 POST   /api/modelos                            cadastra modelo de peça (corpo e pedidos com {{campo}})
 GET    /api/modelos                            lista modelos e os campos que cada um espera
@@ -26,7 +27,8 @@ DELETE /api/modelos/{id}                       remove modelo
 
 POST /api/anexos                               junta arquivo aos autos (multipart)
 GET  /api/anexos?processo=                     lista anexos (sem os bytes)
-GET  /api/anexos/{id}?oab=                     baixa o arquivo (passa pelo Proxy; 403 se não habilitada)
+GET  /api/anexos/{id}                          baixa o arquivo (passa pelo Proxy; exige sessão, usa sempre a OAB
+                                                dela; 401 sem sessão, 403 se a OAB não estiver habilitada)
 
 POST   /api/feriados                           cadastra feriado (data única ou anual; nacional/estadual/comarcal)
 GET    /api/feriados                           lista o calendário cadastrado
@@ -47,15 +49,36 @@ POST /api/honorarios/{id}/parcelas/{numero}/pagamentos
                                                 {valor,dataPagamento}  registra pagamento (parcial ou total) da parcela
 POST /api/honorarios/{id}/resultado            {valorObtido,honorariosSucumbencia}  so quota litis: fecha o valor
                                                 final sobre o proveito economico real e gera as parcelas
+
+POST /api/acessos                              {numeroProcesso,oab,expiraEm}  concede acesso ao processo inteiro
+                                                (expiraEm nulo = permanente) (chefe)
+GET  /api/acessos?processo=                    lista acessos do processo - ativos, expirados e revogados (chefe)
+POST /api/acessos/{id}/revogar                 {motivo}  revoga; recusado se for o ultimo acesso ativo do
+                                                processo sigiloso (chefe)
+
+POST /api/solicitacoes                         {numeroProcesso,justificativa}  solicita acesso a processo
+                                                sigiloso (justificativa com 20+ caracteres); a OAB e a da sessão
+POST /api/solicitacoes/{id}/cancelar           cancela a própria solicitação pendente
+POST /api/solicitacoes/{id}/aprovar            {expiraEm}  aprova e concede o acesso (expiraEm nulo = permanente)
+                                                (chefe)
+POST /api/solicitacoes/{id}/negar              {motivo}  nega a solicitação (chefe)
+GET  /api/solicitacoes                         chefe ve a fila inteira; advogado, só as próprias
+
+GET  /api/auditoria?processo=&oab=&resultado=&de=&ate=
+                                                consulta a auditoria de acesso - toda leitura de peça/anexo
+                                                (permitida ou negada) e toda concessão, revogação, aprovação e
+                                                negação (chefe)
 ```
 
 Existem ainda `/api/clientes`, `/api/partes-contrarias` e `/api/audiencias`. Clientes, partes contrárias e audiências também podem ser gerenciados manualmente pelo chefe nas telas do painel descritas abaixo.
 
-**Leitura é aberta; mutação exige a sessão do painel.** `GET`, `HEAD`, `OPTIONS` e `TRACE` em `/api/**` passam sem autenticar. Todo `POST`, `PUT`, `PATCH` e `DELETE` passa pelo `SessaoApiInterceptor`: sem sessão é `401`, sem o token CSRF (parâmetro `_csrf` ou cabeçalho `X-CSRF-Token`) é `403`, senha provisória é `403` e ação de chefe pedida por advogado é `403`. A recusa sai como `{"erro": ...}` — nunca um redirect para `/login`, que um script leria como sucesso.
+**Leitura é aberta; mutação exige a sessão do painel; download de peça/anexo exige sessão mesmo sendo GET.** `GET`, `HEAD`, `OPTIONS` e `TRACE` em `/api/**` passam sem autenticar, com uma exceção: `GET /api/documentos/{id}` e `GET /api/anexos/{id}` (a leitura protegida pelo Proxy) exigem sessão e respondem `401` sem ela — ver abaixo o porquê. Todo `POST`, `PUT`, `PATCH` e `DELETE` passa pelo `SessaoApiInterceptor`: sem sessão é `401`, sem o token CSRF (parâmetro `_csrf` ou cabeçalho `X-CSRF-Token`) é `403`, senha provisória é `403` e ação de chefe pedida por advogado é `403`. A recusa sai como `{"erro": ...}` — nunca um redirect para `/login`, que um script leria como sucesso.
 
-A OAB de quem age **vem sempre da sessão**, nunca do corpo: gerar peça, aprovar, rejeitar e juntar anexo usam a inscrição de quem está logado. Continuam vindo da requisição as duas OABs que são de terceiro ou de leitura: a de `POST /api/documentos/{id}/oabs` (o chefe habilitando outro advogado nos autos) e a de `?oab=` nos downloads, que é o que o Proxy confere.
+A OAB de quem age **vem sempre da sessão**, nunca do corpo nem de parâmetro de URL: gerar peça, aprovar, rejeitar, juntar anexo e baixar peça/anexo usam a inscrição de quem está logado. A única OAB que ainda é dado da requisição é a de terceiro em `POST /api/documentos/{id}/oabs` (o chefe habilitando outro advogado nos autos) e nos comandos de concessão/aprovação de acesso (`oab` de quem recebe o acesso) - nunca a de quem está fazendo a chamada.
 
-O `?oab=` deixa de ser campo livre para quem está logado: informar a inscrição de outro advogado é `403`, mesmo que ela esteja habilitada nos autos — senão bastaria a um advogado do escritório descobrir uma OAB habilitada para ler processo alheio. Sem sessão nada muda, e aí está o limite: **um chamador anônimo que saiba o id da peça e uma OAB habilitada ainda lê os autos sigilosos**, porque o `GET` é aberto por decisão de projeto. Fechar isso é exigir sessão nos dois downloads.
+Os downloads de peça e anexo **deixaram de aceitar `?oab=`**: antes, um chamador anônimo que soubesse o id e uma OAB habilitada lia autos sigilosos sem nunca ter feito login - o `GET` era aberto por decisão de projeto e o parâmetro era campo livre. Agora os dois exigem sessão (`401` sem ela) e usam sempre a OAB de quem está logado, nunca uma informada na requisição - um `?oab=` enviado é simplesmente ignorado.
+
+A decisão "pode ler?" passa pela `PoliticaDeLeituraDosAutos`, usada pelo Proxy: processo público, sempre sim; em segredo de justiça, a OAB precisa estar habilitada nesta peça/anexo (como antes) **ou** ter acesso ativo e não expirado ao processo inteiro, concedido direto (`POST /api/acessos`) ou por solicitação aprovada. Toda tentativa de leitura - permitida ou negada - entra na auditoria (`GET /api/auditoria`), junto com concessões, revogações, aprovações e negações.
 
 Numa sessão de terminal, o ritual é logar e reusar o cookie:
 
@@ -78,6 +101,11 @@ GET  /painel/documentos            gerar peça, fluxo de aprovação (botões po
 GET  /painel/anexos                juntar e baixar arquivos com a OAB da sessão
 GET  /painel/honorarios            lista de contratos com totais (a receber/recebido/em atraso) e filtros
 GET  /painel/honorarios/{id}       detalhe: parcelas, pagamento, resultado da causa (quota litis) e historico
+GET  /painel/processos/{cnj}/acessos
+                                   acessos ao processo: ativos, expirados, revogados; conceder e revogar (chefe)
+GET  /painel/solicitacoes          chefe: fila de pendentes (aprovar/negar) e historico; advogado: proprias
+                                   solicitacoes, com cancelar nas pendentes
+GET  /painel/auditoria             tentativas de leitura e acoes de gestao de acesso, com filtros (chefe)
 GET  /painel/modelos               cadastro de modelos (remover: chefe)
 GET  /painel/feriados              cadastro de feriados (remover: chefe)
 GET  /painel/usuarios              gestão de usuários (chefe)
@@ -144,8 +172,8 @@ curl -X POST localhost:8080/api/anexos \
   -F 'descricao=Laudo pericial'
 # -> {"id":1,...,"segredoJustica":true}   (herdado do processo; a OAB e a da sessao)
 
-curl 'localhost:8080/api/anexos/1?oab=PE54321'   # -> 200, o arquivo
-curl 'localhost:8080/api/anexos/1?oab=PE99999'   # -> 403, barrado pelo Proxy
+curl -b praxis.jar 'localhost:8080/api/anexos/1'  # -> 200, o arquivo (com a sessao de antes, acima)
+curl 'localhost:8080/api/anexos/1'                # -> 401, sem sessao - o ?oab= livre nao existe mais
 ```
 
 Quota litis em duas fases: o valor nasce estimado (sobre o valor da causa informado
@@ -180,6 +208,33 @@ curl -X POST localhost:8080/api/honorarios/1/parcelas/1/pagamentos -H 'Content-T
 
 curl localhost:8080/api/honorarios/1
 # parcela vencida: valorAtualizado = saldo + multa (2% uma vez) + juros (1% ao mes, pro rata die)
+```
+
+Solicitar acesso a um processo sigiloso, aprovar e ler - a OAB que solicita e a da
+sessão; quem aprova e nega é sempre o chefe:
+
+```bash
+curl -b ana.jar -X POST localhost:8080/api/solicitacoes -H 'Content-Type: application/json' \
+  -H "X-CSRF-Token: $csrf" -d '{
+  "numeroProcesso":"0007654-32.2026.8.17.0002",
+  "justificativa":"preciso acompanhar a audiencia de conciliacao deste processo"}'
+# -> status PENDENTE
+
+curl -b chefe.jar -X POST localhost:8080/api/solicitacoes/1/aprovar -H 'Content-Type: application/json' \
+  -H "X-CSRF-Token: $csrf" -d '{"expiraEm":"2026-12-31"}'
+# -> status APROVADA; cria o acesso ao processo ate 2026-12-31
+
+curl -b ana.jar localhost:8080/api/anexos/5
+# -> 200: a OAB da Ana nao esta na lista deste anexo, mas tem acesso ativo ao processo
+```
+
+Um processo sigiloso nunca fica sem nenhum acesso ativo:
+
+```bash
+curl -b chefe.jar -X POST localhost:8080/api/acessos/1/revogar -H 'Content-Type: application/json' \
+  -H "X-CSRF-Token: $csrf" -d '{"motivo":"saiu do caso"}'
+# -> 409 {"erro":"processo sigiloso não pode ficar sem nenhum acesso ativo; conceda outro antes de revogar este"}
+#    (so acontece quando este e o ultimo acesso ativo do processo)
 ```
 
 Falha de dominio vira status HTTP correto (`TratadorDeErrosRest`): invariante

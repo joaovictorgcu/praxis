@@ -204,7 +204,7 @@ public class PainelWebController {
     @GetMapping("/documentos/{id}")
     public String verDocumento(@PathVariable Long id, UsuarioLogado usuario, Model model) {
         try {
-            DocumentoGerado documento = baixar.executar(id, usuario.oab());
+            DocumentoGerado documento = baixar.executar(id, usuario.oab(), usuario.id(), usuario.nome());
             model.addAttribute("previa", documento.getConteudo());
             model.addAttribute("documentoGerado", documento.getId());
             model.addAttribute("statusDocumento", documento.getStatus().nome());

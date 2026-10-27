@@ -2,6 +2,7 @@ package school.cesar.praxis.domain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import school.cesar.praxis.domain.compartilhado.Solicitante;
 import school.cesar.praxis.domain.documento.*;
 import school.cesar.praxis.domain.honorario.*;
 import school.cesar.praxis.domain.notificacao.*;
@@ -58,6 +59,12 @@ class GeracaoDeDocumentosTest {
         assertTrue(procuracao.contains("Outorgante"));
     }
 
+    /** Proxy de teste: sem acesso ao processo configurado, sem auditoria persistida. */
+    private static DocumentoProxy proxy(AcessoDocumento real, String oab) {
+        return new DocumentoProxy(real, Solicitante.deOab(oab),
+                (processo, oabConsultada, hoje) -> false, evento -> { }, LocalDate.now());
+    }
+
     @Test
     @DisplayName("Proxy: segredo de justica barra OAB nao habilitada")
     void proxySegredoDeJustica() {
@@ -67,11 +74,11 @@ class GeracaoDeDocumentosTest {
 
         AcessoDocumento real = id -> sigiloso;
 
-        assertEquals("conteúdo sigiloso", new DocumentoProxy(real, "PE54321").carregar(1L).getConteudo());
+        assertEquals("conteúdo sigiloso", proxy(real, "PE54321").carregar(1L).getConteudo());
         assertThrows(DocumentoProxy.AcessoNegadoException.class,
-                () -> new DocumentoProxy(real, "PE99999").carregar(1L));
+                () -> proxy(real, "PE99999").carregar(1L));
         assertThrows(DocumentoProxy.AcessoNegadoException.class,
-                () -> new DocumentoProxy(real, "  ").carregar(1L));
+                () -> proxy(real, "  ").carregar(1L));
     }
 
     @Test
@@ -82,7 +89,7 @@ class GeracaoDeDocumentosTest {
                 "conteúdo público", LocalDate.of(2026, 9, 8), "PE12345", false, Set.of("PE12345"));
 
         AcessoDocumento real = id -> publico;
-        assertEquals("conteúdo público", new DocumentoProxy(real, "PE99999").carregar(2L).getConteudo());
+        assertEquals("conteúdo público", proxy(real, "PE99999").carregar(2L).getConteudo());
         assertEquals("procuracao-0001234-56-2026-8-17-0001.txt", publico.nomeArquivo());
     }
 

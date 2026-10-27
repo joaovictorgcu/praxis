@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import school.cesar.praxis.application.port.in.DocumentosUseCases;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.documento.TipoDocumento;
-import school.cesar.praxis.presentation.web.seguranca.OabDeLeitura;
+import school.cesar.praxis.presentation.web.seguranca.SessaoExigidaException;
 import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
 import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
@@ -160,14 +160,15 @@ public class DocumentoRestController {
     }
 
     /**
-     * Leitura protegida pelo Proxy: exige a OAB do solicitante. Quem esta
-     * logado so le com a propria inscricao - ver {@link OabDeLeitura}.
+     * Leitura protegida pelo Proxy: exige sessao e usa sempre a OAB de quem
+     * esta logado, nunca uma informada na requisicao.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<String> baixar(@PathVariable Long id,
-                                         @RequestParam(name = "oab") String oab,
-                                         UsuarioLogado usuario) {
-        DocumentoGerado documento = baixarDocumento.executar(id, OabDeLeitura.conciliar(usuario, oab));
+    public ResponseEntity<String> baixar(@PathVariable Long id, UsuarioLogado usuario) {
+        if (usuario == null) {
+            throw new SessaoExigidaException("faça login para baixar esta peça");
+        }
+        DocumentoGerado documento = baixarDocumento.executar(id, usuario.oab(), usuario.id(), usuario.nome());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + documento.nomeArquivo() + "\"")

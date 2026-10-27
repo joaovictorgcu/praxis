@@ -50,6 +50,12 @@ public interface AnexosUseCases {
     /** Leitura protegida: passa pelo Proxy do segredo de justica. */
     interface BaixarAnexo {
 
-        ArquivoAnexo executar(Long anexoId, String oabSolicitante);
+        /** Chamada direta (BDD, scripts): sem usuario logado, so a auditoria registra "desconhecido". */
+        default ArquivoAnexo executar(Long anexoId, String oabSolicitante) {
+            return executar(anexoId, oabSolicitante, null, null);
+        }
+
+        /** Chamada do painel/API: carrega quem, alem da OAB, para a auditoria. */
+        ArquivoAnexo executar(Long anexoId, String oabSolicitante, Long usuarioId, String usuarioNome);
     }
 }

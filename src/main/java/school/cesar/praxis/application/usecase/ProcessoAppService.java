@@ -3,7 +3,12 @@ package school.cesar.praxis.application.usecase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import school.cesar.praxis.application.port.in.ProcessosUseCases;
+import school.cesar.praxis.application.port.out.AcessoAoProcessoRepositorio;
 import school.cesar.praxis.application.port.out.ProcessoRepositorio;
+import school.cesar.praxis.domain.acesso.AcessoAoProcesso;
+import school.cesar.praxis.domain.compartilhado.EventoDeAuditoria;
+import school.cesar.praxis.domain.compartilhado.RegistradorDeAuditoria;
+import school.cesar.praxis.domain.compartilhado.Relogio;
 import school.cesar.praxis.domain.notificacao.ObservadorProcesso;
 import school.cesar.praxis.domain.processo.Advogado;
 import school.cesar.praxis.domain.processo.Andamento;
@@ -11,6 +16,7 @@ import school.cesar.praxis.domain.processo.NumeroCnj;
 import school.cesar.praxis.domain.processo.Processo;
 import school.cesar.praxis.domain.processo.Vara;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,10 +35,18 @@ public class ProcessoAppService implements ProcessosUseCases.CadastrarProcesso,
 
     private final ProcessoRepositorio processos;
     private final ObservadorProcesso observador;
+    private final AcessoAoProcessoRepositorio acessos;
+    private final RegistradorDeAuditoria auditoria;
+    private final Relogio relogio;
 
-    public ProcessoAppService(ProcessoRepositorio processos, ObservadorProcesso observador) {
+    public ProcessoAppService(ProcessoRepositorio processos, ObservadorProcesso observador,
+                              AcessoAoProcessoRepositorio acessos, RegistradorDeAuditoria auditoria,
+                              Relogio relogio) {
         this.processos = processos;
         this.observador = observador;
+        this.acessos = acessos;
+        this.auditoria = auditoria;
+        this.relogio = relogio;
     }
 
     @Override
@@ -50,7 +64,21 @@ public class ProcessoAppService implements ProcessosUseCases.CadastrarProcesso,
                 comando.segredoJustica(),
                 new Advogado(comando.responsavelNome(), comando.responsavelEmail(), comando.responsavelOab()),
                 vara);
-        return processos.salvar(processo);
+        Processo salvo = processos.salvar(processo);
+
+        // Sigiloso: o responsavel recebe acesso automatico e permanente aos autos
+        // inteiros, para nao ficar bloqueado dos proprios autos no mesmo instante
+        // em que os cadastra.
+        if (salvo.isSegredoJustica()) {
+            String oabResponsavel = salvo.getResponsavel().oab();
+            acessos.salvar(new AcessoAoProcesso(salvo.getNumero(), oabResponsavel, oabResponsavel,
+                    relogio.hoje(), null));
+            auditoria.registrar(EventoDeAuditoria.gestao("CONCESSAO", salvo.getNumero(), oabResponsavel,
+                    null, oabResponsavel, LocalDateTime.now(),
+                    "acesso automático e permanente do responsável ao cadastrar processo sigiloso"));
+        }
+
+        return salvo;
     }
 
     @Override

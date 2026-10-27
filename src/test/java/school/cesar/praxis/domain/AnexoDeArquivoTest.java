@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import school.cesar.praxis.domain.anexo.*;
 import school.cesar.praxis.domain.compartilhado.AcessoRestrito;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
+import school.cesar.praxis.domain.compartilhado.Solicitante;
 import school.cesar.praxis.domain.processo.NumeroCnj;
 
 import java.time.LocalDate;
@@ -98,6 +99,12 @@ class AnexoDeArquivoTest {
 
     // --- Proxy compartilhado com o documento gerado ---
 
+    /** Proxy de teste: sem acesso ao processo configurado, sem auditoria persistida. */
+    private static ArquivoProxy proxy(AcessoRestrito<ArquivoAnexo> real, String oab) {
+        return new ArquivoProxy(real, Solicitante.deOab(oab),
+                (processo, oabConsultada, hoje) -> false, evento -> { }, LocalDate.now());
+    }
+
     @Test
     @DisplayName("Proxy: anexo em segredo de justica barra OAB nao habilitada")
     void proxySegredoDeJustica() {
@@ -105,15 +112,15 @@ class AnexoDeArquivoTest {
         AcessoRestrito<ArquivoAnexo> real = id -> sigiloso;
 
         assertArrayEquals(CONTEUDO,
-                new ArquivoProxy(real, "PE12345").carregar(1L).getConteudo());
+                proxy(real, "PE12345").carregar(1L).getConteudo());
 
         ProxyDeAcesso.AcessoNegadoException negado = assertThrows(
                 ProxyDeAcesso.AcessoNegadoException.class,
-                () -> new ArquivoProxy(real, "PE99999").carregar(1L));
+                () -> proxy(real, "PE99999").carregar(1L));
         assertTrue(negado.getMessage().contains("arquivo 1"), negado.getMessage());
 
         assertThrows(ProxyDeAcesso.AcessoNegadoException.class,
-                () -> new ArquivoProxy(real, "  ").carregar(1L));
+                () -> proxy(real, "  ").carregar(1L));
     }
 
     @Test
@@ -122,6 +129,6 @@ class AnexoDeArquivoTest {
         ArquivoAnexo publico = anexo("recibo.pdf", TipoArquivo.PDF, false);
         AcessoRestrito<ArquivoAnexo> real = id -> publico;
 
-        assertEquals("recibo.pdf", new ArquivoProxy(real, "PE99999").carregar(1L).getNome());
+        assertEquals("recibo.pdf", proxy(real, "PE99999").carregar(1L).getNome());
     }
 }

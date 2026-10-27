@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="'Praxis - Acessos ' + ${numeroProcesso}">Praxis - Acessos</title>
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
+</head>
+<body class="app">
+<header th:replace="~{fragmentos :: cabecalho('processos')}"></header>
+
+<main id="conteudo" tabindex="-1">
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>Acessos ao Processo <span th:text="${numeroProcesso}">CNJ</span></h2>
+      <a class="botao secundario pequeno" th:href="@{'/painel/processos/' + ${numeroProcesso}}">Voltar ao Processo</a>
+    </div>
+    <p class="apoio">
+      Uma OAB com acesso ativo lê todas as peças e anexos deste processo - atuais e futuros.
+      A habilitação por peça/anexo continua existindo e também vale. Um processo sigiloso nunca
+      pode ficar sem nenhum acesso ativo.
+    </p>
+
+    <form th:action="@{'/painel/processos/' + ${numeroProcesso} + '/acessos'}" method="post" class="linha">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <label>OAB
+        <input type="text" name="oab" required placeholder="PE99999">
+      </label>
+      <label>Expira em (opcional)
+        <input type="date" name="expiraEm">
+      </label>
+      <div><button type="submit">Conceder Acesso</button></div>
+    </form>
+
+    <div class="tabela" style="margin-top:16px">
+      <table>
+        <thead>
+        <tr>
+          <th>OAB</th>
+          <th>Concedido Por</th>
+          <th>Concedido Em</th>
+          <th>Expira Em</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${acessos}">
+          <td th:text="${a.oab()}">-</td>
+          <td th:text="${a.concedidoPor()}">-</td>
+          <td style="white-space:nowrap" th:text="${#temporals.format(a.concedidoEm(), 'dd/MM/yyyy')}">-</td>
+          <td style="white-space:nowrap">
+            <span th:if="${a.expiraEm() == null}" class="apoio">permanente</span>
+            <span th:if="${a.expiraEm() != null}" th:text="${#temporals.format(a.expiraEm(), 'dd/MM/yyyy')}">-</span>
+            <span th:if="${a.ativo() and a.expiraEm() != null}" class="apoio"
+                  th:text="'(' + ${a.diasParaExpirar()} + ' dia(s))'">-</span>
+          </td>
+          <td>
+            <span th:if="${a.revogadoEm() != null}" class="etiqueta cinza"
+                  th:text="'revogado em ' + ${#temporals.format(a.revogadoEm(), 'dd/MM/yyyy')}">revogado</span>
+            <span th:if="${a.revogadoEm() == null and a.expirado()}" class="etiqueta vermelha">expirado</span>
+            <span th:if="${a.revogadoEm() == null and a.ativo()}" class="etiqueta verde">ativo</span>
+          </td>
+          <td class="acoes">
+            <form th:if="${a.ativo()}" th:action="@{'/painel/processos/' + ${numeroProcesso} + '/acessos/' + ${a.id()} + '/revogar'}"
+                  method="post" class="linha" style="margin:0;gap:6px">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <input type="text" name="motivo" required placeholder="motivo da revogação" style="width:200px">
+              <button type="submit" class="secundario pequeno">Revogar</button>
+            </form>
+            <span th:unless="${a.ativo()}" class="apoio" th:text="${a.motivoRevogacao()}">-</span>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(acessos)}">
+          <td colspan="6" class="vazio">Nenhum acesso concedido ainda.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>
