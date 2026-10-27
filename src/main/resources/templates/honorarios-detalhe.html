@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="'Praxis - Honorários ' + ${detalhe.numeroProcesso}">Praxis - Honorários</title>
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
+</head>
+<body class="app">
+<header th:replace="~{fragmentos :: cabecalho('honorarios')}"></header>
+
+<main id="conteudo" tabindex="-1">
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>
+        Contrato de Honorários - <span th:text="${detalhe.numeroProcesso}">CNJ</span>
+      </h2>
+      <a class="botao secundario pequeno" th:href="@{/painel/honorarios}">Todos os Contratos</a>
+    </div>
+    <dl class="ficha">
+      <div><dt>Cliente</dt><dd th:text="${processo.cliente}">-</dd></div>
+      <div><dt>Modalidade</dt><dd th:text="${@rotulos.titulo(detalhe.modalidade)}">-</dd></div>
+      <div><dt>Celebrado em</dt><dd th:text="${#temporals.format(detalhe.celebradoEm, 'dd/MM/yyyy')}">-</dd></div>
+      <div><dt>Status</dt>
+        <dd>
+          <span class="etiqueta"
+                th:classappend="${detalhe.status == 'QUITADO'} ? 'verde'
+                                : (${detalhe.status == 'EM_ATRASO'} ? 'vermelha'
+                                : (${detalhe.status == 'PARCIALMENTE_PAGO'} ? 'ambar' : 'azul'))"
+                th:text="${@rotulos.titulo(detalhe.status)}">status</span>
+        </dd>
+      </div>
+      <div><dt>Valor Contratado</dt>
+        <dd>
+          R$ <span th:text="${#numbers.formatDecimal(detalhe.valorContratado, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+          <span th:if="${detalhe.aguardandoResultado}" class="apoio">(estimado)</span>
+        </dd>
+      </div>
+      <div th:if="${detalhe.modalidade == 'FIXO'}">
+        <dt>Base de Cálculo (Fixo)</dt>
+        <dd>Valor fixo combinado: R$ <span th:text="${#numbers.formatDecimal(detalhe.valorFixo, 1, 'POINT', 2, 'COMMA')}">0,00</span></dd>
+      </div>
+      <div th:if="${detalhe.modalidade == 'POR_HORA'}">
+        <dt>Base de Cálculo (Por Hora)</dt>
+        <dd>
+          R$ <span th:text="${#numbers.formatDecimal(detalhe.valorHora, 1, 'POINT', 2, 'COMMA')}">0,00</span> / hora
+          &middot; <span th:text="${detalhe.horasTrabalhadas}">0</span> hora(s) trabalhadas
+        </dd>
+      </div>
+      <div th:if="${detalhe.valorCausaEstimado != null and detalhe.valorCausaEstimado.signum() > 0}">
+        <dt>Base de Cálculo (Quota Litis)</dt>
+        <dd>
+          Valor da causa R$ <span th:text="${#numbers.formatDecimal(detalhe.valorCausaEstimado, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+          &middot; <span th:text="${@rotulos.percentual(detalhe.percentualExito)}">0</span>% de êxito
+        </dd>
+      </div>
+      <div th:if="${detalhe.valorObtido != null}">
+        <dt>Resultado da Causa</dt>
+        <dd>
+          Proveito econômico R$ <span th:text="${#numbers.formatDecimal(detalhe.valorObtido, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+          &middot; sucumbência R$ <span th:text="${#numbers.formatDecimal(detalhe.honorariosSucumbencia, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+        </dd>
+      </div>
+      <div><dt>Total Pago</dt><dd th:text="'R$ ' + ${#numbers.formatDecimal(detalhe.totalPago, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</dd></div>
+      <div><dt>Saldo Devedor</dt><dd th:text="'R$ ' + ${#numbers.formatDecimal(detalhe.saldoDevedor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</dd></div>
+    </dl>
+    <p th:unless="${podeAgir}" class="apoio" style="margin:0">
+      Somente leitura: só o chefe ou o advogado responsável por este processo registra pagamento ou resultado.
+    </p>
+  </section>
+
+  <section class="cartao" th:if="${detalhe.aguardandoResultado}">
+    <h2>Registrar Resultado da Causa</h2>
+    <p class="apoio">
+      Informe o proveito econômico efetivamente obtido pelo cliente; o valor final dos honorários
+      é calculado sobre ele (não mais sobre a estimativa) e as parcelas são geradas agora.
+      Resultado sem êxito (valor obtido zero) encerra o contrato sem cobrança.
+    </p>
+    <form th:if="${podeAgir}" th:action="@{'/painel/honorarios/' + ${detalhe.id} + '/resultado'}" method="post" class="linha">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <label>Valor Obtido pelo Cliente (R$)
+        <input type="number" name="valorObtido" min="0" step="0.01" required placeholder="150000.00">
+      </label>
+      <label>Honorários de Sucumbência (R$)
+        <input type="number" name="honorariosSucumbencia" min="0" step="0.01" placeholder="5000.00">
+      </label>
+      <div><button type="submit">Registrar Resultado</button></div>
+    </form>
+  </section>
+
+  <section class="cartao" th:unless="${detalhe.aguardandoResultado}">
+    <div class="cartao-cabecalho">
+      <h2>Parcelas</h2>
+      <span class="contador" th:text="${#lists.size(detalhe.parcelas)}">0</span>
+    </div>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>#</th>
+          <th>Vencimento</th>
+          <th>Valor</th>
+          <th>Valor Pago</th>
+          <th>Status</th>
+          <th>Valor Atualizado</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${detalhe.parcelas}" th:classappend="${p.status == 'EM_ATRASO'} ? 'vencido'">
+          <td th:text="${p.numero}">1</td>
+          <td style="white-space:nowrap" th:text="${#temporals.format(p.vencimento, 'dd/MM/yyyy')}">-</td>
+          <td style="white-space:nowrap" th:text="'R$ ' + ${#numbers.formatDecimal(p.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+          <td style="white-space:nowrap" th:text="'R$ ' + ${#numbers.formatDecimal(p.valorPago, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+          <td>
+            <span class="etiqueta"
+                  th:classappend="${p.status == 'PAGA'} ? 'verde'
+                                  : (${p.status == 'EM_ATRASO'} ? 'vermelha'
+                                  : (${p.status == 'PARCIALMENTE_PAGA'} ? 'ambar' : 'azul'))"
+                  th:text="${@rotulos.titulo(p.status)}">status</span>
+          </td>
+          <td>
+            <span th:if="${p.status == 'EM_ATRASO'}">
+              <span style="white-space:nowrap">R$ <span th:text="${#numbers.formatDecimal(p.valorAtualizado, 1, 'POINT', 2, 'COMMA')}">0,00</span></span>
+              <br>
+              <span class="apoio" style="white-space:nowrap"
+                    th:text="'(multa R$ ' + ${#numbers.formatDecimal(p.multa, 1, 'POINT', 2, 'COMMA')}
+                             + ' + juros R$ ' + ${#numbers.formatDecimal(p.juros, 1, 'POINT', 2, 'COMMA')} + ')'">-</span>
+            </span>
+            <span th:unless="${p.status == 'EM_ATRASO'}" class="apoio">-</span>
+          </td>
+          <td class="acoes">
+            <form th:if="${podeAgir and p.status != 'PAGA'}"
+                  th:action="@{'/painel/honorarios/' + ${detalhe.id} + '/parcelas/' + ${p.numero} + '/pagamentos'}"
+                  method="post" class="linha" style="margin:0;gap:6px;row-gap:4px">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <input type="number" name="valor" min="0.01" step="0.01" required placeholder="valor" style="width:64px">
+              <input type="date" name="dataPagamento" th:value="${hoje}" required style="width:118px">
+              <button type="submit" class="secundario pequeno">Pagar</button>
+            </form>
+            <span th:if="${p.status == 'PAGA'}" class="apoio">quitada</span>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(detalhe.parcelas)}">
+          <td colspan="7" class="vazio">Nenhuma parcela gerada.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="cartao">
+    <h2>Histórico</h2>
+    <ul class="historico" th:if="${!#lists.isEmpty(detalhe.historico)}">
+      <li th:each="h : ${detalhe.historico}">
+        <strong th:text="${@rotulos.titulo(h.tipo)}">tipo</strong>
+        <span th:text="${h.descricao}">descrição</span>
+        <span th:text="${#temporals.format(h.quando, 'dd/MM/yyyy HH:mm')}">data</span>
+      </li>
+    </ul>
+    <p th:if="${#lists.isEmpty(detalhe.historico)}" class="vazio">Nenhum registro ainda.</p>
+  </section>
+</main>
+</body>
+</html>

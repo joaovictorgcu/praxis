@@ -174,12 +174,15 @@ public class ProcessoWebController {
                                      @RequestParam(required = false) Integer horasTrabalhadas,
                                      @RequestParam(required = false) BigDecimal valorCausa,
                                      @RequestParam(required = false) BigDecimal percentualExito,
+                                     @RequestParam int quantidadeParcelas,
+                                     @RequestParam String primeiroVencimento,
                                      RedirectAttributes flash) {
         return executar(flash, numero, "Contrato de honorários celebrado.", () ->
                 cadastrarContrato.executar(new HonorariosUseCases.CadastrarContrato.Comando(
                         numero, modalidade, LocalDate.parse(celebradoEm),
                         valorFixo, valorHora, horasTrabalhadas == null ? 0 : horasTrabalhadas,
-                        valorCausa, percentualExito)));
+                        valorCausa, percentualExito,
+                        quantidadeParcelas, LocalDate.parse(primeiroVencimento))));
     }
 
     @PostMapping("/{numero}/prazos/{id}/cumprir")

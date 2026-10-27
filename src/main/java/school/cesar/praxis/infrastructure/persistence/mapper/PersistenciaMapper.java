@@ -13,6 +13,8 @@ import school.cesar.praxis.domain.agenda.Audiencia;
 import school.cesar.praxis.domain.anexo.ArquivoAnexo;
 import school.cesar.praxis.domain.honorario.BaseCalculo;
 import school.cesar.praxis.domain.honorario.ContratoHonorario;
+import school.cesar.praxis.domain.honorario.Parcela;
+import school.cesar.praxis.domain.honorario.RegistroHonorario;
 import school.cesar.praxis.domain.modelo.CodigoModelo;
 import school.cesar.praxis.domain.modelo.ModeloDocumento;
 import school.cesar.praxis.domain.modelo.TextoModelo;
@@ -32,6 +34,7 @@ import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.EscritorioEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.ParcelaEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ParteContrariaEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.PrazoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ProcessoEntity;
@@ -444,10 +447,22 @@ public final class PersistenciaMapper {
         entidade.setValorCausa(base.valorCausa());
         entidade.setPercentualExito(base.percentualExito());
         entidade.setValorContratado(contrato.getValorContratado());
+        entidade.setQuantidadeParcelas(contrato.getQuantidadeParcelas());
+        entidade.setPrimeiroVencimento(contrato.getPrimeiroVencimento());
+        entidade.setValorObtido(contrato.getValorObtido());
+        entidade.setHonorariosSucumbencia(contrato.getHonorariosSucumbencia());
+        entidade.setHistorico(serializarHistoricoHonorario(contrato.getHistorico()));
+        entidade.setParcelas(contrato.getParcelas().stream()
+                .map(PersistenciaMapper::paraEntidade)
+                .collect(Collectors.toList()));
         return entidade;
     }
 
     public static ContratoHonorario paraDominio(ContratoHonorarioEntity entidade) {
+        List<Parcela> parcelas = entidade.getParcelas().stream()
+                .map(PersistenciaMapper::paraDominio)
+                .sorted(java.util.Comparator.comparingInt(Parcela::getNumero))
+                .toList();
         return new ContratoHonorario(
                 entidade.getId(),
                 NumeroCnj.de(entidade.getNumeroProcesso()),
@@ -459,7 +474,46 @@ public final class PersistenciaMapper {
                         entidade.getValorCausa(),
                         entidade.getPercentualExito()),
                 entidade.getCelebradoEm(),
-                entidade.getValorContratado());
+                entidade.getValorContratado(),
+                entidade.getQuantidadeParcelas(),
+                entidade.getPrimeiroVencimento(),
+                parcelas,
+                entidade.getValorObtido(),
+                entidade.getHonorariosSucumbencia(),
+                desserializarHistoricoHonorario(entidade.getHistorico()));
+    }
+
+    private static ParcelaEntity paraEntidade(Parcela parcela) {
+        ParcelaEntity entidade = new ParcelaEntity();
+        entidade.setNumero(parcela.getNumero());
+        entidade.setVencimento(parcela.getVencimento());
+        entidade.setValor(parcela.getValor());
+        entidade.setValorPago(parcela.getValorPago());
+        entidade.setDataPagamento(parcela.getDataPagamento());
+        return entidade;
+    }
+
+    private static Parcela paraDominio(ParcelaEntity entidade) {
+        return new Parcela(entidade.getNumero(), entidade.getVencimento(), entidade.getValor(),
+                entidade.getValorPago(), entidade.getDataPagamento());
+    }
+
+    private static String serializarHistoricoHonorario(List<RegistroHonorario> historico) {
+        return historico.stream()
+                .map(r -> String.join("|", r.getTipo(), r.getDescricao(), r.getQuando().toString()))
+                .collect(Collectors.joining(";"));
+    }
+
+    private static List<RegistroHonorario> desserializarHistoricoHonorario(String valor) {
+        List<RegistroHonorario> historico = new ArrayList<>();
+        if (valor == null || valor.isBlank()) {
+            return historico;
+        }
+        for (String entrada : valor.split(";")) {
+            String[] partes = entrada.split("\\|", -1);
+            historico.add(new RegistroHonorario(partes[0], partes[1], LocalDateTime.parse(partes[2])));
+        }
+        return historico;
     }
 
     // --- Modelo de documento ---

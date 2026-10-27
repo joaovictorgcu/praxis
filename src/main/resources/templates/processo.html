@@ -208,19 +208,38 @@
           <input type="number" name="percentualExito" min="0" max="100" step="0.01" placeholder="20">
         </label>
       </div>
+      <div class="linha" style="margin:0">
+        <label>Número de Parcelas
+          <input type="number" name="quantidadeParcelas" min="1" max="24" value="1" required style="width:90px">
+        </label>
+        <label>1º Vencimento
+          <input type="date" name="primeiroVencimento" th:value="${hoje}" required>
+        </label>
+      </div>
       <div><button type="submit">Contratar</button></div>
     </form>
+    <p class="apoio" style="margin:12px 0 0">
+      Na quota litis, o valor acima nasce como <strong>estimativa</strong> sobre o valor da causa;
+      o parcelamento só é gerado depois que o resultado da causa é registrado.
+    </p>
 
     <div class="tabela" style="margin-top:16px">
       <table>
-        <thead><tr><th>Modalidade</th><th>Celebrado em</th><th>Valor Contratado</th></tr></thead>
+        <thead><tr><th>Modalidade</th><th>Celebrado em</th><th>Valor Contratado</th><th>Situação</th><th></th></tr></thead>
         <tbody>
         <tr th:each="ct : ${contratos}">
           <td th:text="${@rotulos.titulo(ct.modalidade)}">-</td>
           <td th:text="${#temporals.format(ct.celebradoEm, 'dd/MM/yyyy')}">-</td>
-          <td th:text="'R$ ' + ${#numbers.formatDecimal(ct.valorContratado, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+          <td>
+            R$ <span th:text="${#numbers.formatDecimal(ct.valorContratado, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+            <span th:if="${ct.aguardandoResultado}" class="apoio">(estimado)</span>
+          </td>
+          <td><span class="etiqueta azul" th:text="${@rotulos.titulo(ct.status)}">status</span></td>
+          <td class="acoes">
+            <a class="botao secundario pequeno" th:href="@{'/painel/honorarios/' + ${ct.id}}">Ver</a>
+          </td>
         </tr>
-        <tr th:if="${#lists.isEmpty(contratos)}"><td colspan="3" class="vazio">Nenhum contrato de honorário.</td></tr>
+        <tr th:if="${#lists.isEmpty(contratos)}"><td colspan="5" class="vazio">Nenhum contrato de honorário.</td></tr>
         </tbody>
       </table>
     </div>

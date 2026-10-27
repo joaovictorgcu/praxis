@@ -39,9 +39,17 @@ POST /api/documentos/{id}/rejeitar             {texto}   em revisão -> rejeitad
 POST /api/documentos/{id}/desfazer             desfaz a última decisão (chefe)
 POST /api/documentos/{id}/protocolar           aprovado -> protocolado
 POST /api/documentos/{id}/oabs                 {oab}  habilita OAB nos autos da peça (chefe)
+
+POST /api/honorarios                           contrata honorario (fixo/por hora/quota litis), parcelado em 1-24 vezes
+GET  /api/honorarios?processo=                 lista contratos (resumo; filtra por processo se informado)
+GET  /api/honorarios/{id}                      detalhe do contrato: parcelas, encargos de atraso e historico
+POST /api/honorarios/{id}/parcelas/{numero}/pagamentos
+                                                {valor,dataPagamento}  registra pagamento (parcial ou total) da parcela
+POST /api/honorarios/{id}/resultado            {valorObtido,honorariosSucumbencia}  so quota litis: fecha o valor
+                                                final sobre o proveito economico real e gera as parcelas
 ```
 
-Existem ainda `/api/clientes`, `/api/partes-contrarias`, `/api/audiencias` e `/api/honorarios`. Clientes, partes contrárias e audiências também podem ser gerenciados manualmente pelo chefe nas telas do painel descritas abaixo.
+Existem ainda `/api/clientes`, `/api/partes-contrarias` e `/api/audiencias`. Clientes, partes contrárias e audiências também podem ser gerenciados manualmente pelo chefe nas telas do painel descritas abaixo.
 
 **Leitura é aberta; mutação exige a sessão do painel.** `GET`, `HEAD`, `OPTIONS` e `TRACE` em `/api/**` passam sem autenticar. Todo `POST`, `PUT`, `PATCH` e `DELETE` passa pelo `SessaoApiInterceptor`: sem sessão é `401`, sem o token CSRF (parâmetro `_csrf` ou cabeçalho `X-CSRF-Token`) é `403`, senha provisória é `403` e ação de chefe pedida por advogado é `403`. A recusa sai como `{"erro": ...}` — nunca um redirect para `/login`, que um script leria como sucesso.
 
@@ -68,6 +76,8 @@ GET  /painel/processos             lista/busca e cadastro de processos
 GET  /painel/processos/{cnj}       ficha: linha do tempo, prazos, peças, anexos; POST andamentos e prazos
 GET  /painel/documentos            gerar peça, fluxo de aprovação (botões por papel), abrir com a OAB da sessão
 GET  /painel/anexos                juntar e baixar arquivos com a OAB da sessão
+GET  /painel/honorarios            lista de contratos com totais (a receber/recebido/em atraso) e filtros
+GET  /painel/honorarios/{id}       detalhe: parcelas, pagamento, resultado da causa (quota litis) e historico
 GET  /painel/modelos               cadastro de modelos (remover: chefe)
 GET  /painel/feriados              cadastro de feriados (remover: chefe)
 GET  /painel/usuarios              gestão de usuários (chefe)
@@ -136,6 +146,40 @@ curl -X POST localhost:8080/api/anexos \
 
 curl 'localhost:8080/api/anexos/1?oab=PE54321'   # -> 200, o arquivo
 curl 'localhost:8080/api/anexos/1?oab=PE99999'   # -> 403, barrado pelo Proxy
+```
+
+Quota litis em duas fases: o valor nasce estimado (sobre o valor da causa informado
+na contratação) e só vira final - com as parcelas geradas - quando o resultado da
+causa é registrado, sobre o proveito econômico de verdade:
+
+```bash
+curl -X POST localhost:8080/api/honorarios -H 'Content-Type: application/json' -d '{
+  "numeroProcesso":"0001234-56.2026.8.17.0001","modalidade":"QUOTA_LITIS",
+  "celebradoEm":"2026-09-10","valorCausa":100000.00,"percentualExito":20,
+  "quantidadeParcelas":2,"primeiroVencimento":"2026-10-10"}'
+# -> valorContratado: 20000.00 (estimado), aguardandoResultado: true, sem parcelas ainda
+
+curl -X POST localhost:8080/api/honorarios/1/resultado -H 'Content-Type: application/json' -d '{
+  "valorObtido":150000.00,"honorariosSucumbencia":5000.00}'
+# -> valorContratado recalculado para 30000.00 (20% de 150000, nao mais da estimativa)
+#    aguardandoResultado: false, 2 parcelas geradas (15000.00 cada)
+
+curl -X POST localhost:8080/api/honorarios/2/resultado -H 'Content-Type: application/json' -d '{
+  "valorObtido":10000.00,"honorariosSucumbencia":9000.00}'
+# -> 400 {"erro":"honorarios contratuais (2000.00) mais honorarios de sucumbencia (9000.00)
+#    superam o valor obtido pelo cliente (10000.00) - art. 50 do Codigo de Etica da OAB"}
+#    contrato nao muda de estado: continua aguardando resultado
+```
+
+Pagamento de parcela com saldo insuficiente e encargo de atraso:
+
+```bash
+curl -X POST localhost:8080/api/honorarios/1/parcelas/1/pagamentos -H 'Content-Type: application/json' -d '{
+  "valor":99999.00,"dataPagamento":"2026-10-10"}'
+# -> 400 {"erro":"pagamento de 99999.00 maior que o saldo da parcela 1 (15000.00)"}
+
+curl localhost:8080/api/honorarios/1
+# parcela vencida: valorAtualizado = saldo + multa (2% uma vez) + juros (1% ao mes, pro rata die)
 ```
 
 Falha de dominio vira status HTTP correto (`TratadorDeErrosRest`): invariante

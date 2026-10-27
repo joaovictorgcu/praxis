@@ -4,10 +4,14 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "contrato_honorario", indexes = @Index(name = "idx_contrato_processo", columnList = "numero_processo"))
 public class ContratoHonorarioEntity {
+
+    static final int TEXTO_LONGO = 1_000_000;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +43,25 @@ public class ContratoHonorarioEntity {
 
     @Column(name = "valor_contratado", nullable = false, precision = 15, scale = 2)
     private BigDecimal valorContratado;
+
+    @Column(name = "quantidade_parcelas", nullable = false)
+    private int quantidadeParcelas;
+
+    @Column(name = "primeiro_vencimento")
+    private LocalDate primeiroVencimento;
+
+    @Column(name = "valor_obtido", precision = 15, scale = 2)
+    private BigDecimal valorObtido;
+
+    @Column(name = "honorarios_sucumbencia", precision = 15, scale = 2)
+    private BigDecimal honorariosSucumbencia;
+
+    @Column(name = "historico", length = TEXTO_LONGO)
+    private String historico;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "contrato_id")
+    private List<ParcelaEntity> parcelas = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -118,5 +141,53 @@ public class ContratoHonorarioEntity {
 
     public void setValorContratado(BigDecimal valorContratado) {
         this.valorContratado = valorContratado;
+    }
+
+    public int getQuantidadeParcelas() {
+        return quantidadeParcelas;
+    }
+
+    public void setQuantidadeParcelas(int quantidadeParcelas) {
+        this.quantidadeParcelas = quantidadeParcelas;
+    }
+
+    public LocalDate getPrimeiroVencimento() {
+        return primeiroVencimento;
+    }
+
+    public void setPrimeiroVencimento(LocalDate primeiroVencimento) {
+        this.primeiroVencimento = primeiroVencimento;
+    }
+
+    public BigDecimal getValorObtido() {
+        return valorObtido;
+    }
+
+    public void setValorObtido(BigDecimal valorObtido) {
+        this.valorObtido = valorObtido;
+    }
+
+    public BigDecimal getHonorariosSucumbencia() {
+        return honorariosSucumbencia;
+    }
+
+    public void setHonorariosSucumbencia(BigDecimal honorariosSucumbencia) {
+        this.honorariosSucumbencia = honorariosSucumbencia;
+    }
+
+    public String getHistorico() {
+        return historico;
+    }
+
+    public void setHistorico(String historico) {
+        this.historico = historico;
+    }
+
+    public List<ParcelaEntity> getParcelas() {
+        return parcelas;
+    }
+
+    public void setParcelas(List<ParcelaEntity> parcelas) {
+        this.parcelas = parcelas;
     }
 }

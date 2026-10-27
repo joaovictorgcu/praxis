@@ -15,20 +15,22 @@ public class ContratoHonorarioRestController {
 
     private final HonorariosUseCases.CadastrarContrato cadastrar;
     private final HonorariosUseCases.ListarContratos listar;
-    private final HonorariosUseCases.ConsultarContrato consultar;
+    private final HonorariosUseCases.ConsultarDetalheContrato consultarDetalhe;
+    private final HonorariosUseCases.RegistrarPagamentoParcela registrarPagamento;
+    private final HonorariosUseCases.RegistrarResultadoCausa registrarResultado;
 
     public ContratoHonorarioRestController(HonorariosUseCases.CadastrarContrato cadastrar,
                                            HonorariosUseCases.ListarContratos listar,
-                                           HonorariosUseCases.ConsultarContrato consultar) {
+                                           HonorariosUseCases.ConsultarDetalheContrato consultarDetalhe,
+                                           HonorariosUseCases.RegistrarPagamentoParcela registrarPagamento,
+                                           HonorariosUseCases.RegistrarResultadoCausa registrarResultado) {
         this.cadastrar = cadastrar;
         this.listar = listar;
-        this.consultar = consultar;
+        this.consultarDetalhe = consultarDetalhe;
+        this.registrarPagamento = registrarPagamento;
+        this.registrarResultado = registrarResultado;
     }
 
-    /**
-     * horasTrabalhadas e Integer, e nao int: so a modalidade POR_HORA o informa, e
-     * omiti-lo no JSON de um contrato fixo nao pode virar erro de desserializacao.
-     */
     public record NovoContrato(@NotBlank String numeroProcesso,
                                @NotBlank String modalidade,
                                LocalDate celebradoEm,
@@ -36,20 +38,31 @@ public class ContratoHonorarioRestController {
                                BigDecimal valorHora,
                                Integer horasTrabalhadas,
                                BigDecimal valorCausa,
-                               BigDecimal percentualExito) {
+                               BigDecimal percentualExito,
+                               Integer quantidadeParcelas,
+                               LocalDate primeiroVencimento) {
+    }
+
+    public record NovoPagamento(BigDecimal valor, LocalDate dataPagamento) {
+    }
+
+    public record NovoResultado(BigDecimal valorObtido, BigDecimal honorariosSucumbencia) {
     }
 
     @PostMapping
     public HonorariosUseCases.ItemContrato cadastrar(@Valid @RequestBody NovoContrato corpo) {
+        LocalDate celebradoEm = corpo.celebradoEm() == null ? LocalDate.now() : corpo.celebradoEm();
         return cadastrar.executar(new HonorariosUseCases.CadastrarContrato.Comando(
                 corpo.numeroProcesso(),
                 corpo.modalidade(),
-                corpo.celebradoEm() == null ? LocalDate.now() : corpo.celebradoEm(),
+                celebradoEm,
                 corpo.valorFixo(),
                 corpo.valorHora(),
                 corpo.horasTrabalhadas() == null ? 0 : corpo.horasTrabalhadas(),
                 corpo.valorCausa(),
-                corpo.percentualExito()));
+                corpo.percentualExito(),
+                corpo.quantidadeParcelas() == null ? 1 : corpo.quantidadeParcelas(),
+                corpo.primeiroVencimento() == null ? celebradoEm : corpo.primeiroVencimento()));
     }
 
     @GetMapping
@@ -59,7 +72,21 @@ public class ContratoHonorarioRestController {
     }
 
     @GetMapping("/{id}")
-    public HonorariosUseCases.ItemContrato consultar(@PathVariable Long id) {
-        return consultar.executar(id);
+    public HonorariosUseCases.DetalheContrato consultar(@PathVariable Long id) {
+        return consultarDetalhe.executar(new HonorariosUseCases.ConsultarDetalheContrato.Comando(id));
+    }
+
+    @PostMapping("/{id}/parcelas/{numero}/pagamentos")
+    public HonorariosUseCases.DetalheContrato registrarPagamento(@PathVariable Long id, @PathVariable int numero,
+                                                                  @RequestBody NovoPagamento corpo) {
+        return registrarPagamento.executar(new HonorariosUseCases.RegistrarPagamentoParcela.Comando(
+                id, numero, corpo.valor(), corpo.dataPagamento()));
+    }
+
+    @PostMapping("/{id}/resultado")
+    public HonorariosUseCases.DetalheContrato registrarResultado(@PathVariable Long id,
+                                                                  @RequestBody NovoResultado corpo) {
+        return registrarResultado.executar(new HonorariosUseCases.RegistrarResultadoCausa.Comando(
+                id, corpo.valorObtido(), corpo.honorariosSucumbencia()));
     }
 }

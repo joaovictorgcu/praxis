@@ -2,6 +2,7 @@ package school.cesar.praxis.presentation.web;
 
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
@@ -31,6 +32,8 @@ public class Rotulos {
             Map.entry("FIXO", "fixo"),
             Map.entry("POR_HORA", "por hora"),
             Map.entry("QUOTA_LITIS", "quota litis"),
+            // Historico do contrato de honorario.
+            Map.entry("CONTRATACAO", "contratação"),
             // Abrangencia do feriado.
             Map.entry("NACIONAL", "nacional"),
             Map.entry("ESTADUAL", "estadual"),
@@ -48,5 +51,17 @@ public class Rotulos {
     public String titulo(Object valor) {
         String texto = de(valor);
         return texto.isEmpty() ? texto : Character.toUpperCase(texto.charAt(0)) + texto.substring(1);
+    }
+
+    /** "20.00" -> "20"; "12.50" -> "12,5": sem zero a mais, sem notação científica. */
+    public String percentual(BigDecimal valor) {
+        if (valor == null) {
+            return "";
+        }
+        BigDecimal limpo = valor.stripTrailingZeros();
+        if (limpo.scale() < 0) {
+            limpo = limpo.setScale(0);
+        }
+        return limpo.toPlainString().replace('.', ',');
     }
 }

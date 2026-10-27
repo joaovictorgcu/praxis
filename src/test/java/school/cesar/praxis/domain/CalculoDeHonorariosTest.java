@@ -79,16 +79,19 @@ class CalculoDeHonorariosTest {
     }
 
     @Test
-    @DisplayName("contrato novo congela o valor calculado pela Strategy da modalidade")
+    @DisplayName("contrato novo congela o valor calculado pela Strategy da modalidade e parcela em partes iguais")
     void contratoCongelaValorCalculado() {
         ContratoHonorario contrato = new ContratoHonorario(
                 processo, LocalDate.of(2026, 9, 10),
                 BaseCalculo.porHora(new BigDecimal("200"), 8),
-                new HonorarioPorHora());
+                new HonorarioPorHora(), 2, LocalDate.of(2026, 10, 10));
 
         assertEquals(new BigDecimal("1600"), contrato.getValorContratado());
         assertEquals("POR_HORA", contrato.getModalidade());
         assertEquals(processo, contrato.getNumeroProcesso());
+        assertEquals(2, contrato.getParcelas().size());
+        assertEquals(new BigDecimal("800.00"), contrato.getParcelas().get(0).getValor());
+        assertEquals(new BigDecimal("800.00"), contrato.getParcelas().get(1).getValor());
     }
 
     @Test
@@ -96,25 +99,32 @@ class CalculoDeHonorariosTest {
     void contratoReconstituidoNaoRecalcula() {
         ContratoHonorario reconstituido = new ContratoHonorario(
                 1L, processo, "FIXO", BaseCalculo.fixo(new BigDecimal("5000")),
-                LocalDate.of(2026, 1, 1), new BigDecimal("999"));
+                LocalDate.of(2026, 1, 1), new BigDecimal("999"), 1, LocalDate.of(2026, 2, 1),
+                List.of(), null, null, List.of());
 
         assertEquals(new BigDecimal("999"), reconstituido.getValorContratado());
     }
 
     @Test
-    @DisplayName("contrato exige processo, data de celebracao, base de calculo e estrategia")
+    @DisplayName("contrato exige processo, data de celebracao, base de calculo, estrategia e parcelamento valido")
     void contratoExigeCamposObrigatorios() {
         LocalDate hoje = LocalDate.of(2026, 9, 10);
         BaseCalculo base = BaseCalculo.fixo(new BigDecimal("1000"));
         CalculoHonorarioStrategy fixo = new HonorarioFixo();
 
         assertThrows(IllegalArgumentException.class,
-                () -> new ContratoHonorario(null, hoje, base, fixo));
+                () -> new ContratoHonorario(null, hoje, base, fixo, 1, hoje));
         assertThrows(IllegalArgumentException.class,
-                () -> new ContratoHonorario(processo, null, base, fixo));
+                () -> new ContratoHonorario(processo, null, base, fixo, 1, hoje));
         assertThrows(IllegalArgumentException.class,
-                () -> new ContratoHonorario(processo, hoje, null, fixo));
+                () -> new ContratoHonorario(processo, hoje, null, fixo, 1, hoje));
         assertThrows(IllegalArgumentException.class,
-                () -> new ContratoHonorario(processo, hoje, base, null));
+                () -> new ContratoHonorario(processo, hoje, base, null, 1, hoje));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ContratoHonorario(processo, hoje, base, fixo, 0, hoje));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ContratoHonorario(processo, hoje, base, fixo, 25, hoje));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ContratoHonorario(processo, hoje, base, fixo, 1, null));
     }
 }

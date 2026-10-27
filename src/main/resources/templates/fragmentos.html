@@ -130,6 +130,11 @@
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-anexos"/></svg>
         <span>Anexos</span>
       </a>
+      <a th:href="@{/painel/honorarios}" th:classappend="${ativo == 'honorarios'} ? 'ativo'"
+         th:attr="aria-current=${ativo == 'honorarios'} ? 'page' : null">
+        <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-balanca"/></svg>
+        <span>Honorários</span>
+      </a>
       <a th:href="@{/painel/modelos}" th:classappend="${ativo == 'modelos'} ? 'ativo'"
          th:attr="aria-current=${ativo == 'modelos'} ? 'page' : null">
         <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-modelos"/></svg>
@@ -194,13 +199,15 @@
       <svg class="icone" aria-hidden="true" focusable="false">
         <use th:if="${ativo == 'painel' or ativo == 'audiencias'}" href="#i-agenda"/>
         <use th:if="${ativo == 'clientes' or ativo == 'partes'}" href="#i-conta"/>
-        <use th:unless="${ativo == 'painel' or ativo == 'audiencias' or ativo == 'clientes' or ativo == 'partes'}"
+        <use th:if="${ativo == 'honorarios'}" href="#i-balanca"/>
+        <use th:unless="${ativo == 'painel' or ativo == 'audiencias' or ativo == 'clientes' or ativo == 'partes' or ativo == 'honorarios'}"
              th:attr="href='#i-' + ${ativo}" href="#i-agenda"/>
       </svg>
       <span th:text="${ativo == 'painel'} ? 'Agenda de Prazos'
                      : (${ativo == 'processos'} ? 'Processos'
                      : (${ativo == 'documentos'} ? 'Documentos'
                      : (${ativo == 'anexos'} ? 'Anexos'
+                     : (${ativo == 'honorarios'} ? 'Honorários'
                      : (${ativo == 'modelos'} ? 'Modelos'
                      : (${ativo == 'feriados'} ? 'Feriados'
                      : (${ativo == 'clientes'} ? 'Clientes'
@@ -211,7 +218,7 @@
                      : (${ativo == 'advogados'} ? 'Advogados'
                      : (${ativo == 'usuarios'} ? 'Usuários'
                      : (${ativo == 'admin'} ? 'Administração'
-                     : 'Minha Conta')))))))))))))">Agenda de Prazos</span>
+                     : 'Minha Conta'))))))))))))))">Agenda de Prazos</span>
     </p>
 
     <div class="sessao" th:if="${usuario != null}">

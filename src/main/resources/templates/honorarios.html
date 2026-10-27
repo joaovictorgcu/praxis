@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Praxis - Honorários</title>
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
+</head>
+<body class="app">
+<header th:replace="~{fragmentos :: cabecalho('honorarios')}"></header>
+
+<main id="conteudo" tabindex="-1">
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <div class="cabecalho-pagina">
+    <h2>Honorários</h2>
+    <p class="apoio" style="margin:0">Controle financeiro de contratos: parcelamento, pagamentos e atraso.</p>
+  </div>
+
+  <!-- Totais da carteira inteira (nao so da pagina filtrada abaixo). -->
+  <section class="estatisticas" aria-label="Resumo financeiro">
+    <div class="estatistica">
+      <span>
+        <span class="rotulo">A Receber</span>
+        <span class="numero" th:text="'R$ ' + ${#numbers.formatDecimal(aReceber, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+        <span class="apoio">saldo em aberto das parcelas</span>
+      </span>
+      <span class="icone-circulo" aria-hidden="true">
+        <svg class="icone" focusable="false"><use href="#i-balanca"/></svg>
+      </span>
+    </div>
+
+    <div class="estatistica">
+      <span>
+        <span class="rotulo">Recebido</span>
+        <span class="numero" th:text="'R$ ' + ${#numbers.formatDecimal(recebido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+        <span class="apoio bom">já pago pelos clientes</span>
+      </span>
+      <span class="icone-circulo verde" aria-hidden="true">
+        <svg class="icone" focusable="false"><use href="#i-conta"/></svg>
+      </span>
+    </div>
+
+    <div class="estatistica">
+      <span>
+        <span class="rotulo">Em Atraso (com Encargos)</span>
+        <span class="numero" th:text="'R$ ' + ${#numbers.formatDecimal(emAtrasoComEncargos, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+        <span class="apoio" th:classappend="${temAtraso} ? 'alerta' : 'bom'"
+              th:text="${temAtraso} ? 'saldo + multa + juros' : 'nenhuma parcela vencida'">saldo + multa + juros</span>
+      </span>
+      <span class="icone-circulo vermelha" aria-hidden="true">
+        <svg class="icone" focusable="false"><use href="#i-alerta"/></svg>
+      </span>
+    </div>
+  </section>
+
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>Contratos</h2>
+      <span class="contador" th:text="${#lists.size(linhas)}">0</span>
+    </div>
+
+    <form th:action="@{/painel/honorarios}" method="get" class="linha">
+      <label>Status
+        <select name="status">
+          <option value="" th:selected="${statusFiltro == null or statusFiltro.isEmpty()}">Todos</option>
+          <option th:each="s : ${T(school.cesar.praxis.domain.honorario.StatusContrato).values()}"
+                  th:value="${s}" th:selected="${s.name() == statusFiltro}" th:text="${@rotulos.titulo(s)}">status</option>
+        </select>
+      </label>
+      <label>Modalidade
+        <select name="modalidade">
+          <option value="" th:selected="${modalidadeFiltro == null or modalidadeFiltro.isEmpty()}">Todas</option>
+          <option value="FIXO" th:selected="${modalidadeFiltro == 'FIXO'}">Fixo</option>
+          <option value="POR_HORA" th:selected="${modalidadeFiltro == 'POR_HORA'}">Por Hora</option>
+          <option value="QUOTA_LITIS" th:selected="${modalidadeFiltro == 'QUOTA_LITIS'}">Quota Litis</option>
+        </select>
+      </label>
+      <label>Cliente
+        <input type="search" name="cliente" th:value="${clienteFiltro}" placeholder="Nome do cliente">
+      </label>
+      <div><button type="submit" class="secundario pequeno">Filtrar</button></div>
+    </form>
+
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Processo</th>
+          <th>Cliente</th>
+          <th>Modalidade</th>
+          <th>Valor</th>
+          <th>Status</th>
+          <th>Próxima Parcela</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="l : ${linhas}">
+          <td><a th:href="@{'/painel/processos/' + ${l.contrato.numeroProcesso}}" th:text="${l.contrato.numeroProcesso}">-</a></td>
+          <td th:text="${l.cliente}">-</td>
+          <td th:text="${@rotulos.titulo(l.contrato.modalidade)}">-</td>
+          <td style="white-space:nowrap">
+            R$ <span th:text="${#numbers.formatDecimal(l.contrato.valorContratado, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+            <span th:if="${l.contrato.aguardandoResultado}" class="apoio">(estimado)</span>
+          </td>
+          <td>
+            <span class="etiqueta"
+                  th:classappend="${l.contrato.status == 'QUITADO'} ? 'verde'
+                                  : (${l.contrato.status == 'EM_ATRASO'} ? 'vermelha'
+                                  : (${l.contrato.status == 'PARCIALMENTE_PAGO'} ? 'ambar' : 'azul'))"
+                  th:text="${@rotulos.titulo(l.contrato.status)}">status</span>
+          </td>
+          <td>
+            <span th:if="${l.contrato.proximaParcela != null}" th:text="${#temporals.format(l.contrato.proximaParcela, 'dd/MM/yyyy')}">-</span>
+            <span th:if="${l.contrato.proximaParcela == null}" class="apoio">-</span>
+          </td>
+          <td class="acoes">
+            <a class="botao secundario pequeno" th:href="@{'/painel/honorarios/' + ${l.contrato.id}}">Abrir</a>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(linhas)}">
+          <td colspan="7" class="vazio">Nenhum contrato encontrado.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

@@ -249,10 +249,12 @@ public class DadosDeExemplo implements CommandLineRunner {
 
         contratos.executar(new HonorariosUseCases.CadastrarContrato.Comando(
                 PROCESSO_PUBLICO, "QUOTA_LITIS", hoje.minusDays(27),
-                null, null, 0, new BigDecimal("120000.00"), new BigDecimal("20")));
+                null, null, 0, new BigDecimal("120000.00"), new BigDecimal("20"),
+                3, hoje.plusDays(30)));
         contratos.executar(new HonorariosUseCases.CadastrarContrato.Comando(
                 PROCESSO_SIGILOSO, "FIXO", hoje.minusDays(15),
-                new BigDecimal("8500.00"), null, 0, null, null));
+                new BigDecimal("8500.00"), null, 0, null, null,
+                3, hoje.minusDays(5)));
 
         anexar.executar(new AnexosUseCases.AnexarArquivo.Comando(
                 PROCESSO_PUBLICO, "laudo-pericial.pdf", "application/pdf",
