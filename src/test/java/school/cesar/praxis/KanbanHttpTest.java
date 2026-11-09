@@ -29,7 +29,12 @@ import school.cesar.praxis.domain.usuario.Papel;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(ApoioDeTesteWeb.class)
-@TestPropertySource(properties = "praxis.dados-exemplo=false")
+@TestPropertySource(properties = {
+        "praxis.dados-exemplo=false",
+        // Banco proprio: sem carga de exemplo, o create-drop deste contexto esvaziava o
+        // banco que os outros testes HTTP compartilham (LoginHttpTest depois falhava).
+        "spring.datasource.url=jdbc:h2:mem:praxis-kanban-http;DB_CLOSE_DELAY=-1"
+})
 @Transactional
 class KanbanHttpTest {
 
