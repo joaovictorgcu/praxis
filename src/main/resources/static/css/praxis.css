@@ -2183,3 +2183,78 @@ body.app main.kb-pagina {
         gap: 0.8rem;
     }
 }
+
+/* ---------- ciclo de vida do prazo e versoes da peca ---------- */
+
+/* Acoes da ficha do prazo: um bloco por acao, separados por linha fina. */
+form.acao-prazo { padding: 12px 0; border-top: 1px solid var(--borda); }
+form.acao-prazo:first-of-type { border-top: 0; padding-top: 4px; }
+form.acao-prazo h3 { margin: 0; font-size: 15px; color: var(--tinta); }
+
+/* Trilha do prazo (prazo_evento): mesma linguagem da linha do tempo do processo. */
+.trilha-prazo { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--borda); }
+.trilha-prazo li { position: relative; padding: 4px 0 14px 14px; font-size: 14px; }
+.trilha-prazo li::before {
+    content: "";
+    position: absolute;
+    left: -21px;
+    top: 9px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--branco);
+    border: 2px solid var(--tinta-clara);
+}
+.trilha-prazo li.evento-alerta::before { border-color: var(--ambar); }
+.trilha-prazo li.evento-cancelamento::before { border-color: var(--vermelho); }
+.trilha-prazo li.evento-cumprimento::before { border-color: var(--verde); }
+.trilha-prazo time { color: var(--cinza); font-size: 12.5px; margin-right: 8px; }
+.trilha-prazo .etiqueta { margin-right: 8px; }
+.trilha-prazo .vencimentos { font-size: 13.5px; }
+.trilha-prazo p { margin: 4px 0 2px; font-size: 13.5px; }
+.trilha-prazo .autor { color: var(--cinza); font-size: 12.5px; }
+.trilha-prazo li.vazio::before { display: none; }
+
+/* Historico de varreduras na agenda. */
+.varreduras { list-style: none; padding: 0; margin: 0; }
+.varreduras li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    align-items: baseline;
+    border-left: 3px solid var(--borda);
+    padding: 6px 12px;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+}
+.varreduras li .apoio { margin: 0; font-size: 12.5px; }
+
+/* Versoes da peca e comparacao linha a linha. */
+.comparacao {
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+    background: var(--caixa);
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: 60vh;
+    overflow: auto;
+    margin: 0;
+    padding: 8px 0;
+    list-style: none;
+}
+.comparacao li { display: grid; grid-template-columns: 3.2em 3.2em 1.4em minmax(0, 1fr); padding: 0 12px; }
+.comparacao li span { color: var(--cinza); text-align: right; padding-right: 8px; user-select: none; }
+.comparacao li code { background: none; padding: 0; white-space: pre-wrap; word-break: break-word; font-size: 13px; }
+.comparacao li.incluida { background: var(--sucesso-fundo); }
+.comparacao li.removida { background: var(--erro-fundo); }
+.comparacao li.incluida b { color: var(--verde); }
+.comparacao li.removida b { color: var(--vermelho); }
+.resumo-comparacao { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13.5px; margin: 0 0 10px; }
+.resumo-comparacao .incluidas { color: var(--verde); font-weight: 600; }
+.resumo-comparacao .removidas { color: var(--vermelho); font-weight: 600; }
+textarea.texto-peca { width: 100%; min-height: 320px; font-family: "Cascadia Mono", Consolas, monospace; font-size: 13px; line-height: 1.5; }
+
+/* Link de texto dentro de tabela (descricao do prazo, numero do processo): cor do app, sem o roxo de visitado. */
+.tabela td a:not(.botao) { color: var(--tinta-clara); font-weight: 600; text-decoration: none; }
+.tabela td a:not(.botao):hover, .tabela td a:not(.botao):focus-visible { text-decoration: underline; }

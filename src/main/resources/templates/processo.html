@@ -92,7 +92,8 @@
       <h2>Abrir Prazo</h2>
       <p class="apoio">
         Vencimento calculado pelo motor: termo inicial no primeiro dia útil após a intimação,
-        feriados do foro e recesso forense (CPC arts. 219, 220 e 224). Fica congelado na abertura.
+        feriados do foro e recesso forense (CPC arts. 219, 220 e 224). Depois de aberto, o vencimento
+        só muda por suspensão, retomada ou dilação registradas na ficha do prazo.
       </p>
       <form th:action="@{'/painel/processos/' + ${processo.numero.valor()} + '/prazos'}" method="post" class="empilhado">
       <input type="hidden" name="_csrf" th:value="${csrf}">
@@ -113,6 +114,12 @@
             </select>
           </label>
         </div>
+        <label>Contagem em Dobro
+          <select name="prerrogativa">
+            <option th:each="p : ${prerrogativas}" th:value="${p}"
+                    th:text="${p.fundamento() == null} ? ${p.rotulo()} : ${p.rotulo()} + ' - ' + ${p.fundamento()}">Prazo simples</option>
+          </select>
+        </label>
         <label class="marcador">
           <input type="checkbox" name="fatal" value="true" checked>
           Prazo Fatal (gera alertas escalonados)
@@ -151,24 +158,25 @@
         </thead>
         <tbody>
         <tr th:each="item : ${prazos}"
-            th:classappend="${item.cumprido()} ? '' : (${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : ''))">
-          <td th:text="${item.descricao()}">-</td>
+            th:with="aberto=${item.situacao().name() == 'EM_ABERTO'}"
+            th:classappend="${!aberto} ? '' : (${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : ''))">
+          <td><a th:href="@{'/painel/prazos/' + ${item.prazoId()}}" th:text="${item.descricao()}">-</a></td>
           <td th:text="${#temporals.format(item.vencimento(), 'dd/MM/yyyy')}">-</td>
           <td>
-            <span th:if="${item.cumprido()}" class="apoio">-</span>
-            <span th:if="${!item.cumprido() and item.vencido()}" class="etiqueta vermelha">vencido</span>
-            <span th:if="${!item.cumprido() and !item.vencido()}" th:text="${item.diasRestantes()}">0</span>
+            <span th:if="${item.situacao().name() == 'SUSPENSO'}" class="apoio"
+                  th:text="'saldo de ' + ${item.diasRestantes()}">saldo</span>
+            <span th:if="${item.situacao().encerrado()}" class="apoio">-</span>
+            <span th:if="${aberto and item.vencido()}" class="etiqueta vermelha">vencido</span>
+            <span th:if="${aberto and !item.vencido()}" th:text="${item.diasRestantes()}">0</span>
           </td>
           <td>
             <span th:if="${item.fatal()}" class="etiqueta vermelha">fatal</span>
             <span th:unless="${item.fatal()}" class="etiqueta cinza">comum</span>
           </td>
-          <td>
-            <span th:if="${item.cumprido()}" class="etiqueta verde">cumprido</span>
-            <span th:unless="${item.cumprido()}" class="etiqueta azul">em aberto</span>
-          </td>
+          <td><span th:replace="~{fragmentos :: situacaoPrazo(${item.situacao().name()})}"></span></td>
           <td class="acoes">
-            <form th:unless="${item.cumprido()}"
+            <a class="botao secundario pequeno" th:href="@{'/painel/prazos/' + ${item.prazoId()}}">Detalhes</a>
+            <form th:if="${aberto}"
                   th:action="@{'/painel/processos/' + ${processo.numero.valor()} + '/prazos/' + ${item.prazoId()} + '/cumprir'}"
                   method="post"
                   th:attr="data-confirmar='Registrar o prazo \'' + ${item.descricao()} + '\' como cumprido?'">

@@ -265,6 +265,13 @@
                       : (${nome == 'REJEITADO'} ? 'vermelha' : 'azul'))"
       th:text="${@rotulos.de(nome)}">rascunho</span>
 
+<!-- Etiqueta da situacao do prazo (EM_ABERTO, SUSPENSO, CUMPRIDO, CANCELADO). -->
+<span th:fragment="situacaoPrazo(nome)" class="etiqueta"
+      th:classappend="${nome == 'CUMPRIDO'} ? 'verde'
+                      : (${nome == 'SUSPENSO'} ? 'ambar'
+                      : (${nome == 'CANCELADO'} ? 'cinza' : 'azul'))"
+      th:text="${@rotulos.de(nome)}">em aberto</span>
+
 <!-- Etiqueta de sigilo dos autos. -->
 <span th:fragment="sigilo(segredo)" th:remove="tag">
   <span th:if="${segredo}" class="etiqueta vermelha">segredo</span>

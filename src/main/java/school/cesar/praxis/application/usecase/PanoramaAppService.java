@@ -1,5 +1,6 @@
 package school.cesar.praxis.application.usecase;
 
+import school.cesar.praxis.application.port.out.VersaoDocumentoRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import school.cesar.praxis.application.port.in.AdministracaoUseCases;
@@ -36,6 +37,8 @@ public class PanoramaAppService implements AdministracaoUseCases.ConsultarPanora
     private final ClienteUseCase clientes;
     private final ParteContrariaUseCase partesContrarias;
     private final AgendaDeAudienciasUseCase audiencias;
+    private final PrazosUseCases.ListarVarreduras varreduras;
+    private final VersaoDocumentoRepositorio versoes;
 
     public PanoramaAppService(UsuariosUseCases.ListarUsuarios usuarios,
                               AdvogadosUseCases.ListarAdvogados advogados,
@@ -48,7 +51,9 @@ public class PanoramaAppService implements AdministracaoUseCases.ConsultarPanora
                               HonorariosUseCases.ListarContratos contratos,
                               ClienteUseCase clientes,
                               ParteContrariaUseCase partesContrarias,
-                              AgendaDeAudienciasUseCase audiencias) {
+                              AgendaDeAudienciasUseCase audiencias,
+                              PrazosUseCases.ListarVarreduras varreduras,
+                              VersaoDocumentoRepositorio versoes) {
         this.usuarios = usuarios;
         this.advogados = advogados;
         this.processos = processos;
@@ -61,6 +66,8 @@ public class PanoramaAppService implements AdministracaoUseCases.ConsultarPanora
         this.clientes = clientes;
         this.partesContrarias = partesContrarias;
         this.audiencias = audiencias;
+        this.varreduras = varreduras;
+        this.versoes = versoes;
     }
 
     @Override
@@ -78,6 +85,8 @@ public class PanoramaAppService implements AdministracaoUseCases.ConsultarPanora
                 contratos.executar(null),
                 clientes.listarTodosOsClientes(),
                 partesContrarias.listarTodasAsPartesContrarias(),
-                audiencias.listarTodasAsAudiencias());
+                audiencias.listarTodasAsAudiencias(),
+                varreduras.executar(5),
+                versoes.contar());
     }
 }

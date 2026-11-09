@@ -77,8 +77,21 @@
     <ul class="historico">
       <li>
         <strong th:text="${panorama.prazosVencidos()}">0</strong> prazo(s) vencido(s) ainda em aberto &middot;
-        <strong th:text="${panorama.prazosEmAberto()}">0</strong> em aberto no total
+        <strong th:text="${panorama.prazosEmAberto()}">0</strong> em aberto no total &middot;
+        <strong th:text="${panorama.prazosSuspensos()}">0</strong> suspenso(s) &middot;
+        <strong th:text="${panorama.prazosCancelados()}">0</strong> cancelado(s)
         <span><a th:href="@{/painel}">Ver Agenda</a></span>
+      </li>
+      <li th:with="ultima=${panorama.ultimaVarredura()}">
+        <th:block th:if="${ultima != null}">
+          Última varredura <strong th:text="${ultima.origem().rotulo()}">manual</strong> em
+          <strong th:text="${#temporals.format(ultima.iniciadaEm(), 'dd/MM/yyyy HH:mm')}">-</strong>:
+          <span th:remove="tag" th:text="${ultima.prazosAvaliados()} + ' prazo(s) avaliado(s), ' + ${ultima.alertasEmitidos()} + ' alerta(s)'">0</span>
+          <span><a href="#varreduras">Ver Execuções</a></span>
+        </th:block>
+        <th:block th:if="${ultima == null}">
+          Nenhuma varredura registrada ainda: o agendador roda às 7h, de segunda a sexta.
+        </th:block>
       </li>
       <li>
         <strong th:text="${panorama.documentosEmRevisao()}">0</strong> peça(s) aguardando revisão do chefe
@@ -246,7 +259,7 @@
         <tbody>
         <tr th:each="pr : ${panorama.prazos()}"
             th:classappend="${pr.vencido} ? 'vencido' : (${!pr.cumprido and pr.diasRestantes <= 3} ? 'critico' : '')">
-          <td th:text="${pr.prazoId}">1</td>
+          <td><a th:href="@{'/painel/prazos/' + ${pr.prazoId}}" th:text="${pr.prazoId}">1</a></td>
           <td th:text="${pr.numeroProcesso}">-</td>
           <td>
             <span th:text="${pr.descricao}">-</span>
@@ -256,9 +269,10 @@
           <td th:text="${pr.diasRestantes}">0</td>
           <td th:text="${pr.responsavel}">-</td>
           <td>
-            <span th:if="${pr.cumprido}" class="etiqueta verde">cumprido</span>
-            <span th:if="${!pr.cumprido and pr.vencido}" class="etiqueta vermelha">vencido</span>
-            <span th:if="${!pr.cumprido and !pr.vencido}" class="etiqueta azul">em aberto</span>
+            <span th:if="${pr.vencido}" class="etiqueta vermelha">vencido</span>
+            <th:block th:unless="${pr.vencido}">
+              <span th:replace="~{fragmentos :: situacaoPrazo(${pr.situacao.name()})}"></span>
+            </th:block>
           </td>
         </tr>
         <tr th:if="${#lists.isEmpty(panorama.prazos())}">
@@ -275,7 +289,7 @@
       <table>
         <thead>
         <tr><th>#</th><th>Processo</th><th>Tipo</th><th>Gerada em</th><th>Por (OAB)</th>
-          <th>Status</th><th>Sigilo</th></tr>
+          <th>Status</th><th>Versão</th><th>Sigilo</th></tr>
         </thead>
         <tbody>
         <tr th:each="d : ${panorama.documentos()}">
@@ -285,10 +299,44 @@
           <td th:text="${d.geradoEm}">-</td>
           <td th:text="${d.geradoPorOab}">-</td>
           <td><span th:replace="~{fragmentos :: status(${d.status})}"></span></td>
+          <td th:text="'v' + ${d.versao}">v1</td>
           <td><span th:replace="~{fragmentos :: sigilo(${d.segredoJustica})}"></span></td>
         </tr>
         <tr th:if="${#lists.isEmpty(panorama.documentos())}">
-          <td colspan="7" class="vazio">nenhuma peça gerada</td>
+          <td colspan="8" class="vazio">nenhuma peça gerada</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="apoio" th:text="${panorama.versoesDePecas()} + ' versão(ões) de texto gravada(s) em documento_versao.'">0 versões</p>
+  </section>
+
+  <section class="cartao" id="varreduras">
+    <h2>Execuções da Varredura</h2>
+    <p class="apoio">As cinco mais recentes de <code>varredura_execucao</code>: automáticas (agendador) e manuais.</p>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr><th>#</th><th>Origem</th><th>Início</th><th>Data de Referência</th><th>Avaliados</th>
+          <th>Alertas</th><th>Duração</th><th>Solicitante</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="v : ${panorama.varreduras()}">
+          <td th:text="${v.id()}">1</td>
+          <td><span class="etiqueta" th:classappend="${v.origem().name() == 'AUTOMATICA'} ? 'azul' : 'cinza'"
+                    th:text="${v.origem().rotulo()}">manual</span></td>
+          <td th:text="${#temporals.format(v.iniciadaEm(), 'dd/MM/yyyy HH:mm:ss')}">-</td>
+          <td>
+            <span th:text="${#temporals.format(v.dataReferencia(), 'dd/MM/yyyy')}">-</span>
+            <span th:if="${v.dataSimulada()}" class="etiqueta ambar">simulada</span>
+          </td>
+          <td th:text="${v.prazosAvaliados()}">0</td>
+          <td th:text="${v.alertasEmitidos()}">0</td>
+          <td th:text="${v.duracaoEmMilissegundos()} + ' ms'">0 ms</td>
+          <td th:text="${v.solicitante()} ?: '-'">-</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(panorama.varreduras())}">
+          <td colspan="8" class="vazio">nenhuma varredura registrada</td>
         </tr>
         </tbody>
       </table>

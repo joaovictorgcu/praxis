@@ -53,6 +53,18 @@ public class DocumentoEntity {
     @Column(name = "historico", length = TEXTO_LONGO)
     private String historico;
 
+    /** Modelo cadastrado usado na geracao; nulo quando foi a peca compilada. */
+    @Column(name = "modelo_codigo", length = 40)
+    private String modeloCodigo;
+
+    /** Campos da geracao, "chave=valor" percent-encoded e separados por '&'. */
+    @Column(name = "campos_geracao", length = TEXTO_LONGO)
+    private String camposGeracao;
+
+    /** Numero da versao de {@code documento_versao} que esta em {@code conteudo}. */
+    @Column(name = "versao_atual", nullable = false)
+    private int versaoAtual = 1;
+
     public Long getId() {
         return id;
     }
@@ -131,5 +143,29 @@ public class DocumentoEntity {
 
     public void setHistorico(String historico) {
         this.historico = historico;
+    }
+
+    public String getModeloCodigo() {
+        return modeloCodigo;
+    }
+
+    public void setModeloCodigo(String modeloCodigo) {
+        this.modeloCodigo = modeloCodigo;
+    }
+
+    public String getCamposGeracao() {
+        return camposGeracao;
+    }
+
+    public void setCamposGeracao(String camposGeracao) {
+        this.camposGeracao = camposGeracao;
+    }
+
+    public int getVersaoAtual() {
+        return versaoAtual;
+    }
+
+    public void setVersaoAtual(int versaoAtual) {
+        this.versaoAtual = versaoAtual;
     }
 }

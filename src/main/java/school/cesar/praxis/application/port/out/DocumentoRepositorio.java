@@ -17,4 +17,7 @@ public interface DocumentoRepositorio extends AcessoDocumento {
     List<DocumentoGerado> porProcesso(NumeroCnj numero);
 
     List<DocumentoGerado> listar();
+
+    /** Exclusao definitiva; a regra de quem pode excluir fica no agregado e no caso de uso. */
+    void excluir(Long documentoId);
 }

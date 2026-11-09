@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import school.cesar.praxis.application.port.in.*;
 import school.cesar.praxis.domain.advogado.StatusAdvogado;
+import school.cesar.praxis.domain.prazo.Prazo;
+import school.cesar.praxis.domain.prazo.PrerrogativaPrazo;
 import school.cesar.praxis.domain.prazo.RegimeContagem;
 import school.cesar.praxis.domain.processo.Processo;
 import school.cesar.praxis.domain.processo.TipoAndamento;
@@ -13,6 +15,7 @@ import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -134,6 +137,7 @@ public class ProcessoWebController {
             model.addAttribute("contratos", listarContratos.executar(numero));
             model.addAttribute("tiposAndamento", TipoAndamento.values());
             model.addAttribute("regimes", RegimeContagem.values());
+            model.addAttribute("prerrogativas", PrerrogativaPrazo.values());
             model.addAttribute("hoje", LocalDate.now());
 
             List<AcessoUseCases.ItemAcesso> acessos = listarAcessos.executar(numero);
@@ -168,6 +172,7 @@ public class ProcessoWebController {
                         numero, LocalDate.parse(data), descricao, tipo)));
     }
 
+    /** A mensagem traz o vencimento que o motor calculou, para quem abriu conferir na hora. */
     @PostMapping("/{numero}/prazos")
     public String abrirPrazo(@PathVariable String numero,
                              @RequestParam String descricao,
@@ -175,11 +180,24 @@ public class ProcessoWebController {
                              @RequestParam int quantidadeDias,
                              @RequestParam(required = false) Boolean fatal,
                              @RequestParam RegimeContagem regime,
+                             @RequestParam(required = false) PrerrogativaPrazo prerrogativa,
+                             UsuarioLogado usuario,
                              RedirectAttributes flash) {
-        return executar(flash, numero, "Prazo aberto; vencimento calculado pelo motor de prazos.", () ->
-                abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
-                        numero, descricao, LocalDate.parse(intimacao), quantidadeDias,
-                        Boolean.TRUE.equals(fatal), regime)));
+        try {
+            Prazo prazo = abrirPrazo.executar(new PrazosUseCases.AbrirPrazo.Comando(
+                    numero, descricao, LocalDate.parse(intimacao), quantidadeDias,
+                    Boolean.TRUE.equals(fatal), regime,
+                    prerrogativa == null ? PrerrogativaPrazo.NENHUMA : prerrogativa,
+                    PrazoWebController.autor(usuario)));
+            flash.addFlashAttribute("mensagem", "Prazo aberto: vence em "
+                    + DateTimeFormatter.ofPattern("dd/MM/yyyy").format(prazo.getVencimento())
+                    + " (" + prazo.getRegime().descrever(prazo.diasEfetivos()) + ", calculado pelo motor de prazos).");
+        } catch (DateTimeParseException data) {
+            flash.addFlashAttribute("erro", "data inválida: " + data.getParsedString());
+        } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException falha) {
+            flash.addFlashAttribute("erro", falha.getMessage());
+        }
+        return "redirect:/painel/processos/" + numero;
     }
 
     @PostMapping("/{numero}/honorarios")
@@ -203,8 +221,10 @@ public class ProcessoWebController {
     }
 
     @PostMapping("/{numero}/prazos/{id}/cumprir")
-    public String cumprir(@PathVariable String numero, @PathVariable Long id, RedirectAttributes flash) {
-        return executar(flash, numero, "Prazo registrado como cumprido.", () -> cumprirPrazo.executar(id));
+    public String cumprir(@PathVariable String numero, @PathVariable Long id,
+                          UsuarioLogado usuario, RedirectAttributes flash) {
+        return executar(flash, numero, "Prazo registrado como cumprido.",
+                () -> cumprirPrazo.executar(id, PrazoWebController.autor(usuario)));
     }
 
     private static String executar(RedirectAttributes flash, String numero, String sucesso, Supplier<?> acao) {
