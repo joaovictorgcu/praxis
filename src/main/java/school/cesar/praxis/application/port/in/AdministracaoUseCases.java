@@ -3,6 +3,8 @@ package school.cesar.praxis.application.port.in;
 import school.cesar.praxis.application.dto.AudienciaResponse;
 import school.cesar.praxis.application.dto.ClienteResponse;
 import school.cesar.praxis.application.dto.ParteContrariaResponse;
+import school.cesar.praxis.domain.prazo.ExecucaoVarredura;
+import school.cesar.praxis.domain.prazo.SituacaoPrazo;
 import school.cesar.praxis.domain.processo.Processo;
 import school.cesar.praxis.domain.usuario.Usuario;
 
@@ -33,15 +35,35 @@ public interface AdministracaoUseCases {
                         List<HonorariosUseCases.ItemContrato> contratos,
                         List<ClienteResponse> clientes,
                         List<ParteContrariaResponse> partesContrarias,
-                        List<AudienciaResponse> audiencias) {
+                        List<AudienciaResponse> audiencias,
+                        List<ExecucaoVarredura> varreduras,
+                        long versoesDePecas) {
 
             /** Prazos em aberto ja vencidos: o numero que o chefe olha primeiro. */
             public long prazosVencidos() {
                 return prazos.stream().filter(PrazosUseCases.ConsultarAgenda.ItemAgenda::vencido).count();
             }
 
+            /** So os que estao correndo: suspenso e cancelado nao contam. */
             public long prazosEmAberto() {
-                return prazos.stream().filter(item -> !item.cumprido()).count();
+                return contarPrazos(SituacaoPrazo.EM_ABERTO);
+            }
+
+            public long prazosSuspensos() {
+                return contarPrazos(SituacaoPrazo.SUSPENSO);
+            }
+
+            public long prazosCancelados() {
+                return contarPrazos(SituacaoPrazo.CANCELADO);
+            }
+
+            private long contarPrazos(SituacaoPrazo situacao) {
+                return prazos.stream().filter(item -> item.situacao() == situacao).count();
+            }
+
+            /** A execucao mais recente da varredura, se houver. */
+            public ExecucaoVarredura ultimaVarredura() {
+                return varreduras.isEmpty() ? null : varreduras.get(0);
             }
 
             public long documentosEmRevisao() {

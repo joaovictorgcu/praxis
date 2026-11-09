@@ -34,7 +34,8 @@ public class ListarDocumentosService implements DocumentosUseCases.ListarDocumen
                         String.valueOf(documento.getGeradoEm()),
                         documento.getGeradoPorOab(),
                         documento.isSegredoJustica(),
-                        documento.getStatus().nome()))
+                        documento.getStatus().nome(),
+                        documento.getVersaoAtual()))
                 .toList();
     }
 }

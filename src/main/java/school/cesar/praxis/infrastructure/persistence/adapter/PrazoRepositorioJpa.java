@@ -3,6 +3,7 @@ package school.cesar.praxis.infrastructure.persistence.adapter;
 import org.springframework.stereotype.Repository;
 import school.cesar.praxis.application.port.out.PrazoRepositorio;
 import school.cesar.praxis.domain.prazo.Prazo;
+import school.cesar.praxis.domain.prazo.SituacaoPrazo;
 import school.cesar.praxis.domain.processo.NumeroCnj;
 import school.cesar.praxis.infrastructure.persistence.mapper.PersistenciaMapper;
 import school.cesar.praxis.infrastructure.persistence.repository.PrazoJpaRepository;
@@ -33,7 +34,7 @@ public class PrazoRepositorioJpa implements PrazoRepositorio {
 
     @Override
     public List<Prazo> emAberto() {
-        return jpa.findByCumpridoFalse().stream().map(PersistenciaMapper::paraDominio).toList();
+        return jpa.findBySituacao(SituacaoPrazo.EM_ABERTO).stream().map(PersistenciaMapper::paraDominio).toList();
     }
 
     @Override

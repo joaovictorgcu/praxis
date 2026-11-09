@@ -6,17 +6,24 @@ package school.cesar.praxis.domain.prazo;
  */
 public enum NivelAlerta {
 
-    ATENCAO(5),
-    URGENTE(3),
-    CRITICO(1),
-    VENCE_HOJE(0),
+    ATENCAO(5, "ATENÇÃO"),
+    URGENTE(3, "URGENTE"),
+    CRITICO(1, "CRÍTICO"),
+    VENCE_HOJE(0, "VENCE HOJE"),
     /** Prazo em aberto apos o vencimento: aviso de perda, distinto do "vence hoje". */
-    VENCIDO(-1);
+    VENCIDO(-1, "VENCIDO");
 
     private final int diasRestantes;
+    private final String rotulo;
 
-    NivelAlerta(int diasRestantes) {
+    NivelAlerta(int diasRestantes, String rotulo) {
         this.diasRestantes = diasRestantes;
+        this.rotulo = rotulo;
+    }
+
+    /** Texto de tela e da trilha do prazo; a regra continua comparando a constante. */
+    public String rotulo() {
+        return rotulo;
     }
 
     public int diasRestantes() {

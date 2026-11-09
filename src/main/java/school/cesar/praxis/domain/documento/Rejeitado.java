@@ -23,6 +23,11 @@ public class Rejeitado implements StatusDocumento {
     }
 
     @Override
+    public StatusDocumento editar(DocumentoGerado documento) {
+        return new Rejeitado();
+    }
+
+    @Override
     public String nome() {
         return "REJEITADO";
     }

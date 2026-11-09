@@ -12,6 +12,7 @@ import school.cesar.praxis.application.port.in.ProcessosUseCases;
 import school.cesar.praxis.domain.compartilhado.ProxyDeAcesso;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
 import school.cesar.praxis.domain.documento.TipoDocumento;
+import school.cesar.praxis.domain.prazo.OrigemVarredura;
 import school.cesar.praxis.domain.processo.Processo;
 import school.cesar.praxis.infrastructure.notificacao.NotificadorPainel;
 import school.cesar.praxis.presentation.web.seguranca.SomenteChefe;
@@ -20,6 +21,7 @@ import school.cesar.praxis.presentation.web.seguranca.UsuarioLogado;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
@@ -39,7 +41,7 @@ public class PainelWebController {
 
     private final PrazosUseCases.ConsultarAgenda agenda;
     private final PrazosUseCases.VarrerPrazos varredura;
-    private final PrazosUseCases.CumprirPrazo cumprir;
+    private final PrazosUseCases.ListarVarreduras listarVarreduras;
     private final DocumentosUseCases.GerarDocumento gerar;
     private final DocumentosUseCases.ListarDocumentos listar;
     private final DocumentosUseCases.BaixarDocumento baixar;
@@ -49,6 +51,11 @@ public class PainelWebController {
     private final DocumentosUseCases.DesfazerDecisaoDocumento desfazer;
     private final DocumentosUseCases.ProtocolarDocumento protocolar;
     private final DocumentosUseCases.HabilitarOab habilitarOab;
+    private final DocumentosUseCases.EditarDocumento editar;
+    private final DocumentosUseCases.RegenerarDocumento regenerar;
+    private final DocumentosUseCases.RestaurarVersao restaurar;
+    private final DocumentosUseCases.ExcluirDocumento excluir;
+    private final DocumentosUseCases.ConsultarVersoes versoes;
     private final ModelosUseCases.ListarModelos listarModelos;
     private final ProcessosUseCases.ListarProcessos listarProcessos;
     private final ClienteUseCase clientes;
@@ -59,7 +66,7 @@ public class PainelWebController {
 
     public PainelWebController(PrazosUseCases.ConsultarAgenda agenda,
                                PrazosUseCases.VarrerPrazos varredura,
-                               PrazosUseCases.CumprirPrazo cumprir,
+                               PrazosUseCases.ListarVarreduras listarVarreduras,
                                DocumentosUseCases.GerarDocumento gerar,
                                DocumentosUseCases.ListarDocumentos listar,
                                DocumentosUseCases.BaixarDocumento baixar,
@@ -69,13 +76,18 @@ public class PainelWebController {
                                DocumentosUseCases.DesfazerDecisaoDocumento desfazer,
                                DocumentosUseCases.ProtocolarDocumento protocolar,
                                DocumentosUseCases.HabilitarOab habilitarOab,
+                               DocumentosUseCases.EditarDocumento editar,
+                               DocumentosUseCases.RegenerarDocumento regenerar,
+                               DocumentosUseCases.RestaurarVersao restaurar,
+                               DocumentosUseCases.ExcluirDocumento excluir,
+                               DocumentosUseCases.ConsultarVersoes versoes,
                                ModelosUseCases.ListarModelos listarModelos,
                                ProcessosUseCases.ListarProcessos listarProcessos,
                                ClienteUseCase clientes,
                                NotificadorPainel painel) {
         this.agenda = agenda;
         this.varredura = varredura;
-        this.cumprir = cumprir;
+        this.listarVarreduras = listarVarreduras;
         this.gerar = gerar;
         this.listar = listar;
         this.baixar = baixar;
@@ -85,6 +97,11 @@ public class PainelWebController {
         this.desfazer = desfazer;
         this.protocolar = protocolar;
         this.habilitarOab = habilitarOab;
+        this.editar = editar;
+        this.regenerar = regenerar;
+        this.restaurar = restaurar;
+        this.excluir = excluir;
+        this.versoes = versoes;
         this.listarModelos = listarModelos;
         this.listarProcessos = listarProcessos;
         this.clientes = clientes;
@@ -111,6 +128,7 @@ public class PainelWebController {
         model.addAttribute("limite", limite);
         model.addAttribute("itens", itens);
         model.addAttribute("avisos", painel.getEntregues());
+        model.addAttribute("varreduras", listarVarreduras.executar(5));
 
         // Resumo do dia: o que exige acao de quem esta logado.
         model.addAttribute("vencidos", itens.stream().filter(PrazosUseCases.ConsultarAgenda.ItemAgenda::vencido).count());
@@ -132,21 +150,24 @@ public class PainelWebController {
         return "painel";
     }
 
+    /**
+     * Varredura manual: grava a execucao com quem pediu e a data usada. Com
+     * "Simular Data", a data de referencia e a informada; sem ela, hoje.
+     */
     @PostMapping("/varredura")
-    public String varrer(@RequestParam(required = false) String hoje, RedirectAttributes flash) {
-        int alertas = (hoje == null || hoje.isBlank()
-                ? varredura.executarHoje()
-                : varredura.executar(LocalDate.parse(hoje))).size();
-        flash.addFlashAttribute("mensagem", alertas == 0
-                ? "Varredura concluida: nenhum alerta novo."
-                : "Varredura concluida: " + alertas + " alerta(s) emitido(s).");
+    public String varrer(@RequestParam(required = false) String hoje, UsuarioLogado usuario, RedirectAttributes flash) {
+        try {
+            LocalDate referencia = hoje == null || hoje.isBlank() ? LocalDate.now() : LocalDate.parse(hoje);
+            PrazosUseCases.VarrerPrazos.Resultado resultado = varredura.executar(new PrazosUseCases.VarrerPrazos.Comando(
+                    referencia, OrigemVarredura.MANUAL, usuario == null ? null : usuario.nome()));
+            int alertas = resultado.alertas().size();
+            int avaliados = resultado.execucao().prazosAvaliados();
+            flash.addFlashAttribute("mensagem", "Varredura concluída: " + avaliados + " prazo(s) em aberto avaliado(s), "
+                    + (alertas == 0 ? "nenhum alerta novo." : alertas + " alerta(s) emitido(s)."));
+        } catch (DateTimeParseException invalida) {
+            flash.addFlashAttribute("erro", "data inválida: " + hoje + " (use AAAA-MM-DD)");
+        }
         return "redirect:/painel";
-    }
-
-    @PostMapping("/prazos/{id}/cumprir")
-    public String cumprirPrazo(@PathVariable Long id, RedirectAttributes flash) {
-        return executarERedirecionar(flash, "/painel", "Prazo registrado como cumprido.",
-                () -> cumprir.executar(id));
     }
 
     // --- Documentos ---
@@ -188,7 +209,7 @@ public class PainelWebController {
         model.addAttribute("processoFiltro", numeroProcesso);
         try {
             DocumentoGerado documento = gerar.executar(new DocumentosUseCases.GerarDocumento.Comando(
-                    numeroProcesso, tipo, campos, usuario.oab(), vazioComoNulo(codigoModelo)));
+                    numeroProcesso, tipo, campos, usuario.oab(), vazioComoNulo(codigoModelo), usuario.nome()));
             model.addAttribute("previa", documento.getConteudo());
             model.addAttribute("documentoGerado", documento.getId());
             model.addAttribute("mensagem", "Peça #" + documento.getId() + " gerada como rascunho.");
@@ -203,6 +224,47 @@ public class PainelWebController {
     /** Leitura passa pelo Proxy com a OAB de quem esta logado. */
     @GetMapping("/documentos/{id}")
     public String verDocumento(@PathVariable Long id, UsuarioLogado usuario, Model model) {
+        fichaDaPeca(id, usuario, model);
+        return comOpcoesDoFormulario(model);
+    }
+
+    /** Texto de uma versao anterior, ao lado da ficha da peca (leitura auditada pelo Proxy). */
+    @GetMapping("/documentos/{id}/versoes/{numero}")
+    public String verVersao(@PathVariable Long id, @PathVariable int numero, UsuarioLogado usuario, Model model) {
+        if (fichaDaPeca(id, usuario, model)) {
+            try {
+                model.addAttribute("versaoVista",
+                        versoes.versao(id, numero, usuario.oab(), usuario.id(), usuario.nome()));
+            } catch (NoSuchElementException | IllegalArgumentException falha) {
+                model.addAttribute("erro", falha.getMessage());
+            }
+        }
+        return comOpcoesDoFormulario(model);
+    }
+
+    /** Comparacao linha a linha entre duas versoes (LCS no dominio). */
+    @GetMapping("/documentos/{id}/comparar")
+    public String comparar(@PathVariable Long id,
+                           @RequestParam int de,
+                           @RequestParam int para,
+                           UsuarioLogado usuario,
+                           Model model) {
+        if (fichaDaPeca(id, usuario, model)) {
+            try {
+                model.addAttribute("comparacao",
+                        versoes.comparar(id, de, para, usuario.oab(), usuario.id(), usuario.nome()));
+            } catch (NoSuchElementException | IllegalArgumentException falha) {
+                model.addAttribute("erro", falha.getMessage());
+            }
+        }
+        return comOpcoesDoFormulario(model);
+    }
+
+    /**
+     * Monta a ficha da peca no modelo da tela. Devolve {@code false} quando a
+     * leitura foi recusada (sigilo) ou a peca nao existe - a tela mostra o erro.
+     */
+    private boolean fichaDaPeca(Long id, UsuarioLogado usuario, Model model) {
         try {
             DocumentoGerado documento = baixar.executar(id, usuario.oab(), usuario.id(), usuario.nome());
             model.addAttribute("previa", documento.getConteudo());
@@ -210,8 +272,20 @@ public class PainelWebController {
             model.addAttribute("statusDocumento", documento.getStatus().nome());
             model.addAttribute("historico", documento.getHistorico());
             model.addAttribute("oabsHabilitadas", documento.getOabsHabilitadas());
+            model.addAttribute("versaoAtual", documento.getVersaoAtual());
+            model.addAttribute("modeloCodigo", documento.getModeloCodigo());
+            model.addAttribute("tipoDocumento", documento.getTipo());
+            model.addAttribute("camposRegeneracao", camposParaRegenerar(documento));
+            model.addAttribute("editavel", "RASCUNHO".equals(documento.getStatus().nome())
+                    || "REJEITADO".equals(documento.getStatus().nome()));
+            model.addAttribute("excluivel", documento.getStatus().admiteExclusao()
+                    && documento.getHistorico().isEmpty()
+                    && (usuario.chefe() || (usuario.oab() != null
+                            && usuario.oab().equalsIgnoreCase(documento.getGeradoPorOab()))));
+            model.addAttribute("versoes", versoes.listar(documento.getId()));
             model.addAttribute("documentos", listar.executar(documento.getNumeroProcesso().valor()));
             model.addAttribute("processoFiltro", documento.getNumeroProcesso().valor());
+            return true;
         } catch (ProxyDeAcesso.AcessoNegadoException negado) {
             model.addAttribute("erro", negado.getMessage());
             model.addAttribute("documentos", listar.executar(null));
@@ -219,7 +293,88 @@ public class PainelWebController {
             model.addAttribute("erro", "documento não encontrado: " + id);
             model.addAttribute("documentos", listar.executar(null));
         }
-        return comOpcoesDoFormulario(model);
+        return false;
+    }
+
+    /**
+     * Campos do formulario de regeneracao: os que o modelo (ou a peca compilada)
+     * espera, na ordem dele, ja preenchidos com o valor usado da ultima vez.
+     */
+    private Map<String, String> camposParaRegenerar(DocumentoGerado documento) {
+        Map<String, String> campos = new LinkedHashMap<>();
+        if (documento.getModeloCodigo() != null) {
+            listarModelos.executar().stream()
+                    .filter(modelo -> modelo.codigo().equalsIgnoreCase(documento.getModeloCodigo()))
+                    .findFirst()
+                    .ifPresent(modelo -> modelo.camposEsperados().forEach(campo -> campos.put(campo, "")));
+        } else {
+            CAMPOS_DA_PECA_COMPILADA.getOrDefault(documento.getTipo(), List.of())
+                    .forEach(campo -> campos.put(campo, ""));
+        }
+        campos.putAll(documento.getCamposGeracao());
+        return campos;
+    }
+
+    /** Os campos fixos que a tela de geracao oferece para cada peca compilada. */
+    private static final Map<TipoDocumento, List<String>> CAMPOS_DA_PECA_COMPILADA = Map.of(
+            TipoDocumento.PETICAO_INICIAL, List.of("fatos", "fundamentos"),
+            TipoDocumento.CONTESTACAO, List.of("preliminares", "merito"),
+            TipoDocumento.PROCURACAO, List.of("poderesEspeciais"));
+
+    // --- Texto versionado da peca ---
+
+    @PostMapping("/documentos/{id}/editar")
+    public String editarTexto(@PathVariable Long id,
+                              @RequestParam String conteudo,
+                              @RequestParam(required = false) String resumo,
+                              UsuarioLogado usuario,
+                              RedirectAttributes flash) {
+        return executarERedirecionar(flash, "/painel/documentos/" + id,
+                "Texto da peça #" + id + " salvo como nova versão.",
+                () -> editar.executar(new DocumentosUseCases.EditarDocumento.Comando(
+                        id, conteudo, resumo, usuario.oab(), usuario.nome())));
+    }
+
+    @PostMapping("/documentos/{id}/regenerar")
+    public String regenerarTexto(@PathVariable Long id,
+                                 @RequestParam Map<String, String> todosOsParametros,
+                                 UsuarioLogado usuario,
+                                 RedirectAttributes flash) {
+        Map<String, String> campos = new LinkedHashMap<>();
+        todosOsParametros.forEach((nome, valor) -> {
+            if (nome.startsWith(PREFIXO_CAMPO)) {
+                adicionar(campos, nome.substring(PREFIXO_CAMPO.length()), valor);
+            }
+        });
+        return executarERedirecionar(flash, "/painel/documentos/" + id,
+                "Peça #" + id + " regenerada pelo gerador original: nova versão criada.",
+                () -> regenerar.executar(new DocumentosUseCases.RegenerarDocumento.Comando(
+                        id, campos, usuario.oab(), usuario.nome())));
+    }
+
+    @PostMapping("/documentos/{id}/versoes/{numero}/restaurar")
+    public String restaurarVersao(@PathVariable Long id,
+                                  @PathVariable int numero,
+                                  UsuarioLogado usuario,
+                                  RedirectAttributes flash) {
+        return executarERedirecionar(flash, "/painel/documentos/" + id,
+                "Texto da versão " + numero + " restaurado como nova versão da peça #" + id + ".",
+                () -> restaurar.executar(new DocumentosUseCases.RestaurarVersao.Comando(
+                        id, numero, usuario.oab(), usuario.nome())));
+    }
+
+    @PostMapping("/documentos/{id}/excluir")
+    public String excluirRascunho(@PathVariable Long id, UsuarioLogado usuario, RedirectAttributes flash) {
+        try {
+            excluir.executar(new DocumentosUseCases.ExcluirDocumento.Comando(
+                    id, usuario.oab(), usuario.chefe(), usuario.id(), usuario.nome()));
+            flash.addFlashAttribute("mensagem", "Rascunho #" + id + " excluído; a exclusão ficou na auditoria.");
+            return "redirect:/painel/documentos";
+        } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException
+                 | ProxyDeAcesso.AcessoNegadoException falha) {
+            flash.addFlashAttribute("erro", falha.getMessage());
+            return "redirect:/painel/documentos/" + id;
+        }
     }
 
     // --- Fluxo de aprovacao (State + Command) ---
@@ -296,7 +451,8 @@ public class PainelWebController {
         try {
             acao.get();
             flash.addFlashAttribute("mensagem", sucesso);
-        } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException falha) {
+        } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException
+                 | ProxyDeAcesso.AcessoNegadoException falha) {
             flash.addFlashAttribute("erro", falha.getMessage());
         }
         return "redirect:" + destino;

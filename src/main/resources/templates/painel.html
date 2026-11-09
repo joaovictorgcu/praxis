@@ -91,11 +91,11 @@
               <svg class="icone" focusable="false"><use href="#i-agenda"/></svg>
             </span>
             <span class="corpo">
-              <a class="titulo" th:href="@{'/painel/processos/' + ${item.numeroProcesso()}}"
+              <a class="titulo" th:href="@{'/painel/prazos/' + ${item.prazoId()}}"
                  th:text="${item.descricao()}">Contestação</a>
               <span class="detalhe" th:text="${item.numeroProcesso()}">0000000-00.0000.0.00.0000</span>
               <span class="detalhe" th:text="'Vence em ' + ${#temporals.format(item.vencimento(), 'dd/MM/yyyy')}
-                                             + ' - OAB ' + ${item.responsavel()}">Vence em 00/00/0000</span>
+                                             + ' - ' + ${item.responsavel()} + ' (OAB ' + ${item.responsavelOab()} + ')'">Vence em 00/00/0000</span>
             </span>
             <span th:if="${item.fatal()}" class="etiqueta vermelha">fatal</span>
             <span th:unless="${item.fatal()}" class="etiqueta cinza">comum</span>
@@ -189,6 +189,28 @@
           </li>
         </ul>
       </section>
+
+      <section class="cartao">
+        <div class="cartao-cabecalho">
+          <h2>Últimas Varreduras</h2>
+          <span class="contador" th:text="${#lists.size(varreduras)}">0</span>
+        </div>
+        <p class="apoio">Cada execução fica gravada em <code>varredura_execucao</code>, mesmo sem alerta novo.</p>
+        <ul class="varreduras">
+          <li th:each="v : ${varreduras}">
+            <span class="etiqueta" th:classappend="${v.origem().name() == 'AUTOMATICA'} ? 'azul' : 'cinza'"
+                  th:text="${v.origem().rotulo()}">manual</span>
+            <strong th:text="${#temporals.format(v.iniciadaEm(), 'dd/MM HH:mm')}">09/11 10:00</strong>
+            <span th:text="${v.prazosAvaliados()} + ' avaliado(s), ' + ${v.alertasEmitidos()} + ' alerta(s)'">0 avaliados</span>
+            <span class="apoio" th:if="${v.dataSimulada()}"
+                  th:text="'data simulada: ' + ${#temporals.format(v.dataReferencia(), 'dd/MM/yyyy')}">simulada</span>
+            <span class="apoio" th:if="${v.solicitante() != null}" th:text="${v.solicitante()}">quem</span>
+          </li>
+          <li th:if="${#lists.isEmpty(varreduras)}" class="vazio">
+            Nenhuma varredura registrada ainda. O agendador roda às 7h, de segunda a sexta.
+          </li>
+        </ul>
+      </section>
     </div>
   </div>
 
@@ -231,7 +253,7 @@
         <tr th:each="item : ${itens}"
             th:classappend="${item.vencido()} ? 'vencido' : (${item.diasRestantes() <= 3} ? 'critico' : '')">
           <td><a th:href="@{'/painel/processos/' + ${item.numeroProcesso()}}" th:text="${item.numeroProcesso()}">-</a></td>
-          <td th:text="${item.descricao()}">-</td>
+          <td><a th:href="@{'/painel/prazos/' + ${item.prazoId()}}" th:text="${item.descricao()}">-</a></td>
           <td th:text="${#temporals.format(item.vencimento(), 'dd/MM/yyyy')}">-</td>
           <td>
             <span th:if="${item.vencido()}" class="etiqueta vermelha">vencido</span>
@@ -243,13 +265,14 @@
           </td>
           <td>
             <span th:text="${item.responsavel()}">-</span>
-            <span th:if="${usuario != null and item.responsavel() == usuario.oab()}"
+            <span th:if="${usuario != null and usuario.oab() != null and #strings.equalsIgnoreCase(item.responsavelOab(), usuario.oab())}"
                   class="etiqueta azul">você</span>
           </td>
           <td class="acoes">
             <form th:action="@{'/painel/prazos/' + ${item.prazoId()} + '/cumprir'}" method="post"
                   th:attr="data-confirmar='Registrar o prazo \'' + ${item.descricao()} + '\' como cumprido?'">
               <input type="hidden" name="_csrf" th:value="${csrf}">
+              <input type="hidden" name="voltar" value="/painel">
               <button type="submit" class="secundario pequeno">Cumprir</button>
             </form>
           </td>

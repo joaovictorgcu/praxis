@@ -83,6 +83,7 @@
         <th:block th:if="${statusDocumento}">
           <span th:replace="~{fragmentos :: status(${statusDocumento})}"></span>
         </th:block>
+        <span th:if="${versaoAtual}" class="etiqueta cinza" th:text="'v' + ${versaoAtual}">v1</span>
       </h2>
       <a th:if="${documentoGerado}" class="botao secundario pequeno"
          th:href="@{'/api/documentos/' + ${documentoGerado}}">Baixar .txt</a>
@@ -94,6 +95,13 @@
             th:action="@{'/painel/documentos/' + ${documentoGerado} + '/enviar-revisao'}" method="post">
       <input type="hidden" name="_csrf" th:value="${csrf}">
         <button type="submit">Enviar para Revisão</button>
+      </form>
+
+      <form th:if="${excluivel == true}"
+            th:action="@{'/painel/documentos/' + ${documentoGerado} + '/excluir'}" method="post"
+            data-confirmar="Excluir o rascunho? A peça e todas as versões serão apagadas; fica só o registro na auditoria.">
+        <input type="hidden" name="_csrf" th:value="${csrf}">
+        <button type="submit" class="perigo">Excluir Rascunho</button>
       </form>
 
       <th:block th:if="${statusDocumento == 'EM_REVISAO'}">
@@ -158,6 +166,143 @@
     </ul>
   </section>
 
+
+  <!-- Versoes do texto (documento_versao): lista, leitura, comparacao e restauracao. -->
+  <section class="cartao" th:if="${versoes != null and documentoGerado != null}">
+    <div class="cartao-cabecalho">
+      <h2>Versões do Texto <span class="contador" th:text="${#lists.size(versoes)}">1</span></h2>
+      <form th:if="${#lists.size(versoes) > 1}"
+            th:action="@{/painel/documentos/{id}/comparar(id=${documentoGerado})}" method="get"
+            class="linha" style="margin:0">
+        <label>De
+          <select name="de">
+            <option th:each="v : ${versoes}" th:value="${v.numero()}" th:text="'v' + ${v.numero()}"
+                    th:selected="${comparacao != null} ? ${v.numero() == comparacao.de()} : ${v.numero() == 1}">v1</option>
+          </select>
+        </label>
+        <label>Para
+          <select name="para">
+            <option th:each="v : ${versoes}" th:value="${v.numero()}" th:text="'v' + ${v.numero()}"
+                    th:selected="${comparacao != null} ? ${v.numero() == comparacao.para()} : ${v.atual()}">v2</option>
+          </select>
+        </label>
+        <button type="submit" class="secundario pequeno">Comparar</button>
+      </form>
+    </div>
+    <p class="apoio">
+      Cada geração, edição, regeneração ou restauração grava o texto inteiro em <code>documento_versao</code>.
+      O histórico só cresce: restaurar a v1 cria uma versão nova com o texto da v1.
+    </p>
+    <div class="tabela">
+      <table>
+        <thead>
+        <tr>
+          <th>Versão</th>
+          <th>Origem</th>
+          <th>Autor</th>
+          <th>Quando</th>
+          <th>Resumo</th>
+          <th>Tamanho</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="v : ${versoes}">
+          <td>
+            <strong th:text="'v' + ${v.numero()}">v1</strong>
+            <span th:if="${v.atual()}" class="etiqueta verde">atual</span>
+          </td>
+          <td><span class="etiqueta azul" th:text="${v.origem().rotulo()}">geração</span></td>
+          <td th:text="${v.autorNome() != null ? v.autorNome() : (v.autorOab() != null ? 'OAB ' + v.autorOab() : '-')}">-</td>
+          <td th:text="${#temporals.format(v.criadaEm(), 'dd/MM/yyyy HH:mm')}">-</td>
+          <td th:text="${v.resumo()}">-</td>
+          <td th:text="${v.linhas()} + ' linhas'">-</td>
+          <td class="acoes">
+            <a class="botao secundario pequeno"
+               th:href="@{/painel/documentos/{id}/versoes/{n}(id=${documentoGerado},n=${v.numero()})}">Ver</a>
+            <a th:unless="${v.atual()}" class="botao secundario pequeno"
+               th:href="@{/painel/documentos/{id}/comparar(id=${documentoGerado},de=${v.numero()},para=${versaoAtual})}">Comparar com a Atual</a>
+            <form th:if="${editavel == true and !v.atual()}"
+                  th:action="@{/painel/documentos/{id}/versoes/{n}/restaurar(id=${documentoGerado},n=${v.numero()})}"
+                  method="post"
+                  th:attr="data-confirmar='Restaurar o texto da v' + ${v.numero()} + '? Ele vira uma versão nova; nenhuma versão é apagada.'">
+              <input type="hidden" name="_csrf" th:value="${csrf}">
+              <button type="submit" class="secundario pequeno">Restaurar</button>
+            </form>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="cartao" th:if="${versaoVista != null}">
+    <div class="cartao-cabecalho">
+      <h2 th:text="'Texto da Versão ' + ${versaoVista.numero()} + ' (' + ${versaoVista.origem().rotulo()} + ')'">Texto da Versão 1</h2>
+      <span class="apoio" th:text="${#temporals.format(versaoVista.criadaEm(), 'dd/MM/yyyy HH:mm')}">-</span>
+    </div>
+    <p class="apoio" th:text="${versaoVista.resumo()}">resumo</p>
+    <pre th:text="${versaoVista.conteudo()}">texto</pre>
+  </section>
+
+  <section class="cartao" th:if="${comparacao != null}">
+    <div class="cartao-cabecalho">
+      <h2 th:text="'Comparação v' + ${comparacao.de()} + ' → v' + ${comparacao.para()}">Comparação</h2>
+    </div>
+    <p class="resumo-comparacao">
+      <span class="incluidas" th:text="'+' + ${comparacao.incluidas()} + ' linha(s) incluída(s)'">+1</span>
+      <span class="removidas" th:text="'−' + ${comparacao.removidas()} + ' linha(s) removida(s)'">-1</span>
+      <span class="apoio">maior subsequência comum (LCS), linha a linha</span>
+    </p>
+    <ol class="comparacao">
+      <li th:each="linha : ${comparacao.linhas()}"
+          th:classappend="${linha.tipo().name() == 'INCLUIDA'} ? 'incluida' : (${linha.tipo().name() == 'REMOVIDA'} ? 'removida' : '')">
+        <span th:text="${linha.numeroAntes()}">1</span>
+        <span th:text="${linha.numeroDepois()}">1</span>
+        <b th:text="${linha.tipo().sinal()}"> </b>
+        <code th:text="${linha.texto()}">linha</code>
+      </li>
+    </ol>
+  </section>
+
+  <section class="cartao" th:if="${editavel == true}">
+    <h2>Editar Texto</h2>
+    <p class="apoio">
+      Rascunho e peça rejeitada aceitam mudança de texto; em revisão, aprovada ou protocolada, não (State).
+      Salvar cria a versão <strong th:text="'v' + ${versaoAtual + 1}">v2</strong> com o seu nome.
+    </p>
+    <form th:action="@{/painel/documentos/{id}/editar(id=${documentoGerado})}" method="post" class="empilhado">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <label>Texto da Peça
+        <textarea name="conteudo" class="texto-peca" rows="18" required th:text="${previa}">texto</textarea>
+      </label>
+      <label>Resumo da Alteração
+        <input type="text" name="resumo" maxlength="300" placeholder="O que mudou e por quê">
+      </label>
+      <div><button type="submit">Salvar Nova Versão</button></div>
+    </form>
+  </section>
+
+  <section class="cartao" th:if="${editavel == true and camposRegeneracao != null and !#maps.isEmpty(camposRegeneracao)}">
+    <h2>Regenerar pelo Gerador Original</h2>
+    <p class="apoio">
+      Refaz o texto com o mesmo gerador da geração
+      (<strong th:text="${modeloCodigo != null} ? 'modelo ' + ${modeloCodigo} : 'peça compilada ' + ${tipoDocumento.rotulo()}">modelo</strong>)
+      e os campos abaixo, já preenchidos com os valores usados. Edição manual feita depois da geração
+      não é levada: ela continua guardada na sua versão.
+    </p>
+    <form th:action="@{/painel/documentos/{id}/regenerar(id=${documentoGerado})}" method="post" class="empilhado">
+      <input type="hidden" name="_csrf" th:value="${csrf}">
+      <div class="grade-campos">
+        <label th:each="campo : ${camposRegeneracao}">
+          <code th:text="${campo.key}">campo</code>
+          <textarea rows="2" th:name="'campo_' + ${campo.key}" th:text="${campo.value}">valor</textarea>
+        </label>
+      </div>
+      <div><button type="submit" class="secundario">Regenerar Peça</button></div>
+    </form>
+  </section>
+
   <section class="cartao">
     <div class="cartao-cabecalho">
       <h2>Peças Geradas</h2>
@@ -176,6 +321,7 @@
           <th>Gerado em</th>
           <th>Por</th>
           <th>Estado</th>
+          <th>Versão</th>
           <th>Sigilo</th>
           <th></th>
         </tr>
@@ -188,6 +334,7 @@
           <td th:text="${documento.geradoEm()}">-</td>
           <td th:text="${documento.geradoPorOab()} ?: '-'">-</td>
           <td><span th:replace="~{fragmentos :: status(${documento.status()})}"></span></td>
+          <td th:text="'v' + ${documento.versao()}">v1</td>
           <td>
             <span th:if="${documento.segredoJustica()}" class="etiqueta vermelha">segredo</span>
             <span th:unless="${documento.segredoJustica()}" class="etiqueta cinza">público</span>
@@ -198,7 +345,7 @@
           </td>
         </tr>
         <tr th:if="${#lists.isEmpty(documentos)}">
-          <td colspan="8" class="vazio">Nenhuma peça gerada ainda.</td>
+          <td colspan="9" class="vazio">Nenhuma peça gerada ainda.</td>
         </tr>
         </tbody>
       </table>

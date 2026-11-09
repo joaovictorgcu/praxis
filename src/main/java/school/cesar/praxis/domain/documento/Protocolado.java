@@ -23,6 +23,11 @@ public class Protocolado implements StatusDocumento {
     }
 
     @Override
+    public StatusDocumento editar(DocumentoGerado documento) {
+        return transicaoInvalida("editar");
+    }
+
+    @Override
     public String nome() {
         return "PROTOCOLADO";
     }

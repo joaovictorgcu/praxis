@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="'Praxis - Prazo #' + ${prazo.id()}">Praxis - Prazo</title>
+  <link rel="icon" th:href="@{/favicon.svg}" type="image/svg+xml">
+  <link rel="stylesheet" th:href="${assetCss}">
+  <script th:src="${assetJs}" defer></script>
+</head>
+<body class="app">
+<header th:replace="~{fragmentos :: cabecalho('painel')}"></header>
+
+<main id="conteudo" tabindex="-1">
+  <div th:replace="~{fragmentos :: mensagens}"></div>
+
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>
+        Prazo <span th:text="'#' + ${prazo.id()}">#1</span> &middot;
+        <span th:text="${prazo.descricao()}">Embargos de declaração</span>
+        <span th:replace="~{fragmentos :: situacaoPrazo(${prazo.situacao().name()})}"></span>
+        <span th:if="${prazo.fatal()}" class="etiqueta vermelha">fatal</span>
+        <span th:unless="${prazo.fatal()}" class="etiqueta cinza">comum</span>
+      </h2>
+      <a class="botao secundario pequeno" th:href="@{'/painel/processos/' + ${prazo.numeroProcesso()}}"
+         th:text="'Processo ' + ${prazo.numeroProcesso()}">Processo</a>
+    </div>
+
+    <dl class="ficha">
+      <div><dt>Responsável</dt>
+        <dd>
+          <span th:text="${prazo.responsavelNome()}">-</span>
+          <span class="apoio" th:text="'OAB ' + ${prazo.responsavelOab()}">OAB</span>
+        </dd>
+      </div>
+      <div><dt>Intimação</dt>
+        <dd th:text="${#temporals.format(prazo.intimacao(), 'dd/MM/yyyy')}">-</dd>
+      </div>
+      <div><dt>Contagem</dt>
+        <dd>
+          <span th:text="${prazo.regime().descrever(prazo.quantidadeDias())}">5 dias úteis</span>
+          <span class="apoio" th:if="${prazo.prerrogativa().emDobro()}"
+                th:text="'Em dobro: ' + ${prazo.prerrogativa().rotulo()} + ' (' + ${prazo.prerrogativa().fundamento()} + ')'">em dobro</span>
+          <span class="apoio" th:if="${prazo.diasAcrescidos() > 0}"
+                th:text="'+' + ${prazo.regime().descrever(prazo.diasAcrescidos())} + ' por dilação (CPC art. 139, VI)'">dilação</span>
+          <span class="apoio" th:if="${prazo.diasEfetivos() != prazo.quantidadeDias()}"
+                th:text="'Total efetivo: ' + ${prazo.regime().descrever(prazo.diasEfetivos())}">total</span>
+        </dd>
+      </div>
+      <div><dt>Vencimento Original</dt>
+        <dd>
+          <span th:text="${#temporals.format(prazo.vencimentoOriginal(), 'dd/MM/yyyy')}">-</span>
+          <span class="apoio">calculado na abertura; nunca muda</span>
+        </dd>
+      </div>
+      <div><dt>Vencimento Vigente</dt>
+        <dd>
+          <strong th:text="${#temporals.format(prazo.vencimento(), 'dd/MM/yyyy')}">-</strong>
+          <span class="apoio" th:if="${prazo.vencimentoAlterado()}">ajustado por suspensão, retomada ou dilação</span>
+          <span class="apoio" th:unless="${prazo.vencimentoAlterado()}">igual ao original</span>
+        </dd>
+      </div>
+      <div th:switch="${prazo.situacao().name()}">
+        <th:block th:case="'SUSPENSO'">
+          <dt>Saldo Congelado</dt>
+          <dd>
+            <strong th:text="${prazo.regime().descrever(prazo.diasRestantes())}">4 dias úteis</strong>
+            <span class="apoio">volta a correr na retomada (CPC art. 221)</span>
+          </dd>
+        </th:block>
+        <th:block th:case="'CUMPRIDO'">
+          <dt>Cumprido em</dt>
+          <dd th:text="${#temporals.format(prazo.cumpridoEm(), 'dd/MM/yyyy')}">-</dd>
+        </th:block>
+        <th:block th:case="'CANCELADO'">
+          <dt>Dias Restantes</dt>
+          <dd class="apoio">prazo cancelado</dd>
+        </th:block>
+        <th:block th:case="*">
+          <dt>Dias Restantes</dt>
+          <dd>
+            <span th:if="${prazo.vencido()}" class="etiqueta vermelha">vencido</span>
+            <strong th:unless="${prazo.vencido()}" th:text="${prazo.regime().descrever(prazo.diasRestantes())}">3 dias úteis</strong>
+          </dd>
+        </th:block>
+      </div>
+      <div><dt>Alertas Já Emitidos</dt>
+        <dd>
+          <span th:if="${#sets.isEmpty(prazo.alertasEmitidos())}" class="apoio">nenhum desde a última mudança de vencimento</span>
+          <span th:each="nivel : ${prazo.alertasEmitidos()}" class="etiqueta ambar" th:text="${nivel.rotulo()}">ATENÇÃO</span>
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <div class="duas-colunas">
+    <section class="cartao">
+      <h2>Ações</h2>
+      <p class="apoio" th:if="${prazo.situacao().name() == 'EM_ABERTO'}">
+        O prazo está correndo. Suspender congela o saldo; dilatar soma dias e recalcula o vencimento.
+        Toda ação fica na trilha abaixo, com o vencimento de antes e o de depois.
+      </p>
+      <p class="apoio" th:if="${prazo.situacao().name() == 'SUSPENSO'}">
+        Prazo suspenso: não corre, não alerta e não pode ser cumprido (CPC art. 314).
+        Na retomada, o motor reconta o prazo sem os dias parados.
+      </p>
+      <p class="apoio" th:if="${prazo.situacao().encerrado()}">
+        Prazo encerrado. A reabertura volta o prazo para a agenda e exige motivo.
+      </p>
+
+      <th:block th:if="${prazo.situacao().name() == 'EM_ABERTO'}">
+        <form th:action="@{'/painel/prazos/' + ${prazo.id()} + '/suspender'}" method="post" class="empilhado acao-prazo">
+          <input type="hidden" name="_csrf" th:value="${csrf}">
+          <h3>Suspender</h3>
+          <label>Suspenso Desde
+            <input type="date" name="inicio" th:value="${hoje}" th:attr="max=${hoje},min=${prazo.intimacao()}" required>
+          </label>
+          <label>Motivo (CPC art. 221 ou hipótese do art. 313)
+            <input type="text" name="motivo" required maxlength="300"
+                   placeholder="Convenção das partes para tentativa de acordo (art. 313, II)">
+          </label>
+          <div><button type="submit" class="secundario">Suspender Prazo</button></div>
+        </form>
+
+        <form th:action="@{'/painel/prazos/' + ${prazo.id()} + '/dilatar'}" method="post" class="empilhado acao-prazo">
+          <input type="hidden" name="_csrf" th:value="${csrf}">
+          <h3>Dilatar</h3>
+          <label>Dias a Acrescentar
+            <input type="number" name="dias" min="1" max="365" value="5" required style="width:110px">
+          </label>
+          <label>Fundamento (decisão que dilatou o prazo, CPC art. 139, VI)
+            <input type="text" name="fundamento" required maxlength="300"
+                   placeholder="Decisão de 09/11/2026 dilatou o prazo em 5 dias">
+          </label>
+          <div><button type="submit" class="secundario">Dilatar Prazo</button></div>
+        </form>
+
+        <form th:action="@{'/painel/prazos/' + ${prazo.id()} + '/cumprir'}" method="post" class="empilhado acao-prazo"
+              th:attr="data-confirmar='Registrar o prazo \'' + ${prazo.descricao()} + '\' como cumprido?'">
+          <input type="hidden" name="_csrf" th:value="${csrf}">
+          <h3>Cumprir</h3>
+          <div><button type="submit">Registrar Cumprimento</button></div>
+        </form>
+      </th:block>
+
+      <form th:if="${prazo.situacao().name() == 'SUSPENSO'}"
+            th:action="@{'/painel/prazos/' + ${prazo.id()} + '/retomar'}" method="post" class="empilhado acao-prazo">
+        <input type="hidden" name="_csrf" th:value="${csrf}">
+        <h3>Retomar</h3>
+        <label>Volta a Correr em
+          <input type="date" name="retomada" th:value="${hoje}" th:attr="max=${hoje}" required>
+        </label>
+        <div><button type="submit">Retomar Prazo</button></div>
+      </form>
+
+      <form th:if="${podeEncerrar and (prazo.situacao().name() == 'EM_ABERTO' or prazo.situacao().name() == 'SUSPENSO')}"
+            th:action="@{'/painel/prazos/' + ${prazo.id()} + '/cancelar'}" method="post" class="empilhado acao-prazo"
+            data-confirmar="Cancelar o prazo? Ele sai da agenda e da varredura.">
+        <input type="hidden" name="_csrf" th:value="${csrf}">
+        <h3>Cancelar</h3>
+        <label>Motivo
+          <input type="text" name="motivo" required maxlength="300" placeholder="Prazo lançado em duplicidade">
+        </label>
+        <div><button type="submit" class="perigo">Cancelar Prazo</button></div>
+      </form>
+
+      <form th:if="${podeEncerrar and prazo.situacao().encerrado()}"
+            th:action="@{'/painel/prazos/' + ${prazo.id()} + '/reabrir'}" method="post" class="empilhado acao-prazo">
+        <input type="hidden" name="_csrf" th:value="${csrf}">
+        <h3>Reabrir</h3>
+        <label>Motivo
+          <input type="text" name="motivo" required maxlength="300" placeholder="Cumprimento registrado por engano">
+        </label>
+        <div><button type="submit" class="secundario">Reabrir Prazo</button></div>
+      </form>
+      <p th:if="${!podeEncerrar}" class="apoio">
+        Cancelar e reabrir ficam com o responsável pelo prazo ou com o chefe do escritório.
+      </p>
+    </section>
+
+    <section class="cartao">
+      <div class="cartao-cabecalho">
+        <h2>Suspensões</h2>
+        <span class="contador" th:text="${#lists.size(prazo.suspensoes())}">0</span>
+      </div>
+      <div class="tabela">
+        <table>
+          <thead>
+          <tr>
+            <th>Período Parado</th>
+            <th>Dias</th>
+            <th>Motivo</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="s : ${prazo.suspensoes()}">
+            <td>
+              <span th:text="${#temporals.format(s.inicio(), 'dd/MM/yyyy')}">05/11/2026</span>
+              <span th:if="${s.emAberto()}" class="etiqueta ambar">em aberto</span>
+              <span th:unless="${s.emAberto()}" th:text="'a ' + ${#temporals.format(s.fim(), 'dd/MM/yyyy')}">a 08/11/2026</span>
+            </td>
+            <td th:text="${s.diasParado(hoje)}">0</td>
+            <td th:text="${s.motivo()}">-</td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(prazo.suspensoes())}">
+            <td colspan="3" class="vazio">O prazo nunca foi suspenso.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="apoio">
+        Os dias parados não contam: na retomada o prazo é recontado desde a intimação, pulando
+        fins de semana, feriados do foro e os dias desta tabela.
+      </p>
+    </section>
+  </div>
+
+  <section class="cartao">
+    <div class="cartao-cabecalho">
+      <h2>Trilha do Prazo</h2>
+      <span class="contador" th:text="${#lists.size(prazo.eventos())}">0</span>
+    </div>
+    <p class="apoio">Gravada em <code>prazo_evento</code> e só acrescenta: nenhum evento é alterado ou apagado.</p>
+    <ol class="trilha-prazo">
+      <li th:each="e : ${prazo.eventos()}" th:classappend="${'evento-' + #strings.toLowerCase(e.tipo().name())}">
+        <time th:text="${#temporals.format(e.ocorridoEm(), 'dd/MM/yyyy HH:mm')}">09/11/2026 10:00</time>
+        <span class="etiqueta" th:classappend="${e.tipo().name() == 'ALERTA'} ? 'ambar'
+                     : (${e.tipo().name() == 'CANCELAMENTO'} ? 'vermelha'
+                     : (${e.tipo().name() == 'CUMPRIMENTO'} ? 'verde' : 'azul'))"
+              th:text="${e.tipo().rotulo()}">Abertura</span>
+        <span class="vencimentos" th:if="${e.moveuVencimento()}">
+          <span th:text="${#temporals.format(e.vencimentoAnterior(), 'dd/MM/yyyy')}">-</span>
+          &rarr;
+          <strong th:text="${#temporals.format(e.vencimentoNovo(), 'dd/MM/yyyy')}">-</strong>
+        </span>
+        <span class="vencimentos" th:if="${e.tipo().name() == 'ABERTURA'}">
+          vence em <strong th:text="${#temporals.format(e.vencimentoNovo(), 'dd/MM/yyyy')}">-</strong>
+        </span>
+        <p th:text="${e.detalhe()}">detalhe</p>
+        <span class="autor" th:text="${e.autorNome() + (e.autorOab() != null and !e.autorOab().isEmpty() ? ' · OAB ' + e.autorOab() : '')}">autor</span>
+      </li>
+      <li th:if="${#lists.isEmpty(prazo.eventos())}" class="vazio">Nenhum evento registrado.</li>
+    </ol>
+  </section>
+</main>
+</body>
+</html>

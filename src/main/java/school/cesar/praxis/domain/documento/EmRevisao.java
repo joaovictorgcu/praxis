@@ -29,6 +29,11 @@ public class EmRevisao implements StatusDocumento {
     }
 
     @Override
+    public StatusDocumento editar(DocumentoGerado documento) {
+        return transicaoInvalida("editar");
+    }
+
+    @Override
     public String nome() {
         return "EM_REVISAO";
     }

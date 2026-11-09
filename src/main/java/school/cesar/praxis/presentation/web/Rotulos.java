@@ -20,6 +20,16 @@ public class Rotulos {
             Map.entry("APROVADO", "aprovado"),
             Map.entry("REJEITADO", "rejeitado"),
             Map.entry("PROTOCOLADO", "protocolado"),
+            // Situacao do prazo.
+            Map.entry("EM_ABERTO", "em aberto"),
+            Map.entry("SUSPENSO", "suspenso"),
+            Map.entry("CUMPRIDO", "cumprido"),
+            Map.entry("CANCELADO", "cancelado"),
+            // Origem da versao da peca.
+            Map.entry("GERACAO", "geração"),
+            Map.entry("EDICAO", "edição"),
+            Map.entry("REGENERACAO", "regeneração"),
+            Map.entry("RESTAURACAO", "restauração"),
             // Tipo de andamento do processo.
             Map.entry("INTIMACAO", "intimação"),
             Map.entry("CITACAO", "citação"),
@@ -41,6 +51,7 @@ public class Rotulos {
             Map.entry("SOLICITACAO_CRIADA", "solicitação criada"),
             Map.entry("SOLICITACAO_APROVADA", "solicitação aprovada"),
             Map.entry("SOLICITACAO_NEGADA", "solicitação negada"),
+            Map.entry("EXCLUSAO_PECA", "exclusão de peça"),
             // Abrangencia do feriado.
             Map.entry("NACIONAL", "nacional"),
             Map.entry("ESTADUAL", "estadual"),

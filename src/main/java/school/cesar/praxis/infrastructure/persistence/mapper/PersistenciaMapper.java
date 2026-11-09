@@ -5,6 +5,7 @@ import school.cesar.praxis.domain.acesso.SolicitacaoAcesso;
 import school.cesar.praxis.domain.acesso.StatusSolicitacao;
 import school.cesar.praxis.domain.cliente.Cliente;
 import school.cesar.praxis.domain.documento.DocumentoGerado;
+import school.cesar.praxis.domain.documento.VersaoDocumento;
 import school.cesar.praxis.domain.documento.RegistroAprovacao;
 import school.cesar.praxis.domain.documento.StatusDocumento;
 import school.cesar.praxis.domain.feriado.Abrangencia;
@@ -22,8 +23,12 @@ import school.cesar.praxis.domain.modelo.CodigoModelo;
 import school.cesar.praxis.domain.modelo.ModeloDocumento;
 import school.cesar.praxis.domain.modelo.TextoModelo;
 import school.cesar.praxis.domain.partecontraria.ParteContraria;
+import school.cesar.praxis.domain.prazo.EventoPrazo;
+import school.cesar.praxis.domain.prazo.ExecucaoVarredura;
 import school.cesar.praxis.domain.prazo.NivelAlerta;
+import school.cesar.praxis.domain.prazo.PeriodoSuspensao;
 import school.cesar.praxis.domain.prazo.Prazo;
+import school.cesar.praxis.domain.prazo.SituacaoPrazo;
 import school.cesar.praxis.domain.processo.*;
 import school.cesar.praxis.domain.usuario.Usuario;
 import school.cesar.praxis.domain.escritorio.Escritorio;
@@ -34,12 +39,16 @@ import school.cesar.praxis.infrastructure.persistence.entity.ArquivoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ClienteEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ContratoHonorarioEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.DocumentoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.DocumentoVersaoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.EscritorioEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.FeriadoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ModeloEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ParcelaEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ParteContrariaEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.PeriodoSuspensaoEmbeddable;
 import school.cesar.praxis.infrastructure.persistence.entity.PrazoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.PrazoEventoEntity;
+import school.cesar.praxis.infrastructure.persistence.entity.VarreduraExecucaoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.AcessoAoProcessoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.SolicitacaoAcessoEntity;
 import school.cesar.praxis.infrastructure.persistence.entity.ProcessoEntity;
@@ -131,7 +140,10 @@ public final class PersistenciaMapper {
         entidade.setIntimacao(prazo.getIntimacao());
         entidade.setQuantidadeDias(prazo.getQuantidadeDias());
         entidade.setRegime(prazo.getRegime());
+        entidade.setPrerrogativa(prazo.getPrerrogativa());
+        entidade.setVencimentoOriginal(prazo.getVencimentoOriginal());
         entidade.setVencimento(prazo.getVencimento());
+        entidade.setDiasAcrescidos(prazo.getDiasAcrescidos());
         entidade.setFatal(prazo.isFatal());
         entidade.setResponsavelNome(prazo.getResponsavel().nome());
         entidade.setResponsavelEmail(prazo.getResponsavel().email());
@@ -139,8 +151,12 @@ public final class PersistenciaMapper {
         entidade.setAlertasEmitidos(prazo.getAlertasEmitidos().stream()
                 .map(Enum::name)
                 .collect(Collectors.joining(",")));
+        entidade.setSituacao(prazo.getSituacao());
         entidade.setCumprido(prazo.isCumprido());
         entidade.setCumpridoEm(prazo.getCumpridoEm());
+        entidade.setSuspensoes(prazo.getSuspensoes().stream()
+                .map(periodo -> new PeriodoSuspensaoEmbeddable(periodo.inicio(), periodo.fim(), periodo.motivo()))
+                .collect(Collectors.toCollection(ArrayList::new)));
         return entidade;
     }
 
@@ -154,6 +170,17 @@ public final class PersistenciaMapper {
                     .forEach(alertas::add);
         }
 
+        // Linha gravada antes da V7 nao tem situacao: o booleano antigo decide.
+        SituacaoPrazo situacao = entidade.getSituacao() != null
+                ? entidade.getSituacao()
+                : entidade.isCumprido() ? SituacaoPrazo.CUMPRIDO : SituacaoPrazo.EM_ABERTO;
+        List<PeriodoSuspensao> suspensoes = entidade.getSuspensoes() == null
+                ? List.of()
+                : entidade.getSuspensoes().stream()
+                        .map(periodo -> new PeriodoSuspensao(periodo.getInicio(), periodo.getFim(), periodo.getMotivo()))
+                        .sorted(java.util.Comparator.comparing(PeriodoSuspensao::inicio))
+                        .toList();
+
         return new Prazo(
                 entidade.getId(),
                 NumeroCnj.de(entidade.getNumeroProcesso()),
@@ -161,14 +188,80 @@ public final class PersistenciaMapper {
                 entidade.getIntimacao(),
                 entidade.getQuantidadeDias(),
                 entidade.getRegime(),
+                entidade.getPrerrogativa(),
+                entidade.getVencimentoOriginal(),
                 entidade.getVencimento(),
                 entidade.isFatal(),
                 new Advogado(entidade.getResponsavelNome(),
                         entidade.getResponsavelEmail(),
                         entidade.getResponsavelOab()),
                 alertas,
-                entidade.isCumprido(),
-                entidade.getCumpridoEm());
+                situacao,
+                entidade.getCumpridoEm(),
+                entidade.getDiasAcrescidos(),
+                suspensoes);
+    }
+
+    // --- Trilha do prazo e execucoes da varredura ---
+
+    public static PrazoEventoEntity paraEntidade(EventoPrazo evento) {
+        PrazoEventoEntity entidade = new PrazoEventoEntity();
+        entidade.setId(evento.id());
+        entidade.setPrazoId(evento.prazoId());
+        entidade.setTipo(evento.tipo());
+        entidade.setOcorridoEm(evento.ocorridoEm());
+        entidade.setVencimentoAnterior(evento.vencimentoAnterior());
+        entidade.setVencimentoNovo(evento.vencimentoNovo());
+        entidade.setDetalhe(limitar(evento.detalhe(), 500));
+        entidade.setAutorOab(evento.autorOab());
+        entidade.setAutorNome(limitar(evento.autorNome(), 150));
+        return entidade;
+    }
+
+    public static EventoPrazo paraDominio(PrazoEventoEntity entidade) {
+        return new EventoPrazo(
+                entidade.getId(),
+                entidade.getPrazoId(),
+                entidade.getTipo(),
+                entidade.getOcorridoEm(),
+                entidade.getVencimentoAnterior(),
+                entidade.getVencimentoNovo(),
+                entidade.getDetalhe(),
+                entidade.getAutorOab(),
+                entidade.getAutorNome());
+    }
+
+    public static VarreduraExecucaoEntity paraEntidade(ExecucaoVarredura execucao) {
+        VarreduraExecucaoEntity entidade = new VarreduraExecucaoEntity();
+        entidade.setId(execucao.id());
+        entidade.setOrigem(execucao.origem());
+        entidade.setDataReferencia(execucao.dataReferencia());
+        entidade.setIniciadaEm(execucao.iniciadaEm());
+        entidade.setConcluidaEm(execucao.concluidaEm());
+        entidade.setPrazosAvaliados(execucao.prazosAvaliados());
+        entidade.setAlertasEmitidos(execucao.alertasEmitidos());
+        entidade.setSolicitante(limitar(execucao.solicitante(), 150));
+        return entidade;
+    }
+
+    public static ExecucaoVarredura paraDominio(VarreduraExecucaoEntity entidade) {
+        return new ExecucaoVarredura(
+                entidade.getId(),
+                entidade.getOrigem(),
+                entidade.getDataReferencia(),
+                entidade.getIniciadaEm(),
+                entidade.getConcluidaEm(),
+                entidade.getPrazosAvaliados(),
+                entidade.getAlertasEmitidos(),
+                entidade.getSolicitante());
+    }
+
+    /** Texto livre que vai para coluna de tamanho fixo: corta em vez de estourar o insert. */
+    private static String limitar(String texto, int maximo) {
+        if (texto == null || texto.length() <= maximo) {
+            return texto;
+        }
+        return texto.substring(0, maximo - 1) + "…";
     }
 
     // --- Documento ---
@@ -185,6 +278,9 @@ public final class PersistenciaMapper {
         entidade.setOabsHabilitadas(String.join(",", documento.getOabsHabilitadas()));
         entidade.setStatus(documento.getStatus().nome());
         entidade.setHistorico(serializarHistorico(documento.getHistorico()));
+        entidade.setModeloCodigo(documento.getModeloCodigo());
+        entidade.setCamposGeracao(serializarCampos(documento.getCamposGeracao()));
+        entidade.setVersaoAtual(documento.getVersaoAtual());
         return entidade;
     }
 
@@ -205,7 +301,10 @@ public final class PersistenciaMapper {
                 entidade.getGeradoEm(),
                 entidade.getGeradoPorOab(),
                 entidade.isSegredoJustica(),
-                oabs);
+                oabs,
+                entidade.getModeloCodigo(),
+                desserializarCampos(entidade.getCamposGeracao()),
+                Math.max(1, entidade.getVersaoAtual()));
         documento.restaurarStatusPersistido(StatusDocumento.porNome(entidade.getStatus()));
         documento.restaurarHistoricoPersistido(desserializarHistorico(entidade.getHistorico()));
         return documento;
@@ -245,6 +344,60 @@ public final class PersistenciaMapper {
                     LocalDateTime.parse(decodificar(partes[4]))));
         }
         return historico;
+    }
+
+    /** Campos da geracao: "chave=valor" percent-encoded, separados por '&' (ordem preservada). */
+    private static String serializarCampos(java.util.Map<String, String> campos) {
+        if (campos == null || campos.isEmpty()) {
+            return null;
+        }
+        return campos.entrySet().stream()
+                .map(campo -> codificar(campo.getKey()) + "=" + codificar(campo.getValue()))
+                .collect(Collectors.joining("&"));
+    }
+
+    private static java.util.Map<String, String> desserializarCampos(String valor) {
+        java.util.Map<String, String> campos = new java.util.LinkedHashMap<>();
+        if (valor == null || valor.isBlank()) {
+            return campos;
+        }
+        for (String par : valor.split("&")) {
+            int separador = par.indexOf('=');
+            if (separador > 0) {
+                campos.put(decodificar(par.substring(0, separador)),
+                        par.length() > separador + 1 ? decodificar(par.substring(separador + 1)) : "");
+            }
+        }
+        return campos;
+    }
+
+    // --- Versao do documento ---
+
+    public static DocumentoVersaoEntity paraEntidade(VersaoDocumento versao) {
+        DocumentoVersaoEntity entidade = new DocumentoVersaoEntity();
+        entidade.setId(versao.id());
+        entidade.setDocumentoId(versao.documentoId());
+        entidade.setNumero(versao.numero());
+        entidade.setConteudo(versao.conteudo());
+        entidade.setOrigem(versao.origem());
+        entidade.setAutorOab(versao.autorOab());
+        entidade.setAutorNome(limitar(versao.autorNome(), 150));
+        entidade.setCriadaEm(versao.criadaEm());
+        entidade.setResumo(limitar(versao.resumo(), 300));
+        return entidade;
+    }
+
+    public static VersaoDocumento paraDominio(DocumentoVersaoEntity entidade) {
+        return new VersaoDocumento(
+                entidade.getId(),
+                entidade.getDocumentoId(),
+                entidade.getNumero(),
+                entidade.getConteudo(),
+                entidade.getOrigem(),
+                entidade.getAutorOab(),
+                entidade.getAutorNome(),
+                entidade.getCriadaEm(),
+                entidade.getResumo());
     }
 
     private static String codificar(String valor) {

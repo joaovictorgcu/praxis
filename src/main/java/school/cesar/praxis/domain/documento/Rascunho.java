@@ -23,6 +23,16 @@ public class Rascunho implements StatusDocumento {
     }
 
     @Override
+    public StatusDocumento editar(DocumentoGerado documento) {
+        return new Rascunho();
+    }
+
+    @Override
+    public boolean admiteExclusao() {
+        return true;
+    }
+
+    @Override
     public String nome() {
         return "RASCUNHO";
     }

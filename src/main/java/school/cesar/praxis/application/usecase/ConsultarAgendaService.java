@@ -67,6 +67,8 @@ public class ConsultarAgendaService implements PrazosUseCases.ConsultarAgenda,
                 prazo.isFatal(),
                 prazo.estaEmAberto() && prazo.venceu(hoje),
                 prazo.getResponsavel().nome(),
-                prazo.isCumprido());
+                prazo.isCumprido(),
+                prazo.getResponsavel().oab(),
+                prazo.getSituacao());
     }
 }

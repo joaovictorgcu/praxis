@@ -47,4 +47,12 @@ public class DocumentoRepositorioJpa implements DocumentoRepositorio {
     public List<DocumentoGerado> listar() {
         return jpa.findAll().stream().map(PersistenciaMapper::paraDominio).toList();
     }
+
+    @Override
+    public void excluir(Long documentoId) {
+        if (!jpa.existsById(documentoId)) {
+            throw new NoSuchElementException("documento não encontrado: " + documentoId);
+        }
+        jpa.deleteById(documentoId);
+    }
 }
